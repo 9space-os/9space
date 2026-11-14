@@ -77,3 +77,8 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   parent>`); no guest while binding or releasing.
 - Documentation only in English: `dist/docs`, the wiki, READMEs, NOTES.md, comments. Exception: the tree's `MEMORY.md` stays German.
 - Fix causes, not symptoms; close open ends (hangs, unrun tests) before new work.
+- Clean solutions over workarounds, even when they change compatibility
+  with 9front (an interface, a type, a syscall's arguments): change every
+  part that depends on it (the tree, the toolchains' libc crate and std,
+  Go's syscalls, the man pages) instead of routing around the defect, and
+  note the difference to 9front in the man page and `tree/MEMORY.md`.

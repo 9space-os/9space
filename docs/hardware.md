@@ -26,6 +26,10 @@ otherwise.
 | | desktop (`desktop=wsys`) | tested | 2026-11-11 | wsys on i915, wbar, title bars, Mod4+Tab, Wayland (foot) |
 | | xHCI | works | 2026-11-01 | the test stick boots and is read from it |
 | | backlight, external monitor | untested | | open in `MEMORY.md` |
+| Lenovo ThinkBook 16 G7 ARP (Ryzen 7 7735HS, 32 GB) | boot by PXE (`scripts/hw/pxe.sh`), root from the host | tested | 2026-11-14 | `*nonvme=1`: the internal NVMe (another system) is never touched; 16 processors, ACPI (battery), RTL8168 Ethernet, xHCI (USB devices listed), i8042 keyboard, HDA |
+| | GPU: Radeon 680M (Rembrandt, YELLOW_CARP) | tested | 2026-11-14 | `aux/amdgpu` as the screen, eDP 1920×1200, the display's cursor; the APU's 4 GB of video memory through `gpu(3)`'s `vram`; taking over from VESA with the desktop running |
+| | desktop (`desktop=wsys`) | tested | 2026-11-14 | wsys on amdgpu, wbar |
+| | touchpad (I2C-HID), WLAN (RTL8852CE), card reader, camera, fingerprint, internal mic | missing | | no driver; PS/2 aux disabled by the firmware |
 | HP Mini 2140 (Atom N270, 945GSE, UHCI+EHCI) | boot, 386 CD | fails | 2026-10-14 | the boot stops (not looked at since; 386 comes later) |
 | AMD Radeon RX 7600 XT (Navi 33) | GPU, by VFIO in a QEMU guest | tested | 2026-11-12 | `amdall.rc`: `aux/amdgpu`, RADV (Vulkan), wsys composing on the GPU, overlay plane, eframe/egui on wgpu, SDL3 on Vulkan, ui on vello/wgpu |
 | | second monitor | untested | | |
