@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""push [-n] [part...]: push what nfront's parts have and GitHub has not.
+
+  tree        to remote nfront (nfront-os/9front) the branches front, gcc, main,
+              nix, riscv as fast-forwards, and upstream (the one rebased branch,
+              dist/docs/upstream.md) with --force-with-lease: only over the commit
+              last seen there
+  gcc rust go mcp dist
+              their branch to its remote (origin), fast-forward only
+
+A branch equal to its remote-tracking ref is left out; one that is not ahead
+of it (diverged: someone pushed elsewhere) is not pushed but reported: fetch
+and merge first. Only remotes under github.com/nfront-os are pushed to;
+plan9port (9fans') and the repositories without a remote (rust/rust,
+rust/libc, go/go: their changes travel as patches) are never pushed.
+
+  -n          only say what it would push
+
+parts: tree gcc rust go mcp dist (default: all). After pushing the tree or a
+toolchain: bin/pin, then push dist."""
+import os, subprocess, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import parts
+
+TREE_BRANCHES = ['front', 'gcc', 'main', 'nix', 'riscv']
+REBASED = ['upstream']
+PARTS = [('tree', 'TREE'), ('gcc', 'GCC_DIR'), ('rust', 'RUST_DIR'), ('go', 'GO_DIR'),
+	('mcp', 'MCP_DIR'), ('dist', 'DIST')]
+
+def ref(d, r):
+	return parts.git(d, 'rev-parse', '--verify', '-q', r)
+
+def plan(name, d):
+	"""(remote, [(branch, how)]) with how 'new', 'ahead N', 'lease'; None, why if nothing to push"""
+	if parts.git(d, 'rev-parse', '--git-dir') is None:
+		return None, 'no repository at %s' % d
+	if name == 'tree':
+		remote, branches = 'nfront', TREE_BRANCHES + REBASED
+	else:
+		b = parts.git(d, 'rev-parse', '--abbrev-ref', 'HEAD')
+		remote = parts.git(d, 'config', 'branch.%s.remote' % b)
+		if not remote:
+			return None, 'branch %s has no remote' % b
+		branches = [b]
+	url = parts.git(d, 'remote', 'get-url', '--push', remote) or ''
+	if 'nfront-os/' not in url:
+		return None, 'remote %s is %s, not nfront-os' % (remote, url or 'missing')
+	todo, notes = [], []
+	for b in branches:
+		local, seen = ref(d, 'refs/heads/' + b), ref(d, 'refs/remotes/%s/%s' % (remote, b))
+		if local is None or local == seen:
+			continue
+		if seen is None:
+			todo.append((b, 'new'))
+		elif parts.git(d, 'merge-base', '--is-ancestor', seen, local) is not None:
+			todo.append((b, 'ahead %s' % parts.git(d, 'rev-list', '--count', '%s..%s' % (seen, local))))
+		elif b in REBASED:
+			todo.append((b, 'lease'))
+		else:
+			notes.append('%s diverged from %s/%s: not pushed (fetch and merge first)' % (b, remote, b))
+	return (remote, todo, notes), None
+
+def main():
+	args = sys.argv[1:]
+	dry = '-n' in args
+	args = [a for a in args if a != '-n']
+	known = [n for n, _ in PARTS]
+	for a in args:
+		if a not in known:
+			sys.exit('push: unknown part %s (parts: %s)' % (a, ' '.join(known)))
+	vals = parts.env()
+	bad = pushed = 0
+	for name, var in PARTS:
+		if args and name not in args:
+			continue
+		d = parts.where(var, vals)
+		p, why = plan(name, d)
+		if p is None:
+			print('%-6s skipped: %s' % (name, why))
+			continue
+		remote, todo, notes = p
+		for n in notes:
+			print('%-6s %s' % (name, n))
+			bad = 1
+		if not todo:
+			print('%-6s up to date' % name)
+			continue
+		print('%-6s to %s: %s' % (name, remote, ', '.join('%s (%s)' % t for t in todo)))
+		if dry:
+			continue
+		ff = [b for b, how in todo if how != 'lease']
+		lease = [b for b, how in todo if how == 'lease']
+		cmds = []
+		if ff:
+			cmds.append(['push', remote] + ff)
+		for b in lease:
+			cmds.append(['push', '--force-with-lease=%s:%s/%s' % (b, remote, b), remote, b])
+		for c in cmds:
+			if subprocess.run(['git', '-C', d] + c).returncode != 0:
+				print('%-6s failed: git %s' % (name, ' '.join(c)))
+				bad = 1
+			elif name != 'dist':
+				pushed = 1
+	if pushed:
+		print('then: bin/pin, and push dist')
+	sys.exit(bad)
+
+main()

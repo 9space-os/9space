@@ -29,8 +29,9 @@ Steps:
    resolved for the branch's own version.
 4. `upstream`: rebased onto the new `front` (all its commits must apply), export
    `patch-upstream/` again; it alone is force-pushed.
-5. Push `front`, `gcc`, `main`, `nix`, `riscv`, `upstream`; `bin/pin` in the
-   distribution's repository.
+5. Push `front`, `gcc`, `main`, `nix`, `riscv`, `upstream` (`bin/push tree`:
+   `upstream` with `--force-with-lease`); `bin/pin` in the distribution's
+   repository, then `bin/push dist`.
 
 `main` is merged in `tree` itself. A branch without a worktree is merged in one
 made for the while, never by switching `tree` (its working tree holds `main`'s build):
