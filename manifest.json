@@ -43,27 +43,27 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "27d6b4fedc1f0e2e7583fe89e36d047bc81bb197",
+			"commit": "0ffbc4c717c0a9ca9a8bb6ae26df38afb5d27c0d",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "1d2724ca6a7f30c24a08047c623ee1102b9c0969",
+			"commit": "a8e2b6e6c564adee423f448a684aa4edb2148747",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
 			"branch": "nix",
-			"commit": "d70bed6cf1f249eb78037eb329fafadb1096edc7",
+			"commit": "bcdd690f5418294746cd312e049d9f4df474eb0b",
 			"path": "TREE_NIX"
 		},
 		"tree-riscv": {
 			"branch": "riscv",
-			"commit": "09b29326ad5e0a44d82baa6a2dc164027e30d5c8",
+			"commit": "1d11c9971b3ce4a6753fa2821bfd315943c2c72e",
 			"path": "TREE_RISCV"
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "7b6593201d669ffd8685523c3277d929662c533b",
+			"commit": "590052a99d71f549489d58c123799729c6e89cb6",
 			"path": "TREE_UPSTREAM"
 		}
 	}
