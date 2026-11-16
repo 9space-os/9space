@@ -18,7 +18,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   under `/lib/firmware`; the CA roots (Mozilla's, MPL-2.0) likewise a separate file,
   from `distfiles.list` onto a CD with Rust or Go as `/sys/lib/tls/ca.pem`. It is a fixed
   state: before each release raise its entry in `distfiles.list` to curl's newest
-  `cacert-DATE.pem` (https://curl.se/ca/); installed systems get no update of it
+  `cacert-DATE.pem` (https://curl.se/ca/; `bin/cacert`); installed systems get no update of it
   until there is an update path (replica/pull; there now: `pull(1)`, once
   the update server runs).
 - Tests: `tests/static`, `tests/gpu/run.sh` (QEMU, ~140 checks), the

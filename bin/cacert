@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""cacert [-n]: the CA roots (Mozilla's, as curl publishes them) to the newest:
+before each release (dist/docs/roadmap.md). Fetches https://curl.se/ca/cacert.pem
+and its .sha256, checks them against each other, takes the date from the file's
+head ("Certificate data from Mozilla as of: ..."); if that is newer than the
+cacert-DATE.pem of distfiles.list, fetches curl's dated copy (cacert-DATE.pem,
+the URL the list keeps), which must have the same sha256, puts it into
+DISTFILES and its line into distfiles.list in place of the old one. The old
+file stays in DISTFILES (stage-dist.sh takes the newest).  -n: only say whether
+there is a newer one.  Then: commit distfiles.list."""
+import datetime, hashlib, os, re, subprocess, sys, tempfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import parts
+
+BASE = 'https://curl.se/ca/'
+LIST = os.path.join(parts.HERE, 'distfiles.list')
+
+def get(url, path):
+	if subprocess.run(['curl', '-fsSL', '-o', path, url]).returncode != 0:
+		sys.exit('cacert: cannot fetch %s' % url)
+	return open(path, 'rb').read()
+
+def main():
+	dry = '-n' in sys.argv[1:]
+	lines = open(LIST).read().split('\n')
+	cur = [i for i, l in enumerate(lines) if re.match(r'cacert-\d{4}-\d\d-\d\d\.pem\t', l)]
+	if len(cur) != 1:
+		sys.exit('cacert: distfiles.list has %d cacert-DATE.pem lines, want 1' % len(cur))
+	have = lines[cur[0]].split('\t')[0][len('cacert-'):-len('.pem')]
+	with tempfile.TemporaryDirectory() as t:
+		pem = get(BASE + 'cacert.pem', os.path.join(t, 'cacert.pem'))
+		want = get(BASE + 'cacert.pem.sha256', os.path.join(t, 'sha256')).split()[0].decode()
+		sha = hashlib.sha256(pem).hexdigest()
+		if sha != want:
+			sys.exit('cacert: cacert.pem is not its .sha256 (%s, want %s)' % (sha, want))
+		m = re.search(rb'^## Certificate data from Mozilla as of: \w+ (\w+ +\d+) [\d:]+ (\d{4}) GMT$', pem, re.M)
+		if not m:
+			sys.exit('cacert: no "Certificate data from Mozilla as of" line in cacert.pem')
+		date = datetime.datetime.strptime('%s %s' % (' '.join(m.group(1).decode().split()), m.group(2).decode()), '%b %d %Y').date().isoformat()
+		n = pem.count(b'-----BEGIN CERTIFICATE-----')
+		if date <= have:
+			print('cacert: up to date: cacert-%s.pem (curl has %s, %d roots)' % (have, date, n))
+			return
+		name = 'cacert-%s.pem' % date
+		print('cacert: %s, %d roots, newer than cacert-%s.pem' % (name, n, have))
+		if dry:
+			return
+		dated = get(BASE + name, os.path.join(t, name))
+		if hashlib.sha256(dated).hexdigest() != sha:
+			sys.exit('cacert: %s%s is not cacert.pem of the same date' % (BASE, name))
+		d = parts.where('DISTFILES')
+		os.makedirs(d, exist_ok=True)
+		with open(os.path.join(d, name), 'wb') as f:
+			f.write(dated)
+	lines[cur[0]] = '\t'.join([name, sha, BASE + name])
+	open(LIST, 'w').write('\n'.join(lines))
+	print('cacert: %s in DISTFILES and distfiles.list: commit distfiles.list' % name)
+
+main()

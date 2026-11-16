@@ -47,6 +47,8 @@ the attic into git: a copy of nfront must carry no GPL material.
   the tree's branches (`upstream` with `--force-with-lease`), each toolchain's,
   mcp's and dist's branch, fast-forward only; `-n` says what it would push.
 - `fetch [-n]`: the archives of `distfiles.list` into `distfiles/`, checked by sha256.
+- `cacert [-n]`: the CA roots to curl's newest `cacert-DATE.pem` (DISTFILES and
+  `distfiles.list`), before each release.
 - `build-toolchains [-n] [-from STEP] [ARCH...]`: the whole chain from scratch
   (tree, gcc, Rust, Go, tree again), one log per step in `dist/logs/`; the
   build the wiki's Building page describes. Keep the two in step.
