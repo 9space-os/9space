@@ -1,12 +1,12 @@
 # Repositories
 
-Layout of `~/Devel/nfront` (each entry below is a git repository). `tree` has
+Layout of `~/Devel/9space` (each entry below is a git repository). `tree` has
 `main` checked out; its other branches (`gcc`, `nix`, `riscv`, `upstream`) are
 refs in the same repository, with a worktree beside it only when one works on
 them (see [[Branches]]):
 
 ```
-nfront/
+9space/
 ├── dist/              the distribution: paths, manifest, tools, docs
 ├── tree/              the 9front tree
 ├── toolchain/
@@ -32,7 +32,7 @@ nfront/
 | `tools/plan9port` | rc, yacc and the generators of the host build (`PLAN9PORT`); 9fans' repository, unchanged: its `INSTALL` writes the install path into ~75 files, `bin/repos` knows that | github.com/9fans/plan9port |
 | `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9front system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
 
-Outside nfront, referenced by `dist/paths.env`:
+Outside 9space, referenced by `dist/paths.env`:
 
 | Name | Path | Needed for |
 |---|---|---|
@@ -61,7 +61,7 @@ heads; a part that is not there keeps its pin.
 
 Paths: never written into scripts. The tree reads them with
 `scripts/lib/paths.sh` / `paths.py`, each toolchain with
-`scripts/nfront-paths.sh`. Moving a part means editing `dist/paths.env`:
+`scripts/9space-paths.sh`. Moving a part means editing `dist/paths.env`:
 
 ```sh
 GCC_DIR=toolchain/gcc

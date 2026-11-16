@@ -1,6 +1,6 @@
 # Hardware matrix
 
-What nfront has run on, and how far. The roadmap's 1.0 asks for this table
+What 9space has run on, and how far. The roadmap's 1.0 asks for this table
 published, with VESA as the guarantee: the aim is that every machine with
 a VESA BIOS or UEFI GOP gets rio and the desktop (wsys composing on the
 processor), with or without a GPU driver; the rows below say where that

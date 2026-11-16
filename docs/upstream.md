@@ -8,7 +8,7 @@ work on several branches at once: `dist/bin/repos --worktrees=gcc,...`):
 |---|---|---|
 | `front` | (none) | mirror of github.com/9front/9front, branch `front`; fast-forward only |
 | `gcc` | `tree-gcc` | 9front built with gcc; minimal changes against `front` |
-| `main` | `tree` | nfront: gcc + the GPU stack + wsys/ui (`ui` until 2026-11-12) |
+| `main` | `tree` | 9space: gcc + the GPU stack + wsys/ui (`ui` until 2026-11-12) |
 | `nix`, `riscv` | `tree-nix`, `tree-riscv` | ports on `gcc` |
 | `upstream` | `tree-upstream` | fixes for 9front itself, one commit each on `origin/front` (`patch-upstream/`) |
 
@@ -48,4 +48,4 @@ other branches already have them.
 
 Leave no backup branches in the repository (they once carried old history
 with GPL code): before larger work at most a `git bundle` outside the
-repositories (`~/Devel/nfront-attic/bundles`).
+repositories (`~/Devel/9space-attic/bundles`).

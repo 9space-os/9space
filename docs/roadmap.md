@@ -1,7 +1,7 @@
-# nfront: the way to a distribution
+# 9space: the way to a distribution
 
 The starting point was a review of the project. Unlike its recommendation
-(an overlay on 9front, merging upstream as an option), nfront is a
+(an overlay on 9front, merging upstream as an option), 9space is a
 **distribution of its own** (decided 2026-11-12): its own name, its own
 replica and ISOs. 9front's `front` stays the source, brought in regularly
 (`upstream.md`); single fixes still go to 9front as patches
@@ -10,7 +10,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
 ## State (2026-11-12)
 
 - Parts and paths: `../paths.env`, `../manifest.json`, `../bin/status`;
-  `../bin/repos` gets them from GitHub (github.com/nfront-os).
+  `../bin/repos` gets them from GitHub (github.com/9space-os).
 - Licences: no GPL code of Linux in the tree or its git history (the
   LinuxKPI from OpenBSD/FreeBSD templates, `scripts/linux/provenance.py` in
   `tests/static`). Exceptions: Bison parsers (GPL with the Bison
@@ -39,10 +39,10 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   (RSA, SHA-256 per file; webfs checks no TLS certificate, so the signature
   carries the trust); `tree/scripts/replica/publish.py` publishes a CD's tree
   (every `mkcd`: into `cache/replica/current/NAME.ARCH`, channel `current`,
-  signed with `~/.config/nfront/replica.pem`), and the CD installs the client
+  signed with `~/.config/9space/replica.pem`), and the CD installs the client
   up to date. On gefs `pull` snapshots `main` first, the way back; on hjfs
   what it replaces is gone. `tests/replica` covers it. The server does not
-  exist yet: the CDs ask a placeholder, `https://nfront-os.github.io/replica`
+  exist yet: the CDs ask a placeholder, `https://9space-os.github.io/replica`
   (GitHub, likely). For GitHub: files over 100 MB are refused there (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB stripped),
   objects would need splitting, or another host. Open as well: the
@@ -54,7 +54,7 @@ Goal: a reproducible build, an ISO, a green test suite.
 
 - `bin/build-all`: toolchains (only when their commit changes) → tree
   (`build.exe -D` per arch) → ISO (`scripts/guest/mkiso.sh` with Rust and Go).
-- Done: the move to `~/Devel/nfront/` (umbrella; only `paths.env` changed);
+- Done: the move to `~/Devel/9space/` (umbrella; only `paths.env` changed);
   `distfiles/` with checksums and `bin/fetch`; the toolchains from release
   archives (`fetch.sh`).
 - ISO amd64 with `desktop=wsys`; VESA, virtio-gpu, amdgpu, i915.

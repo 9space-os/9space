@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-all [-iso] [ARCH...]: nfront from the parts paths.env names, with
+# build-all [-iso] [ARCH...]: 9space from the parts paths.env names, with
 # what is there of the toolchains.
 #
 #   1. checks the toolchains: gcc's cross compiler and its install tree

@@ -1,6 +1,6 @@
 # Host requirements
 
-nfront is built on a Linux host (x86-64). Tested on Arch Linux with the
+9space is built on a Linux host (x86-64). Tested on Arch Linux with the
 versions below; other distributions work with their equivalents. All Python
 scripts use the standard library only.
 
@@ -27,7 +27,7 @@ pacman -S --needed base-devel lib32-glibc lib32-gcc-libs go python git curl gnup
 plan9port itself comes with the sources (`dist/bin/repos`, [[Building]] step 2):
 `cd tools/plan9port && ./INSTALL` builds it; its `./INSTALL` needs only the
 compiler and, for its graphical programs, the X11 headers (`libx11 libxt libxext
-fontconfig freetype2` on Arch); the build of nfront uses none of those.
+fontconfig freetype2` on Arch); the build of 9space uses none of those.
 
 ## Per architecture
 
@@ -77,7 +77,7 @@ go install github.com/Harvey-OS/ninep/cmd/ufs@latest
 
 | Requirement | For |
 |---|---|
-| Linux 7.3.1 and 6.6 sources from kernel.org, unpacked as `../linux-7.3.1` and `../linux-6.6` beside `~/Devel/nfront` (`LINUX`, `LINUX_OLD` in `dist/paths.env`) | the LinuxKPI's GPL check and its manifests (they fail without them and say what is missing) |
+| Linux 7.3.1 and 6.6 sources from kernel.org, unpacked as `../linux-7.3.1` and `../linux-6.6` beside `~/Devel/9space` (`LINUX`, `LINUX_OLD` in `dist/paths.env`) | the LinuxKPI's GPL check and its manifests (they fail without them and say what is missing) |
 
 ## GPU tests (`tests/gpu`)
 

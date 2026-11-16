@@ -1,4 +1,4 @@
-"""bin/parts.py: nfront's parts, from paths.env and manifest.json (for
+"""bin/parts.py: 9space's parts, from paths.env and manifest.json (for
 bin/status and bin/pin).
 
 manifest.json: {"name", "parts": {part: {"path": a paths.env variable or
@@ -114,4 +114,4 @@ def load():
 	try:
 		return json.load(open(MANIFEST))
 	except OSError:
-		return {'name': 'nfront', 'parts': {}}
+		return {'name': '9space', 'parts': {}}

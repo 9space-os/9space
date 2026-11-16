@@ -1,12 +1,12 @@
 # Making a release
 
-A release of nfront is one pinned state of all its parts (`manifest.json` in
+A release of 9space is one pinned state of all its parts (`manifest.json` in
 the `dist` repository), the install CDs made from it, and the tree those CDs
 publish for `pull(1)`. This page goes from a working checkout to that state;
 [[Building]] has the steps it builds on (toolchains, tree, CDs), and the
 roadmap (`docs/roadmap.md`) the releases planned (0.1-preview, 0.9-beta, 1.0).
 
-All commands run in `~/Devel/nfront`. Builds and guests one at a time: two
+All commands run in `~/Devel/9space`. Builds and guests one at a time: two
 builds never in one tree, and no other load while a suite boots guests.
 
 ## 1. 9front's newest
@@ -83,20 +83,20 @@ for p in minimal gpu ui full; do dist/bin/mkcd $p; done
 dist/bin/mkcd full 386                 # 386: the same profiles, without the GPU stack
 ```
 
-The CDs land in `cache/cli/nfront-PROFILE.ARCH.iso`. Test each one:
+The CDs land in `cache/cli/9space-PROFILE.ARCH.iso`. Test each one:
 
 ```sh
 cd tree
-for p in minimal gpu ui full; do ISO=../cache/cli/nfront-$p.amd64.iso bash tests/run.sh iso; done
+for p in minimal gpu ui full; do ISO=../cache/cli/9space-$p.amd64.iso bash tests/run.sh iso; done
 ```
 
 ## 7. The replica
 
 Each `mkcd` also publishes its CD's tree for `pull(1)` into
 `cache/replica/current/NAME.ARCH` (channel `current`), signed with the key
-`~/.config/nfront/replica.pem` (made on the first run; keep it, and keep it
-out of nfront). The CD's client asks `REPLICA_BASE/current/NAME.ARCH`; its
-default is a placeholder, `https://nfront-os.github.io/replica`.
+`~/.config/9space/replica.pem` (made on the first run; keep it, and keep it
+out of 9space). The CD's client asks `REPLICA_BASE/current/NAME.ARCH`; its
+default is a placeholder, `https://9space-os.github.io/replica`.
 
 To release, `cache/replica` goes to the web server at `REPLICA_BASE` as it is
 (any static HTTP server; the index is signed, the server needs no TLS of its

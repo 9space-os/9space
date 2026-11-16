@@ -1,4 +1,4 @@
-# What nfront changes in other projects' sources (as of 2026-11-12)
+# What 9space changes in other projects' sources (as of 2026-11-12)
 
 Every change to a template is kept as a patch series beside it, so that an
 update is a rebase of that series.

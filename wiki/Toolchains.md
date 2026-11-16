@@ -1,6 +1,6 @@
 # Using gcc, Rust and Go
 
-nfront's toolchains run on 9front itself (native) and on Linux (cross). This
+9space's toolchains run on 9front itself (native) and on Linux (cross). This
 page shows how to use them and how to rebuild the system with gcc.
 [[Building]] describes how they are built.
 
@@ -18,7 +18,7 @@ On a system installed some other way, copy them over as archives, with paths
 from `/` (on 386 or arm64 replace amd64 and the Rust target):
 
 ```sh
-# on Linux, in ~/Devel/nfront
+# on Linux, in ~/Devel/9space
 tar -C toolchain/gcc/out/amd64 -czf gnu-amd64.tgz amd64        # gcc has no archive of its own
 ls toolchain/rust/out/amd64/*.tgz toolchain/go/out/amd64/*.tgz
 ```
@@ -84,15 +84,15 @@ cargo new hello && cd hello && cargo run
   extracts it (`cacert-DATE.pem` in `distfiles.list`; MPL-2.0, so kept out of the
   tree like firmware). 9front itself ships none.
 - Crates with C code build through gcc (APE). Crates that 9front needs
-  changes for come from nfront's patches (`toolchain/rust/crates`); in your own
+  changes for come from 9space's patches (`toolchain/rust/crates`); in your own
   project, use them through `[patch.crates-io]` like `toolchain/rust/cargo-plan9.toml`.
 - The other tools: `rustdoc`, `rustfmt`, `cargo fmt`, `cargo clippy`.
 
 From Linux (cross), with the stage-1 compiler and gcc's cross compiler:
 
 ```sh
-cd ~/Devel/nfront/toolchain/rust
-TOP=$PWD; . scripts/nfront-paths.sh
+cd ~/Devel/9space/toolchain/rust
+TOP=$PWD; . scripts/9space-paths.sh
 PATH=$GCC_DIR/build/amd64/cross/bin:$PATH
 rust/build/host/stage1/bin/rustc --edition 2024 --target x86_64-unknown-plan9 -O hello.rs
 ```
@@ -117,7 +117,7 @@ go build -o hello hello.go
 From Linux (cross):
 
 ```sh
-cd ~/Devel/nfront/toolchain/go
+cd ~/Devel/9space/toolchain/go
 GOOS=plan9 GOARCH=amd64 go/bin/go build -o hello hello.go     # 386, arm64 likewise
 ```
 
@@ -126,7 +126,7 @@ GOOS=plan9 GOARCH=amd64 go/bin/go build -o hello hello.go     # 386, arm64 likew
 ### The whole tree, in a guest, from Linux
 
 ```sh
-cd ~/Devel/nfront/tree
+cd ~/Devel/9space/tree
 scripts/guest/build-self.sh               # amd64; objtype=386 for 386
 ```
 
@@ -137,7 +137,7 @@ The script:
    disk;
 3. runs the tree's own build tool there (`build.exe`, built for Plan 9) with
    gcc, exactly as `CC=gcc ARCH=$objtype build.exe` on Linux does;
-4. copies the result back to `~/Devel/nfront/cache/cli/self.$objtype` and compares
+4. copies the result back to `~/Devel/9space/cache/cli/self.$objtype` and compares
    every object with the Linux build.
 
 It needs the tree built for that architecture and `toolchain/gcc/out/$objtype`

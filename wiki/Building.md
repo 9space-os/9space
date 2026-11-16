@@ -1,7 +1,7 @@
 # Building
 
 Everything is built on a Linux host (x86-64) from the repositories of
-[nfront-os](https://github.com/nfront-os) and the release archives they name.
+[9space-os](https://github.com/9space-os) and the release archives they name.
 The result is the 9front tree for amd64, 386 and arm64 with gcc, Rust and Go
 for 9front, and an install CD.
 
@@ -17,7 +17,7 @@ mostly gcc and Rust. Later builds are incremental and take minutes.
 | Go | `toolchain/go` | Go for 9front (from Go's release archive) |
 
 All paths come from `dist/paths.env`. Every command below starts in
-`~/Devel/nfront` unless it says otherwise.
+`~/Devel/9space` unless it says otherwise.
 
 ## 1. Host
 
@@ -28,8 +28,8 @@ and "Toolchains"; for the CD and the tests also "Guests". Disk: about
 ## 2. The sources
 
 ```sh
-mkdir -p ~/Devel/nfront && cd ~/Devel/nfront
-git clone https://github.com/nfront-os/nfront dist
+mkdir -p ~/Devel/9space && cd ~/Devel/9space
+git clone https://github.com/9space-os/9space dist
 dist/bin/repos --sources
 (cd tools/plan9port && ./INSTALL)
 ```
@@ -99,7 +99,7 @@ system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
 
 ```sh
 cd tree && scripts/guest/build-boot.sh && cd ..
-dist/bin/mkcd full                    # ~/Devel/nfront/cache/cli/nfront-full.amd64.iso
+dist/bin/mkcd full                    # ~/Devel/9space/cache/cli/9space-full.amd64.iso
 ```
 
 ### Installation profiles
@@ -122,20 +122,20 @@ or Go the CD also gets the CA roots (`/sys/lib/tls/ca.pem`), so cargo and go
 can fetch crates and modules over https.
 
 `-mcp` puts the MCP server on the CD, with any profile: `/$objtype/bin/9front-mcp`
-(built with nfront's Go from `tools/mcp`) and its example deny list as
+(built with 9space's Go from `tools/mcp`) and its example deny list as
 `/sys/lib/mcp/deny`. It lets an agent on another machine work on the installed
 system; how to start it and what guards it: `tools/mcp/README.md`.
 
 ```sh
-dist/bin/mkcd minimal                         # nfront-minimal.amd64.iso
+dist/bin/mkcd minimal                         # 9space-minimal.amd64.iso
 dist/bin/mkcd -dev all minimal                # minimal with gcc, Rust and Go
-dist/bin/mkcd -dev rust gpu                   # nfront-gpu-dev-rust.amd64.iso
+dist/bin/mkcd -dev rust gpu                   # 9space-gpu-dev-rust.amd64.iso
 dist/bin/mkcd -ini 'desktop=rio' ui           # rio instead of wsys, the ui CD's default
-dist/bin/mkcd -mcp minimal                    # with the MCP server: nfront-minimal-mcp.amd64.iso
+dist/bin/mkcd -mcp minimal                    # with the MCP server: 9space-minimal-mcp.amd64.iso
 dist/bin/mkcd -o /tmp/x.iso full 386          # 386 (no GPU stack there)
 ```
 
-The CDs go to `~/Devel/nfront/cache/cli` (`-o` for another place). `-ini` takes
+The CDs go to `~/Devel/9space/cache/cli` (`-o` for another place). `-ini` takes
 lines `name=value` for the CD's `plan9.ini`. The groups and their files are
 listed in `tree/scripts/guest/profiles`. `mkcd` needs the tree's build and
 takes a QEMU guest (one at a time); it does not start while `build-all` runs.
@@ -169,7 +169,7 @@ boot loader and the boot questions are visible. `aux/virtiogpu` drives both.
 For example, the CD with virtio-gpu:
 
 ```sh
-qemu-system-x86_64 -enable-kvm -m 4096 -cdrom ~/Devel/nfront/cache/cli/nfront-full.amd64.iso \
+qemu-system-x86_64 -enable-kvm -m 4096 -cdrom ~/Devel/9space/cache/cli/9space-full.amd64.iso \
 	-vga none -device virtio-vga
 ```
 
@@ -208,9 +208,9 @@ bash tests/gpu/run.sh          # ~1 h: LinuxKPI selftests, virtio-gpu, Vulkan, G
 ```
 
 The CD tests (`bash tests/run.sh iso`) make a CD of their own; to test a
-profile's CD instead: `ISO=~/Devel/nfront/cache/cli/nfront-ui.amd64.iso bash tests/run.sh iso`.
+profile's CD instead: `ISO=~/Devel/9space/cache/cli/9space-ui.amd64.iso bash tests/run.sh iso`.
 
-Only one guest at a time: they share `~/Devel/nfront/cache/cli` (`CLI_DIR`).
+Only one guest at a time: they share `~/Devel/9space/cache/cli` (`CLI_DIR`).
 
 ## Later: updating
 

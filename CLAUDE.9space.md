@@ -1,6 +1,6 @@
-# CLAUDE.md — nfront
+# CLAUDE.md — 9space
 
-nfront (working name) is a distribution built on 9front: the 9front tree
+9space (working name) is a distribution built on 9front: the 9front tree
 built with gcc, the GPU stack (gpu(4), the LinuxKPI with Linux's DRM
 drivers, Mesa), the window system wsys and the ui framework, and the
 toolchains gcc, Rust and Go for it. This directory holds all of its parts;
@@ -20,9 +20,9 @@ it is not a git repository itself, each part is one.
 | `distfiles/` | the releases' archives other projects' sources come from | no (data) |
 | `dist/` | the distribution: `paths.env`, `manifest.json`, `bin/`, `docs/` | yes |
 
-Outside, on purpose: `~/Devel/nfront-attic` (the plans and chats, downloads
-with GPL sources, a bundle of the old git history with GPL code). Never move them into nfront, never put
-the attic into git: a copy of nfront must carry no GPL material.
+Outside, on purpose: `~/Devel/9space-attic` (the plans and chats, downloads
+with GPL sources, a bundle of the old git history with GPL code). Never move them into 9space, never put
+the attic into git: a copy of 9space must carry no GPL material.
 
 ## Paths
 
@@ -31,7 +31,7 @@ the attic into git: a copy of nfront must carry no GPL material.
   After moving anything, change only this file.
 - Scripts read it: in the tree `scripts/lib/paths.sh` (after `ROOT=`) and
   `scripts/lib/paths.py` (`paths.get('GCC_DIR')`, `paths.archive()` for
-  `$DISTFILES/x`); in each toolchain `scripts/nfront-paths.sh` (after
+  `$DISTFILES/x`); in each toolchain `scripts/9space-paths.sh` (after
   `TOP=`). Never write a sibling path (`../9front-gcc`, `~/Devel/...`) into a
   script.
 - `~/Devel/9front*` are symlinks of the old layout, kept until the
@@ -43,7 +43,7 @@ the attic into git: a copy of nfront must carry no GPL material.
 - `pin [-f]`: `manifest.json` from the parts' heads, after commits. Changes a
   build makes (plan9port's `./INSTALL` paths, cargo's `Cargo.lock`) are listed in
   `expected-changes` and do not count; `-f` only for real uncommitted work.
-- `push [-n] [PART...]`: what the parts have and GitHub (nfront-os) has not:
+- `push [-n] [PART...]`: what the parts have and GitHub (9space-os) has not:
   the tree's branches (`upstream` with `--force-with-lease`), each toolchain's,
   mcp's and dist's branch, fast-forward only; `-n` says what it would push.
 - `fetch [-n]`: the archives of `distfiles.list` into `distfiles/`, checked by sha256.
@@ -57,7 +57,7 @@ the attic into git: a copy of nfront must carry no GPL material.
 
 Docs: `dist/docs/roadmap.md` (phases, 1.0 criteria), `upstream.md` (bringing
 in 9front: front → gcc → main), `patches.md`; the plans (German) are kept
-outside git in `~/Devel/nfront-attic/dist-docs`.
+outside git in `~/Devel/9space-attic/dist-docs`.
 Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a translation would conflict in each merge), `toolchain/*/NOTES.md` (English).
 
 ## Rules
@@ -73,7 +73,7 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   build output); never commit build files (`.o`, `.d`, logs). Other agents
   may have uncommitted work in a part (`toolchain/rust`: crate patches):
   leave it alone. No backup branches in the repositories: a `git bundle`
-  outside nfront instead. History rewrites only with the user's word and
+  outside 9space instead. History rewrites only with the user's word and
   `filter-repo --refs` limited to the range concerned.
 - Builds: never two builds in one tree at once (`build-all` locks). After
   changes: `tree/tests/static/run.sh`, the build, and for the GPU stack

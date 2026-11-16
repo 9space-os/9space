@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""push [-n] [part...]: push what nfront's parts have and GitHub has not.
+"""push [-n] [part...]: push what 9space's parts have and GitHub has not.
 
-  tree        to remote nfront (nfront-os/9front) the branches front, gcc, main,
+  tree        to remote 9space (9space-os/9front) the branches front, gcc, main,
               nix, riscv as fast-forwards, and upstream (the one rebased branch,
               dist/docs/upstream.md) with --force-with-lease: only over the commit
               last seen there
@@ -10,7 +10,7 @@
 
 A branch equal to its remote-tracking ref is left out; one that is not ahead
 of it (diverged: someone pushed elsewhere) is not pushed but reported: fetch
-and merge first. Only remotes under github.com/nfront-os are pushed to;
+and merge first. Only remotes under github.com/9space-os are pushed to;
 plan9port (9fans') and the repositories without a remote (rust/rust,
 rust/libc, go/go: their changes travel as patches) are never pushed.
 
@@ -35,7 +35,7 @@ def plan(name, d):
 	if parts.git(d, 'rev-parse', '--git-dir') is None:
 		return None, 'no repository at %s' % d
 	if name == 'tree':
-		remote, branches = 'nfront', TREE_BRANCHES + REBASED
+		remote, branches = '9space', TREE_BRANCHES + REBASED
 	else:
 		b = parts.git(d, 'rev-parse', '--abbrev-ref', 'HEAD')
 		remote = parts.git(d, 'config', 'branch.%s.remote' % b)
@@ -43,8 +43,8 @@ def plan(name, d):
 			return None, 'branch %s has no remote' % b
 		branches = [b]
 	url = parts.git(d, 'remote', 'get-url', '--push', remote) or ''
-	if 'nfront-os/' not in url:
-		return None, 'remote %s is %s, not nfront-os' % (remote, url or 'missing')
+	if '9space-os/' not in url:
+		return None, 'remote %s is %s, not 9space-os' % (remote, url or 'missing')
 	todo, notes = [], []
 	for b in branches:
 		local, seen = ref(d, 'refs/heads/' + b), ref(d, 'refs/remotes/%s/%s' % (remote, b))

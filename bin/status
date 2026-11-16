@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""status: each part of nfront against manifest.json: where it is, its
+"""status: each part of 9space against manifest.json: where it is, its
 branch and commit, whether that is the manifest's (=), changed files. A
 branch of the tree without its worktree: its ref in tree."""
 import os, sys

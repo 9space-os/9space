@@ -3,7 +3,7 @@
 ## tree (9front)
 
 ```
-origin/front ── front ── gcc ──┬── main       nfront: GPU stack, wsys, ui
+origin/front ── front ── gcc ──┬── main       9space: GPU stack, wsys, ui
                                ├── nix        NIX: application cores
                                └── riscv      riscv64 port
 origin/front ── upstream                      fixes for 9front itself
@@ -13,7 +13,7 @@ origin/front ── upstream                      fixes for 9front itself
 |---|---|---|---|
 | `front` | — | mirror of 9front's `front` | fast-forward only |
 | `gcc` | (`tree-gcc`) | 9front built with gcc | minimal diff to `front`; each change marked `/* GCC port: why */` |
-| `main` | `tree` | the distribution | 9front code may change where nfront needs it |
+| `main` | `tree` | the distribution | 9front code may change where 9space needs it |
 | `nix` | (`tree-nix`) | NIX (AC/TC cores) on `gcc` | |
 | `riscv` | (`tree-riscv`) | riscv64 kernel and userland on `gcc` | |
 | `upstream` | (`tree-upstream`) | one commit per fix, on `origin/front`; exported to `patch-upstream/` | must apply to 9front as is |

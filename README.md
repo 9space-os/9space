@@ -1,4 +1,4 @@
-# nfront
+# 9space
 
 Working name of a distribution built on 9front: the gcc-built tree with
 the GPU stack (gpu(4), the LinuxKPI with Linux's DRM drivers, Mesa), the
@@ -16,13 +16,13 @@ Go for it.  This repository holds what ties the parts together:
   (gcc, Rust, Go and the tree from scratch, step by step, logs in `logs/`),
   `build-all [-iso] [ARCH...]`
   (checks the toolchains, builds the tree, optionally the amd64 CD)
-- `CLAUDE.nfront.md`: the guide for agents working in ~/Devel/nfront
+- `CLAUDE.9space.md`: the guide for agents working in ~/Devel/9space
   (its `CLAUDE.md` is a symlink to it)
 - `wiki/`: the English documentation (GitHub wiki format: Home, Repositories,
   Branches, Building, Releasing, Features)
 - `docs/`: `roadmap.md`, `upstream.md` (bringing in 9front), `patches.md`
 
-The parts (in ~/Devel/nfront, beside this repository, `dist/`):
+The parts (in ~/Devel/9space, beside this repository, `dist/`):
 
 | part | what |
 |---|---|
