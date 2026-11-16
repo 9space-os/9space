@@ -40,7 +40,12 @@ the attic into git: a copy of nfront must carry no GPL material.
 ## Tools (dist/bin)
 
 - `status`: each part (branch, commit) against `manifest.json`, changed files.
-- `pin [-f]`: `manifest.json` from the parts' heads, after commits.
+- `pin [-f]`: `manifest.json` from the parts' heads, after commits. Changes a
+  build makes (plan9port's `./INSTALL` paths, cargo's `Cargo.lock`) are listed in
+  `expected-changes` and do not count; `-f` only for real uncommitted work.
+- `push [-n] [PART...]`: what the parts have and GitHub (nfront-os) has not:
+  the tree's branches (`upstream` with `--force-with-lease`), each toolchain's,
+  mcp's and dist's branch, fast-forward only; `-n` says what it would push.
 - `fetch [-n]`: the archives of `distfiles.list` into `distfiles/`, checked by sha256.
 - `build-toolchains [-n] [-from STEP] [ARCH...]`: the whole chain from scratch
   (tree, gcc, Rust, Go, tree again), one log per step in `dist/logs/`; the

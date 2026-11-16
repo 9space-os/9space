@@ -4,7 +4,7 @@ bin/status and bin/pin).
 manifest.json: {"name", "parts": {part: {"path": a paths.env variable or
 a path below it ("RUST_DIR/rust"), "branch", "commit"}}}.  A part is a git
 repository (or a worktree of one)."""
-import json, os, subprocess
+import fnmatch, json, os, re, subprocess
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOP = os.path.dirname(HERE)
@@ -69,8 +69,46 @@ def state(d, name=None, vals=None):
 		return None
 	commit = git(d, 'rev-parse', 'HEAD')
 	branch = git(d, 'rev-parse', '--abbrev-ref', 'HEAD')
-	dirty = git(d, 'status', '--porcelain', '--untracked-files=no') or ''
-	return {'branch': branch, 'commit': commit, 'dirty': len(dirty.splitlines()), 'gitdir': d, 'head': 'HEAD', 'worktree': True}
+	# the tracked files that differ from the commit, staged or not (paths from the top)
+	changed = (git(d, 'diff', '--name-only', 'HEAD') or '').splitlines()
+	expected = [f for f in changed if isexpected(name, d, f)]
+	return {'branch': branch, 'commit': commit, 'dirty': len(changed) - len(expected), 'expected': len(expected),
+		'gitdir': d, 'head': 'HEAD', 'worktree': True}
+
+EXPECTED = os.path.join(HERE, 'expected-changes')
+
+def expectations():
+	"""expected-changes: [(part, glob, check)]"""
+	out = []
+	try:
+		for line in open(EXPECTED):
+			w = line.split('#', 1)[0].split()
+			if len(w) >= 2:
+				out.append((w[0], w[1], w[2] if len(w) > 2 else None))
+	except OSError:
+		pass
+	return out
+
+def isexpected(name, d, path):
+	for part, glob, check in expectations():
+		if part != name or not fnmatch.fnmatchcase(path, glob):
+			continue
+		if check is None:
+			return True
+		if check == 'install-path':
+			# the commit's file with /usr/local/plan9 as the part's directory
+			gd = d.rstrip('/') + '.git'
+			cmd = ['git', '--git-dir=' + gd] if not os.path.exists(os.path.join(d, '.git')) and os.path.isdir(gd) else ['git', '-C', d]
+			r = subprocess.run(cmd + ['show', 'HEAD:' + path], capture_output=True)
+			try:
+				now = open(os.path.join(d, path), 'rb').read()
+			except OSError:
+				return False
+			# as lib/moveplan9.sh's sam command: ,s;/usr/local/plan9($|/|});NEW\1;g
+			new = os.fsencode(d.rstrip('/')).replace(b'\\', b'\\\\')
+			want = re.sub(rb'/usr/local/plan9($|/|\})', new + rb'\1', r.stdout, flags=re.M)
+			return r.returncode == 0 and want == now
+	return False
 
 def load():
 	try:

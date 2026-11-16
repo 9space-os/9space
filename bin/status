@@ -26,6 +26,8 @@ for name, spec in parts.PARTS:
 		mark = ('+%s' % ahead) if ahead is not None and parts.git(g, 'merge-base', '--is-ancestor', m['commit'], h) is not None else 'differs'
 		bad += 1
 	dirty = (' %d changed' % s['dirty']) if s['dirty'] else ''
+	if s.get('expected'):
+		dirty += ' (%d expected: expected-changes)' % s['expected']
 	if not s['worktree']:
 		dirty += ' (no worktree: the branch in tree)'
 	print('%-18s %-10s %-12s %s%s' % (name, s['branch'], s['commit'][:10], mark, dirty))

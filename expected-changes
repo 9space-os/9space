@@ -1,0 +1,15 @@
+# Changes to a part's tracked files that its build makes and that are not work:
+# bin/status and bin/pin leave them out (status says "N expected").
+#
+#   part  path (a glob)  [check]
+#
+# check install-path: only if the file is the commit's with /usr/local/plan9
+# replaced by the part's directory (what plan9port's ./INSTALL writes, through
+# its lib/moveplan9.sh); any other change to it still counts.
+
+plan9port	*	install-path
+
+# cargo adds the dependencies of our curl-sys (rustls) to its lock whenever it
+# builds cargo for plan9; no locked version changes (toolchain/rust/NOTES.md,
+# "cargo on the nightly's own crates")
+rust/rust	src/tools/cargo/Cargo.lock
