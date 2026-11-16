@@ -21,3 +21,5 @@ tllist-1.1.0.tar.gz	0e7b7094a02550dd80b7243bcffc3671550b0f1d8ba625e4dff52517827d
 wayland-1.26.0.tar.xz	64176eaa46e4969903e286f8e5ef8331affc17fdf03ac9b58381d2b23162b7a3	https://gitlab.freedesktop.org/wayland/wayland/-/releases/1.26.0/downloads/wayland-1.26.0.tar.xz
 wayland-protocols-1.47.tar.xz	5fd4349bcbc9bab9a46f8cf77d1f434296a7a052c87440a094f63fcf62a58e20	https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.47/downloads/wayland-protocols-1.47.tar.xz
 cacert-2026-11-05.pem	427c064216761a1e72a8b30f0d954d08cb6e4435a82091fb865afd20c8497285	https://curl.se/ca/cacert-2026-11-05.pem
+zlib-1.4.tar.gz	02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584	https://zlib.net/zlib-1.4.tar.gz
+zlib-1.4.tar.gz.asc	db39f00c5546358d34521f7c98bb082c3322af123db0ddb53910a57b6439301f	https://zlib.net/zlib-1.4.tar.gz.asc
