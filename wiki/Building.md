@@ -114,6 +114,24 @@ the CD, and so onto the system installed from it.
 | `gpu` | + the GPU stack: gpu(4)'s drivers (i915, amdgpu, virtiogpu), Mesa's Vulkan, the Vulkan programs | 1.3 GB |
 | `ui` | + the desktop: wsys, the ui framework, term, foot, Wayland, the TrueType fonts and themes; wsys composes on the processor and is the desktop (`desktop=rio` in plan9.ini: rio) | 670 MB |
 | `full` | `gpu` and `ui`, with gcc, Rust and Go | past 2 GB |
+| `nix` | the branch `nix`: 9front built with gcc, NIX's kernel; no GPU stack, no desktop | 340 MB |
+
+`nix` is the one profile not made from `main`: its CD comes from the tree's
+branch `nix` (9front built with gcc and NIX's kernel, its application and
+kernel cores: `*nixac`, `*nixkc` in plan9.ini(8)), without the GPU stack, the
+desktop and `pull(1)`, for amd64 only. It needs that branch's build in its
+worktree first:
+
+```sh
+dist/bin/repos --worktrees=nix tree
+cd tree-nix
+(cd sys/src/cmd/build && GO111MODULE=off go build -o build.exe .)
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe
+scripts/guest/build-boot.sh
+cd ..
+dist/bin/mkcd nix                             # 9space-nix.amd64.iso
+dist/bin/mkcd -dev all nix                    # with gcc, Rust and Go (1.5 GB)
+```
 
 The languages are an option of every profile: `-dev` takes `gcc`, `rust`,
 `go` (comma-separated), `all` or `none`. The default is `all` for `full` and
@@ -121,7 +139,7 @@ The languages are an option of every profile: `-dev` takes `gcc`, `rust`,
 or Go the CD also gets the CA roots (`/sys/lib/tls/ca.pem`), so cargo and go
 can fetch crates and modules over https.
 
-`-mcp` puts the MCP server on the CD, with any profile: `/$objtype/bin/9front-mcp`
+`-mcp` puts the MCP server on the CD, with any profile of `main`: `/$objtype/bin/9front-mcp`
 (built with 9space's Go from `tools/mcp`) and its example deny list as
 `/sys/lib/mcp/deny`. It lets an agent on another machine work on the installed
 system; how to start it and what guards it: `tools/mcp/README.md`.

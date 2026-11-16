@@ -1,10 +1,12 @@
 # Making a release
 
 A release of 9space is one pinned state of all its parts (`manifest.json` in
-the `dist` repository), the install CDs made from it, and the tree those CDs
-publish for `pull(1)`. This page goes from a working checkout to that state;
-[[Building]] has the steps it builds on (toolchains, tree, CDs), and the
-roadmap (`docs/roadmap.md`) the releases planned (0.1-preview, 0.9-beta, 1.0).
+the `dist` repository) that builds and passes its tests. **No CDs are published
+for now**: whoever wants 9space checks out the release and makes the CD of the
+profile they want with `dist/bin/mkcd` ([[Building]]). This page goes from a
+working checkout to that state; [[Building]] has the steps it builds on
+(toolchains, tree, CDs), and the roadmap (`docs/roadmap.md`) the releases
+planned (0.1-preview, 0.9-beta, 1.0).
 
 All commands run in `~/Devel/9space`. Builds and guests one at a time: two
 builds never in one tree, and no other load while a suite boots guests.
@@ -76,39 +78,44 @@ and `upstream` with `--force-with-lease`.
 
 ## 6. The CDs
 
-One CD per profile, from the build of `main` (profiles: [[Building]]):
+Every profile must make a CD that installs and boots: the CDs are not
+published, but each one a user makes from the release has to work. The
+profiles of `main`, and `nix` from its branch (its build first: [[Building]]):
 
 ```sh
 for p in minimal gpu ui full; do dist/bin/mkcd $p; done
 dist/bin/mkcd full 386                 # 386: the same profiles, without the GPU stack
+dist/bin/mkcd nix
 ```
 
-The CDs land in `cache/cli/9space-PROFILE.ARCH.iso`. Test each one:
+The CDs land in `cache/cli/9space-PROFILE.ARCH.iso`. Test each one with the
+CD tests of the tree it came from:
 
 ```sh
 cd tree
 for p in minimal gpu ui full; do ISO=../cache/cli/9space-$p.amd64.iso bash tests/run.sh iso; done
+cd ../tree-nix && ISO=../cache/cli/9space-nix.amd64.iso bash tests/run.sh iso
 ```
 
 ## 7. The replica
 
-Each `mkcd` also publishes its CD's tree for `pull(1)` into
-`cache/replica/current/NAME.ARCH` (channel `current`), signed with the key
-`~/.config/9space/replica.pem` (made on the first run; keep it, and keep it
-out of 9space). The CD's client asks `REPLICA_BASE/current/NAME.ARCH`; its
-default is a placeholder, `https://9space-os.github.io/replica`.
-
-To release, `cache/replica` goes to the web server at `REPLICA_BASE` as it is
-(any static HTTP server; the index is signed, the server needs no TLS of its
-own for the trust).
+Each `mkcd` of `main`'s profiles also publishes its CD's tree for `pull(1)`
+into `cache/replica/current/NAME.ARCH` (channel `current`), signed with the key
+`~/.config/9space/replica.pem` (made on the first run; keep it, and keep it out
+of 9space). The CD's client asks `REPLICA_BASE/current/NAME.ARCH`; its default
+is a placeholder, `https://9space-os.github.io/replica`. Nothing serves it yet,
+so `pull` on a CD fails to reach it: a system is brought up to date by making a
+new CD from a newer release (or `-noreplica`, a CD without the client). Once
+there is a server, `cache/replica` goes there as it is (any static HTTP server;
+the index is signed, the server needs no TLS of its own for the trust).
 
 ## Open
 
-These are not decided yet; until they are, a release stops after step 6:
+Not decided yet:
 
-- **The server for the replica.** GitHub Pages refuses files over 100 MB
-  (the `full` profile's rustc and rustdoc are larger): split objects, release
-  assets, or another host.
+- **Published CDs and the replica's server** (later; for now everyone makes
+  their own CD). GitHub Pages refuses files over 100 MB (the `full` profile's
+  rustc and rustdoc are larger): split objects, release assets, or another host.
 - **The release's name.** Where the tag goes (the `dist` commit whose
   `manifest.json` names every part, or each repository too) and what it is
   called (`0.1-preview`, ...).

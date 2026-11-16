@@ -9,6 +9,10 @@
 #     ui       + the desktop: wsys, the ui framework, term, foot, Wayland, the fonts
 #              (wsys composes on the processor)
 #     full     gpu and ui
+#     nix      the tree's branch nix (TREE_NIX, its build): 9front built with gcc and
+#              NIX's kernel (application and kernel cores, plan9.ini(8) *nixac); no
+#              GPU stack, no desktop, no pull(1); amd64 only. Its languages with -dev
+#              (default none); -mcp and -ini only for the main branch's profiles
 #   -dev LIST  the languages on the CD, any profile: gcc, rust, go, comma-separated,
 #              or all, or none. Default: all for full, none for the others.
 #              Rust links with gcc: rust takes gcc along
@@ -30,7 +34,7 @@
 # Takes a QEMU guest (one at a time: it shares CLI_DIR, 9space/cache/cli, with the others).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full [amd64|386]" >&2; exit 2; }
+usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
 dev=- ini= out= mcp= replica=1
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -45,7 +49,12 @@ while [ $# -gt 0 ]; do
 done
 [ $# -ge 1 ] && [ $# -le 2 ] || usage
 profile=$1 arch=${2:-amd64}
-case $profile in minimal|gpu|ui|full) ;; *) usage ;; esac
+case $profile in minimal|gpu|ui|full|nix) ;; *) usage ;; esac
+if [ $profile = nix ]; then
+	[ $arch = amd64 ] || { echo "mkcd: nix is amd64 only" >&2; exit 2; }
+	[ -z "$mcp$ini" ] || { echo "mkcd: -mcp and -ini are for the main branch's profiles, not nix" >&2; exit 2; }
+	replica=	# the branch nix has no pull(1) client
+fi
 case $arch in amd64|386) ;; *) echo "mkcd: the CD is for amd64 or 386, not $arch" >&2; exit 2 ;; esac
 if [ "$dev" = - ]; then
 	[ $profile = full ] && dev=all || dev=none
@@ -58,6 +67,13 @@ done
 
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
 ROOT=$TREE
+# nix: the branch nix's worktree and build (dist/bin/repos --worktrees=nix tree, then
+# CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe and scripts/guest/build-boot.sh there)
+if [ $profile = nix ]; then
+	TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE_NIX=//p' "$HERE/paths.env")
+	ROOT=$TREE
+	[ -s "$TREE/amd64/9pc64" ] || { echo "mkcd: no build of the branch nix in $TREE (dist/bin/repos --worktrees=nix tree; there: CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe, scripts/guest/build-boot.sh)" >&2; exit 1; }
+fi
 . "$TREE/scripts/lib/paths.sh"	# CLI_DIR (paths.env)
 name=9space-$profile
 [ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
@@ -83,5 +99,9 @@ if [ -n "$replica" ]; then
 	export REPLICA_KEY REPLICA_DIR=$REPLICA_ROOT/current/$name.$arch REPLICA_URL=$REPLICA_BASE/current/$name.$arch
 	echo "mkcd: published for pull(1) in $REPLICA_DIR as $REPLICA_URL"
 fi
-PROFILE=$profile DEV=$dev MCP=$mcp PLAN9INI=$ini objtype=$arch scripts/guest/mkiso.sh "$out"
+if [ $profile = nix ]; then
+	DEV=$dev objtype=$arch scripts/guest/mkiso.sh "$out"
+else
+	PROFILE=$profile DEV=$dev MCP=$mcp PLAN9INI=$ini objtype=$arch scripts/guest/mkiso.sh "$out"
+fi
 ls -l "$out"
