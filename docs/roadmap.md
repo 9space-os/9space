@@ -45,8 +45,8 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   exist yet: the CDs ask a placeholder, `https://9space-os.github.io/replica`
   (GitHub, likely). For GitHub: files over 100 MB are refused there (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB stripped),
-  objects would need splitting, or another host. Open as well: the
-  reference workflow as one test, a file manager.
+  objects would need splitting, or another host. Open as well: a file
+  manager (the reference workflow is a test now: `tests/workflow`).
 
 ## Phase 0: reference build (weeks)
 
@@ -70,7 +70,9 @@ Goal: a working day on the desktop.
   server's place and key, 2026-11-14).
 - Reference workflow without a browser: term, an editor (acme/sam), a file
   manager, a ui client, a draw(3) program, a Wayland program, 9P over the
-  network.
+  network. As one test: `tree/tests/workflow` (2026-11-16; term, sam, paint,
+  uitodo, foot, 9P from the host, on a `ui` CD); the file manager is
+  missing (a skip there).
 - Result: **0.9-beta**, public, with a hardware matrix.
 
 ## Phase 2: stable
