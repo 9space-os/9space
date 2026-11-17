@@ -7,7 +7,7 @@ update is a rebase of that series.
 |---|---|---|---|
 | 9front | github.com/9front/9front `front` | 27 fixes for 9front itself | tree `patch-upstream/` (its README: the status of each patch) |
 | 9front, the port | `front` | branch `gcc` (minimal changes, each marked `/* GCC port */`), branch `main` | tree |
-| Mesa | 26.2.4 | 42 | tree `sys/src/mesa/patches`, `scripts/mesa/patches.sh` |
+| Mesa | 26.2.7 | 42 | tree `sys/src/mesa/patches`, `scripts/mesa/patches.sh` |
 | Linux DRM | 7.3.1 (MIT files only, `vendor/`) | none; own versions in `replace/`, the LinuxKPI in `kpi/` (templates OpenBSD a9becb03c, FreeBSD 584f44221f45, drm-kmod drm_v6.14) | tree `sys/src/linux` (NOTICE, REJECTED, PROVENANCE) |
 | gcc, binutils | gcc 16.2.0, binutils 2.47 | `gcc.patch`, `binutils.patch` | `toolchain/gcc/patches` |
 | Rust | the nightly source archive (rust with cargo, backtrace, llvm-project; branch `plan9`), libc's crate, crates | rust 25, libc 7, llvm-project 1, cargo 3, backtrace 1, crates 43 | `toolchain/rust/patches` |
