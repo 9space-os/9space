@@ -28,7 +28,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "488f3965abc246517531aeca122fa792f0f69656",
+			"commit": "7e639ba2024e5980c049e2d905c1f2d25d093869",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -38,12 +38,12 @@
 		},
 		"rust/rust": {
 			"branch": "plan9",
-			"commit": "1368418784f85da0cc15f6aa4998a4fef7b0646b",
+			"commit": "4e715c66675883483c5bba4922ddc14eebf9e7d8",
 			"path": "RUST_DIR/rust"
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "f6cb0bdf70545b4e8762c451b488919b1410e89d",
+			"commit": "1d8107a9eb22eef4263219ba2144930766d646a0",
 			"path": "TREE"
 		},
 		"tree-gcc": {
