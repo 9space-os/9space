@@ -28,7 +28,7 @@ otherwise.
 | | desktop (`desktop=wsys`) | tested | 2026-11-11 | wsys on i915, wbar, title bars, Mod4+Tab, Wayland (foot) |
 | | backlight | tested | 2026-11-04 | `gpuoutputs` (eDP-1 to 30 % and back); `/dev/backlight` by `aux/acpi` as well |
 | | Ethernet: I218-LM (through Lenovo's adapter) | works | 2026-11-18 | 1000 Mbps; PXE and the 9P root |
-| | WLAN: Intel Wireless 7265 (`etheriwl`) | works | 2026-11-18 | WPA2 (CCMP) associated; legacy rates only (54 Mbps), no HT/VHT although the access point offers them; firmware `iwm-7265-17` (the machine file's `firmware` line) |
+| | WLAN: Intel Wireless 7265 (`etheriwl`) | works | 2026-11-18 | WPA2 (CCMP) with WMM; 802.11n: HT up to MCS 14 with two streams (AMRR); 2.4 GHz only; throughput still ~2 Mbit/s (the round trip over the WLAN varies 1-90 ms, as before HT; open in `MEMORY.md`); firmware `iwm-7265-17` (the machine file's `firmware` line) |
 | | xHCI | works | 2026-11-18 | USB 2 root hub (11 ports), USB 3 root hub (4 ports); the test stick boots and is read from it (2026-11-01) |
 | | camera: Integrated Camera 04ca:7049 (UVC, `nusb/cam`) | works | 2026-11-18 | frames at 640×480 and 1280×720 (YUY2); `ctl` settings take effect (brightness, gamma); `format WxHxBPP-FOURCC` failed before `patch-upstream` 0046 |
 | | audio: HDA, Realtek ALC292 | untested | | codec found: speaker, headphone jack, internal mic; nothing played yet; `waitup timeout` messages at the controller's reset |
