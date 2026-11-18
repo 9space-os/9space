@@ -33,7 +33,8 @@ otherwise.
 | | camera: Integrated Camera 04ca:7049 (UVC, `nusb/cam`) | works | 2026-11-18 | frames at 640×480 and 1280×720 (YUY2); `ctl` settings take effect (brightness, gamma); `format WxHxBPP-FOURCC` failed before `patch-upstream` 0046 |
 | | audio: HDA, Realtek ALC292 | untested | | codec found: speaker, headphone jack, internal mic; nothing played yet; `waitup timeout` messages at the controller's reset |
 | | audio over HDMI/DP (Broadwell HDA, `#A1`) | fails | 2026-11-18 | "no audio codecs found" |
-| | keyboard, TrackPoint (PS/2) | works | 2026-11-11 | the desktop runs; the touchpad (PS/2, no gestures) not checked |
+| | keyboard, TrackPoint (PS/2) | works | 2026-11-11 | the desktop runs; the touchpad (PS/2, no gestures) not checked; `midscroll=on` (scrolling by the middle button) is set, the TrackPoint itself not tried yet (2026-11-18); volume keys: not handled yet (wsys has no kbdtap) |
+| | lid, battery | works | 2026-11-18 | lid closed: panel dark, clock `low`; open: both back (`aux/acpikeys`, the events fed by hand); `batteryguard`: a window and `fshalt` at 5 % without AC (the window seen, the halt only on the host); wbar `bat N%+`/`low`; charge limits 60/80 kept by the EC (`/dev/battery`) |
 | | external monitor | untested | | DP-1/2 and HDMI-A-1/2 are listed (disconnected) |
 | | processor clock: `aux/pstate`, `intel-eist` | works | 2026-11-18 | idle at the lowest ratio (~750 MHz; package 2.28 W instead of 2.81 W), busy at turbo (3.09 GHz); policies auto, high, low |
 | | Bluetooth (Intel 8087:0a2a), suspend | missing | | Bluetooth listed on USB, no driver; fingerprint reader not on the bus |
