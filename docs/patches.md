@@ -17,3 +17,12 @@ update is a rebase of that series.
 
 Open: a rebase cycle per part (phase 2 of the roadmap), upstream
 submissions where possible.
+
+Candidates to send upstream:
+
+- OpenBSD, `sys/dev/pci/drm/drm_linux.c` (our `sys/src/linux/kpi/linux/drm_linux.c`,
+  2026-11-18): `idr_get_next`, `xa_get_next` and `xa_find` walk the splay tree from
+  its start for each call, so `idr_for_each_entry` and `xa_for_each` are quadratic.
+  9space splays the tree at the index and takes the root or its successor
+  (amortized O(log n)). Found as aux/i915 spinning for minutes after a GPU client
+  closed (shmem_release freeing a GEM object's pages one by one).
