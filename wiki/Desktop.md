@@ -8,11 +8,13 @@ follow it as it changes.
 
 ## The theme 9space
 
-`/lib/theme/9space` is 9space's own: rio's colours, warmer. Rio's grey
-desktop (`#777777`), paper and ink, its pale yellow selection; umber, ochre
-and sand for what is current or chosen; moss, brick and ochre for success,
-danger and warning. Text has a contrast of 12:1 or more against its window,
-every colour of text 5.6:1 or more. The window buttons are on the right.
+`/lib/theme/9space` is 9space's own: acme's colours on rio's grey desktop
+(`#777777`). Text on acme's pale yellow (`#ffffea`) with its darker yellow
+selection; controls, menus and text boxes on acme's pale blue-green (its tag
+line); the current window's border in acme's purple-blue, the scroll bar its
+yellow-green; danger and success acme's button 2 red and button 3 green.
+Text has a contrast of 12:1 or more against its window, every colour of
+text 6.2:1 or more. The window buttons are on the right.
 
 It has a light and a dark palette (`dark.<name>` lines in the same file);
 `mode` chooses:
@@ -24,6 +26,11 @@ echo mode light >/dev/theme
 
 wbar's menu has *theme: 9space*, *theme: light* and *theme: dark*;
 *theme: classic* (rio's own colours) and *theme: modern* are there as well.
+
+Sources: the colours are acme's (9front's `/sys/src/cmd/acme/acme.c`,
+`iconinit`, with the values of `/sys/include/draw.h`) and rio's background
+(`/sys/src/cmd/rio/data.c`); Copyright © 2021 Plan 9 Foundation, Copyright
+© 20XX 9front authors; MIT (`/lib/legal/mit`). The dark palette is 9space's.
 
 ## New and existing installations
 
