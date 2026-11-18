@@ -48,6 +48,32 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   objects would need splitting, or another host. Open as well: a file
   manager (the reference workflow is a test now: `tests/workflow`).
 
+## Progress (2026-11-18)
+
+- Desktop: a program has several windows under wsys (a window's clone
+  makes a dialog or popup: parent, modal, askclose), through libdraw,
+  SDL3, GLFW, winit (p9win) and Wayland (wlsys, `xdg_wm_dialog_v1`);
+  ui(4) has window nodes. The same widget demo in rc, Go, Rust and C++
+  (`tests/uiserver`); the theme `9space` (acme's colours) is the default.
+- Real hardware by PXE: `scripts/hw/pxe.sh` boots a machine of the LAN
+  with its root from the host (or a USB stick image), with the MCP server
+  and drawterm. The ThinkPad X1 Carbon 3rd runs so: ACPI (battery, AC,
+  brightness keys), `aux/pstate` (P-states), the WLAN (etheriwl: 802.11n,
+  5 GHz, A-MPDU both ways, roaming by a background scan; 40-77 Mbit/s).
+  The CD carries linux-firmware's WLAN and GPU firmware, each file checked.
+- Graphics: Mesa 26.2.7. The i915 driver spent a CPU while drawing and
+  minutes freeing buffers: the LinuxKPI's xarray and idr (OpenBSD's
+  drm_linux.c) find the next entry by walking a splay tree from its start;
+  moving them to a red-black tree is under test.
+- The gcc port's checks are errors now (device registers volatile,
+  sequence points, return mismatch, implicit declarations); zlib 1.4; one
+  memory image per `rfork(RFMEM)` family. Fixes for 9front: `patch-upstream`
+  up to 0047.
+- Next: the X1 as a daily driver (criterion 1), first a plan. Open
+  decisions: a local install on the X1's SSD or the root by PXE; the
+  update server's place; the 0.1-preview tag. Still missing: a file
+  manager.
+
 ## Phase 0: reference build (weeks)
 
 Goal: a reproducible build, an ISO, a green test suite.
