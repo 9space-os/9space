@@ -68,7 +68,8 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   needs `LINUX`, `LINUX_OLD` of paths.env). Own versions of GPL files are
   written by hand from usage, never generated from the original; copied code
   keeps its notices. Exceptions the user accepted: Bison-generated parsers,
-  dual-licensed files (a permissive choice).
+  dual-licensed files (a permissive choice), FreeBSD's BSD-4-Clause
+  (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept).
 - Git: commit only your own files (`git add <files>`, not `-A` in a tree with
   build output); never commit build files (`.o`, `.d`, logs). Other agents
   may have uncommitted work in a part (`toolchain/rust`: crate patches):
