@@ -8,3 +8,4 @@
 - [[Releasing]]
 - [[Using gcc, Rust and Go|Toolchains]]
 - [[Features]]
+- [[The desktop and its theme|Desktop]]
