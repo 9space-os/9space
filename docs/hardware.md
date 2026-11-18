@@ -35,11 +35,13 @@ otherwise.
 | | audio over HDMI/DP (Broadwell HDA, `#A1`) | fails | 2026-11-18 | "no audio codecs found" |
 | | keyboard, TrackPoint (PS/2) | works | 2026-11-11 | the desktop runs; the touchpad (PS/2, no gestures) not checked |
 | | external monitor | untested | | DP-1/2 and HDMI-A-1/2 are listed (disconnected) |
-| | Bluetooth (Intel 8087:0a2a), processor clock (P-states, turbo), suspend | missing | | Bluetooth listed on USB, no driver; the clock stays at 2594 MHz; fingerprint reader not on the bus |
+| | processor clock: `aux/pstate`, `intel-eist` | works | 2026-11-18 | idle at the lowest ratio (~750 MHz; package 2.28 W instead of 2.81 W), busy at turbo (3.09 GHz); policies auto, high, low |
+| | Bluetooth (Intel 8087:0a2a), suspend | missing | | Bluetooth listed on USB, no driver; fingerprint reader not on the bus |
 | Lenovo ThinkBook 16 G7 ARP (Ryzen 7 7735HS, 32 GB) | boot by PXE (`scripts/hw/pxe.sh`), root from the host | tested | 2026-11-14 | `*nonvme=1`: the internal NVMe (another system) is never touched; 16 processors, ACPI (battery), RTL8168 Ethernet, xHCI (USB devices listed), i8042 keyboard, HDA |
 | | GPU: Radeon 680M (Rembrandt, YELLOW_CARP) | tested | 2026-11-14 | `aux/amdgpu` as the screen, eDP 1920×1200, the display's cursor; the APU's 4 GB of video memory through `gpu(3)`'s `vram`; taking over from VESA with the desktop running |
 | | desktop (`desktop=wsys`) | tested | 2026-11-14 | wsys on amdgpu, wbar |
 | | touchpad (I2C-HID), WLAN (RTL8852CE), card reader, camera, fingerprint, internal mic | missing | | no driver; PS/2 aux disabled by the firmware |
+| | processor clock: `aux/pstate` (CPPC or AMD P-states) | untested | | written for it, not yet run |
 | HP Mini 2140 (Atom N270, 945GSE, UHCI+EHCI) | boot, 386 CD | fails | 2026-10-14 | the boot stops (not looked at since; 386 comes later) |
 | AMD Radeon RX 7600 XT (Navi 33) | GPU, by VFIO in a QEMU guest | tested | 2026-11-12 | `amdall.rc`: `aux/amdgpu`, RADV (Vulkan), wsys composing on the GPU, overlay plane, eframe/egui on wgpu, SDL3 on Vulkan, ui on vello/wgpu |
 | | second monitor | untested | | |
