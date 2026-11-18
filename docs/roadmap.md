@@ -69,9 +69,11 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   sequence points, return mismatch, implicit declarations); zlib 1.4; one
   memory image per `rfork(RFMEM)` family. Fixes for 9front: `patch-upstream`
   up to 0047.
-- Next: the X1 as a daily driver (criterion 1), first a plan. Open
-  decisions: a local install on the X1's SSD or the root by PXE; the
-  update server's place; the 0.1-preview tag. Still missing: a file
+- Next: the X1 as a daily driver (criterion 1; plan in Phase 1). The user
+  chose a local install on the SSD with PXE kept for test kernels, but not
+  to wipe the SSD yet: until then it runs by PXE, and the steps without an
+  install come first. Open decisions: the update server's place; the
+  0.1-preview tag. Still missing: a file
   manager.
 
 ## Phase 0: reference build (weeks)
