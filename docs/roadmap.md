@@ -73,6 +73,12 @@ Goal: a working day on the desktop.
   network. As one test: `tree/tests/workflow` (2026-11-16; term, sam, paint,
   uitodo, foot, 9P from the host, on a `ui` CD); the file manager is
   missing (a skip there).
+- The laptop as a daily driver (2026-11-18; the X1 Carbon 3rd, plan in the
+  attic: `dist-docs/plans/x1-daily.md`): first the system on its SSD (or PXE
+  kept; the user's call), no crash for a day (a soak test on the laptop),
+  battery protection and a lid rule (no suspend yet); then TrackPoint
+  scrolling, volume keys, the headphone jack, choosing a WLAN, an external
+  display; later suspend/resume, the touchpad, Bluetooth.
 - Result: **0.9-beta**, public, with a hardware matrix.
 
 ## Phase 2: stable
