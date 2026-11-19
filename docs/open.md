@@ -41,14 +41,20 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 - The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1): the i915 spin
   it waited for is fixed (tree 991f1c79d); it needs the final kernel on the
   X1 and so the user at the machine.
-- Volume and mute keys: wsys has no kbdtap.
+- Volume and mute keys: wsys has no kbdtap (9front's reform/shortcuts
+  style keys need one between kbd(3) and the windows).
 - HDMI/DP audio: "no audio codecs found" (the i915 audio power domain);
   the cause of HDA's `waitup timeout` is open (L1756).
 - UEFI: `bootx64.efi` resets the X1 at once; the test with 9front's own
   (`stick-9front-efi.img`) is pending (L1726).
 - The second monitor black (pointer visible) after a replug or a login,
   seen once by the user, not reproduced; needs the user with the monitor.
-- Menus under wsys take the main monitor's scale (L1794).
+  The same visit: tree 3f185ebb6 (windows moving to the remaining monitor
+  and back, maximize and full screen per monitor, the scale per monitor,
+  framebuffers that grow) is untested on the X1 with the current wsys.
+- wsys' menus (button 3, the window menu) take the theme's one scale and
+  font (`drawmenu`: `self.sz`, `self.font`), not the monitor's they open
+  on (L1794).
 - Small: sysname is the IPv6 link-local address; etheriwl's loud
   "file does not exist" at the first attach (L1726). Bluetooth (8087:0a2a).
 
@@ -74,6 +80,14 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   process. Some entries look stale (amdgpu "no display", "no hotplug";
   the framebuffer never freed): check them.
 - Mesa 26.3 as a step of its own (L1692).
+- A fence wait with a time limit is several calls: gpu(4)'s fence file
+  waits without one, so Mesa's plan9 drm (`drm9.c` `gemwait`, `syncwait`)
+  polls with usleep(200-500) for a limited wait; a `wait k timeout` in
+  gpufs.c and the drivers' `fencewait` (i915, amdgpu, virtio) would make it
+  one blocking read.
+- Mesa's plan9 WSI has no VK_KHR_incremental_present: on the GPU path wsys
+  composes a client's whole window each frame even when ui drew only a
+  small part of it.
 
 ## Desktop: wsys, ui, Wayland
 
@@ -86,11 +100,16 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 - ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
   Alt/Meta key; APE's `_getpty` starts ptyfs in the caller's window
   namespace, fixed for term only (L1372).
-- ui: the scene not clipped to the damage before vello encodes it (L1813);
-  no native build with the `gpu` feature, a slow first frame (shader
-  compilation; L1274); a window node's x, y, role set only at creation.
-- wsys(4) BUGS: some entries look stale (64 segments per Rust thread;
-  "clients cannot announce windows again"): check them.
+- ui: the scene not clipped to the damage before vello encodes it: a
+  frame of a small change costs ui's process as much as a whole one
+  (Masonry's passes, vello's encoding; the region saves only GPU work;
+  L1813); no native build with the `gpu` feature, a slow first frame
+  (shader compilation; L1274); a window node's x, y, role set only at
+  creation (its width and height follow since tree fe201a126).
+- wsys(4) BUGS: "clients cannot announce theirs again yet" is stale for
+  p9win's windows (winit, ui, term) and Mesa's WSI, which move to the next
+  wsys (tests/gpu "wsys gone"); say which clients still cannot (draw(3)
+  programs?). "Rust's threads take 64" of ~250 segments: check.
 - A rio inside a window goes Broken when the window closes; real rio does
   too, an upstream candidate (L1175).
 - The HiDPI cursor never seen on a real monitor (L1392); AltGr in the
