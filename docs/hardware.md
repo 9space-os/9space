@@ -28,7 +28,7 @@ otherwise.
 | | desktop (`desktop=wsys`) | tested | 2026-11-11 | wsys on i915, wbar, title bars, Mod4+Tab, Wayland (foot) |
 | | backlight | tested | 2026-11-04 | `gpuoutputs` (eDP-1 to 30 % and back); `/dev/backlight` by `aux/acpi` as well |
 | | Ethernet: I218-LM (through Lenovo's adapter) | works | 2026-11-18 | 1000 Mbps; PXE and the 9P root |
-| | WLAN: Intel Wireless 7265D (`etheriwl`) | works | 2026-11-18 | WPA2 (CCMP) with WMM; 802.11n: HT MCS 15 with two streams (AMRR), aggregates both ways (A-MPDU, block ack); 2.4 and 5 GHz (DFS channels by listening); the strongest node of a mesh by signal, roaming below -75 dBm by a background scan of the firmware (the link stays, a node 8 dB stronger is joined); ~65-77 Mbit/s sent, ~40-45 received, ping ~2 ms; firmware `iwm-7265D-29` (the machine file's `firmware` lines); `wlan` lists and joins networks, `wlan auto` at boot (2026-11-18) |
+| | WLAN: Intel Wireless 7265D (`etheriwl`) | works | 2026-11-18 | WPA2 (CCMP) with WMM; 802.11n: HT MCS 15 with two streams (AMRR), aggregates both ways (A-MPDU, block ack); 2.4 and 5 GHz (DFS channels by listening); the strongest node of a mesh by signal, roaming below -75 dBm by a background scan of the firmware (the link stays, a node 8 dB stronger is joined); ~65-77 Mbit/s sent, ~40-45 received, ping ~2 ms; firmware `iwm-7265D-29` (the machine file's `firmware` lines); `wlan` lists and joins networks, `wlan auto` at boot (2026-11-18; since 2026-11-19 it does not associate at boot, by hand it does); the soak's 50 MB transfers hold (9 of 9 rounds, 2026-11-19, after the block-ack reorder moved out of the interrupt, tree be974532b) |
 | | xHCI | works | 2026-11-18 | USB 2 root hub (11 ports), USB 3 root hub (4 ports); the test stick boots and is read from it (2026-11-01) |
 | | camera: Integrated Camera 04ca:7049 (UVC, `nusb/cam`) | works | 2026-11-18 | frames at 640×480 and 1280×720 (YUY2); `ctl` settings take effect (brightness, gamma); `format WxHxBPP-FOURCC` failed before `patch-upstream` 0046 |
 | | audio: HDA, Realtek ALC292 | works | 2026-11-18 | speaker (pin 20) and headphones (pin 21): the output follows the jack (`jack auto`), heard by the user in both; internal mic; `waitup timeout` messages at the controller's reset |
@@ -40,15 +40,23 @@ otherwise.
 | | Bluetooth (Intel 8087:0a2a), suspend | missing | | Bluetooth listed on USB, no driver; fingerprint reader not on the bus |
 | Lenovo ThinkBook 16 G7 ARP (Ryzen 7 7735HS, 32 GB) | boot by PXE (`scripts/hw/pxe.sh`), root from the host | tested | 2026-11-14 | `*nonvme=1`: the internal NVMe (another system) is never touched; Secure Boot off in the firmware's setup (9boot's `bootx64.efi` is not signed: with it on, neither PXE nor the stick boots; 2026-11-19); beside the X1 with a root of its own (`PXE_DIR=$CLI_DIR/pxe-thinkbook UFS_PORT=5651`); 16 processors, ACPI (battery), RTL8168 Ethernet, xHCI (USB devices listed), i8042 keyboard, HDA |
 | | GPU: Radeon 680M (Rembrandt, YELLOW_CARP) | tested | 2026-11-14 | `aux/amdgpu` as the screen, eDP 1920×1200, the display's cursor; the APU's 4 GB of video memory through `gpu(3)`'s `vram`; taking over from VESA with the desktop running |
+| | Vulkan (RADV) on the APU | fails | 2026-11-19 | `vkEnumeratePhysicalDevices` finds no device (vkcube, vulkaninfo), though `/dev/gpu/0` is there; never tried before on this APU (`tests/gpu` runs RADV on the RX 7600 only) |
 | | desktop (`desktop=wsys`) | tested | 2026-11-14 | wsys on amdgpu, wbar |
 | | touchpad (ELAN 04f3:327e, I2C-HID, PTP) | works | 2026-11-15 | `aux/i2chid` over 9space's GPIO and I2C drivers; still open: tap-and-drag, horizontal scrolling |
-| | WLAN: Realtek RTL8852CE (`aux/rtw89`) | works | 2026-11-15 | FreeBSD's rtw89 on the LinuxKPI; WPA2, WMM, HT 20/40 MHz, A-MPDU: ~47-57 Mbit/s sent, ~40 received on 5 GHz; open: VHT/HE, 6 GHz, MSI |
+| | WLAN: Realtek RTL8852CE (`aux/rtw89`) | works | 2026-11-15 | FreeBSD's rtw89 on the LinuxKPI; WPA2, WMM, HT 20/40 MHz, A-MPDU: ~47-57 Mbit/s sent, ~40 received on 5 GHz; 2026-11-19: 167-221 Mbit/s in the soak's transfers, then no data after two rounds while still associated (a stall, under investigation); `wlan auto` at boot does not associate; open: VHT/HE, 6 GHz, MSI |
 | | card reader (Realtek RTS522A, `rtsx`), camera (30c9:00c2), sound (ALC257) | works | 2026-11-15 | an SD card with its partitions (`#S/sdM0`); the camera's RGB function through `nusb/cam` (the infrared one stays black: its emitter needs a vendor extension unit); a tone from the speakers |
 | | fingerprint (Goodix 27c6), internal mic (ACP), Bluetooth, power button | missing | | no driver; the power button comes over the AMD GPIO controller and gave no event |
 | | processor clock: `aux/pstate` (CPPC or AMD P-states) | untested | | written for it, not yet run |
 | HP Mini 2140 (Atom N270, 945GSE, UHCI+EHCI) | boot, 386 CD | fails | 2026-10-14 | the boot stops (not looked at since; 386 comes later) |
-| AMD Radeon RX 7600 XT (Navi 33) | GPU, by VFIO in a QEMU guest | tested | 2026-11-12 | `amdall.rc`: `aux/amdgpu`, RADV (Vulkan), wsys composing on the GPU, overlay plane, eframe/egui on wgpu, SDL3 on Vulkan, ui on vello/wgpu |
+| Desktop: ASUS PRIME B550-PLUS, Ryzen 5 5600XT (Zen 3), 32 GB, UEFI (the build host) | boot, native | untested | | inventory 2026-11-19 (plan: attic `dist-docs/plans/host-b550.md`); its NVMe (Crucial P310) and SATA disk (Samsung 870 QVO) hold the host's Linux: a native boot only with `*nonvme=1 *noahci=1`; the devices are tried by VFIO in a guest first, the host keeps running; `cputemp` knows family 0x19 |
+| | GPU: Radeon RX 7600 XT (Navi 33, 1002:7480), by VFIO in a QEMU guest | tested | 2026-11-12 | `amdall.rc`: `aux/amdgpu`, RADV (Vulkan), wsys composing on the GPU, overlay plane, eframe/egui on wgpu, SDL3 on Vulkan, ui on vello/wgpu; as the host's own screen (native) never |
 | | second monitor | untested | | |
+| | HDMI/DP audio (1002:ab30) | missing | | `audiohda` does not know the function; amdgpu's display audio is not done |
+| | HDA (1022:1487), codec Realtek ALC897 | untested | | `audiohda` knows the controller |
+| | USB audio: TI PCM2902 (08bb:2902, UAC1) | untested | | `nusb/audio` |
+| | Ethernet: RTL8168H (10ec:8168 rev 15) | untested | | `ether8169` knows the MAC version (Macv45) |
+| | xHCI (1022:43ee, 1022:149c), USB keyboard and mouse | untested | | `usbxhci`, `nusb/kb` |
+| | Bluetooth: TP-Link USB adapter (2357:0604, RTL8761B) | missing | | 9front has no Bluetooth |
 
 ## QEMU (the test suites)
 
