@@ -69,9 +69,6 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   The same visit: tree 3f185ebb6 (windows moving to the remaining monitor
   and back, maximize and full screen per monitor, the scale per monitor,
   framebuffers that grow) is untested on the X1 with the current wsys.
-- wsys' menus (button 3, the window menu) take the theme's one scale and
-  font (`drawmenu`: `self.sz`, `self.font`), not the monitor's they open
-  on (L1794).
 - Small: sysname is the IPv6 link-local address; etheriwl's loud
   "file does not exist" at the first attach (L1726). Bluetooth (8087:0a2a).
 
@@ -79,8 +76,6 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 - aux/i915's page pool never returns chunks (high-water ~1.2-1.6 GB; not
   a leak, L1781, L1786).
-- The screen through aux/i915 and aux/amdgpu can tear: no double buffer
-  with flips (L1128).
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
 - RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
@@ -102,42 +97,58 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   polls with usleep(200-500) for a limited wait; a `wait k timeout` in
   gpufs.c and the drivers' `fencewait` (i915, amdgpu, virtio) would make it
   one blocking read.
-- Mesa's plan9 WSI has no VK_KHR_incremental_present: on the GPU path wsys
-  composes a client's whole window each frame even when ui drew only a
-  small part of it.
 
 ## Desktop: wsys, ui, Wayland
 
-- Wayland: no linux-dmabuf v4, no linux-drm-syncobj (L1363); clients
-  beyond weston and foot (GTK) not ported (L1293); subsurfaces clipped at
-  the root (L1346). wlsys(4) BUGS: one output, 32 buffers, clipboard text
-  only, no client scaling.
-- Under drawterm/rcpu (33 ms RTT): ui on the GPU sends 4.8 MB in 20 s
-  against ui -p's 280 KB (its round trips per frame not yet traced). wsys'
-  text windows are done (3000 lines: 0.5 s, rio 105 s; tree MEMORY.md,
-  2026-11-19). A draw(3)-ops back end for ui,
-  as rio's clients send drawing commands rather than pixels, is the larger
-  step after these.
-- GPU windows are not seen by draw(3) readers and the software cursor
-  (L1359).
-- ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
-  Alt/Meta key; APE's `_getpty` starts ptyfs in the caller's window
-  namespace, fixed for term only (L1372).
-- ui: the scene not clipped to the damage before vello encodes it: a
-  frame of a small change costs ui's process as much as a whole one
-  (L1813). Measured in QEMU (venus, spinner): 1.1-1.3 ms of ui per frame,
-  no hotspot in vello's encoding or Masonry: no block for it unless a 60 s
-  profile on the X1 shows one (9space-attic/tools/uiprof). No native build with the `gpu` feature, a slow first frame
-  (shader compilation; L1274); a window node's x, y, role set only at
-  creation (its width and height follow since tree fe201a126).
-- wsys(4) BUGS: "clients cannot announce theirs again yet" is stale for
-  p9win's windows (winit, ui, term) and Mesa's WSI, which move to the next
-  wsys (tests/gpu "wsys gone"); say which clients still cannot (draw(3)
-  programs?). "Rust's threads take 64" of ~250 segments: check.
-- A rio inside a window goes Broken when the window closes; real rio does
-  too, an upstream candidate (L1175).
-- The HiDPI cursor never seen on a real monitor (L1392); AltGr in the
-  Windows drawterm fork (L1575).
+"The ui first, perfect" (the user, 2026-11-19), in this order:
+
+1. servoshell on the X1 (Zink/kopper, wsys -g on i915): old screen
+   content flickers back while scrolling: the present/compose order
+   (a frame shown before its rendering fence, or an image given back to
+   the app while wsys still reads it).
+2. RADV finds no device on the ThinkBook's APU (1002:1681): RADV says
+   only "Created an instance"; drm9's scan has DRM9DEBUG lines since tree
+   0b322aebc, one run there names the cause.
+3. From the X1's ui profile (60 s, 0.45 ms of ui's first proc a frame, no
+   encode hotspot): Mesa built with asserts? (vk_object_base_assert_valid
+   2.2 %), a printf every frame, the pool's checks (blockcheck); allocation
+   churn ~25 %. uiprof.rc to cover all of ui's procs.
+4. Tearing on the processor path (aux/i915, aux/amdgpu: devdraw's screen
+   copied into the one scanned-out object): two screen objects, flips
+   at the vblank (kmsscreen.c/kmsout.c, with the X1 session); a test that
+   counts copies into the scanned-out one; the X1 by eye.
+5. Partial updates on the GPU path: VK_KHR_incremental_present in Mesa's
+   plan9 WSI, the regions to wsys, comp.rs composing the damage only
+   (buffer age), ui's damage as present regions.
+6. A measurement as a script: ui's start time to its first frame and the
+   input-to-pixel latency, QEMU and the X1.
+7. wsys' menus (button 3, the window menu) in the scale and font of the
+   monitor they open on (`drawmenu`: `self.sz`, `self.font`; L1794).
+8. term: no Alt/Meta key; ptyfs: no SIGWINCH on a resize, VTIME/VMIN
+   ignored (L1357); APE's `_getpty` starts ptyfs in the caller's window
+   namespace, fixed for term only (L1372).
+9. ui: a slow first frame (shader compilation, no pipeline cache across
+   starts; L1274), no native build with the `gpu` feature, a window
+   node's x, y, role set only at creation.
+10. GPU windows not seen by draw(3) readers and the software cursor
+    (L1359).
+
+Later, by the user's choice: Wayland (no linux-dmabuf v4, no
+linux-drm-syncobj, L1363; clients beyond weston and foot not ported,
+L1293; subsurfaces clipped at the root, L1346; wlsys(4) BUGS: one output,
+32 buffers, clipboard text only, no client scaling) and a draw(3)-ops back
+end for ui under drawterm/rcpu (ui on the GPU sends 4.8 MB in 20 s at
+33 ms RTT, ui -p 280 KB; wsys' text windows are done). For one visit at
+the X1 with the user: the HiDPI cursor on a real monitor (L1392), the
+tearing check, the GPU return under wsys -g (above).
+
+Smaller: ui's scene not clipped to the damage before vello encodes it
+(measured: no encode hotspot in QEMU or on the X1, no block for it);
+wsys(4) BUGS "clients cannot announce theirs again yet" is stale for
+p9win's windows and Mesa's WSI (say which still cannot: draw(3)
+programs?), "Rust's threads take 64" of ~250 segments: check; a rio
+inside a window goes Broken when the window closes (real rio too, an
+upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Kernel, APE, the gcc port
 
