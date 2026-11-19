@@ -223,6 +223,12 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- The VFIO guest's /tests lacks `drawcmp` and `workload`: amddraw.rc's
+  drawcmp comparison and its workload part FAIL on the RX 7600
+  (2026-11-19). drawcmp is built only by tests/draw/run.sh into its own
+  root; vfio-test.sh copies tests/gpu's root and `amd*.rc` alone.
+  Fix: build both into tests/gpu's root (build-vktest.sh), or let
+  vfio-test.sh take tests/draw's root as well.
 - Never run: `scripts/build/rc/ape.rc` (no self-build), eframetest on
   venus (L1266, L1354); firmware loaded from the CD (only its staging
   checked; L1762).
