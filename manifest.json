@@ -43,7 +43,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "f3bd194864661e22cb2414a86ce5e128e88c0a93",
+			"commit": "d35ccbc02e804f6053e5c319b052e54aff6f3319",
 			"path": "TREE"
 		},
 		"tree-gcc": {
@@ -63,7 +63,7 @@
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "ef5ee57b594c779a7a47c29540ef3e6b87e3ea35",
+			"commit": "ccc1e37571c9f8b57fec1bebbde2474a2aebab1e",
 			"path": "TREE_UPSTREAM"
 		}
 	}
