@@ -115,9 +115,13 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 "The ui first, perfect" (the user, 2026-11-19), in this order:
 
 1. servoshell on the X1 (Zink/kopper, wsys -g on i915): old screen
-   content flickers back while scrolling: the present/compose order
-   (a frame shown before its rendering fence, or an image given back to
-   the app while wsys still reads it).
+   content flickers back while scrolling. Done as far as 9space goes:
+   the 4-row band under the toolbar is servoshell's (no clear of the
+   whole frame, egui's panels and the blit leave a gap; a Servo patch
+   candidate, not now); heise.de's flicker while loading is the page.
+   Found on the way: EGL never announced buffer age (tree d191d12f4, Mesa
+   0046), zink read stale scissored clears (996f2e697, 0047); tests/gpu
+   glage, wsysorder. Servo by eye again with the next root.
 2. RADV finds no device on the ThinkBook's APU (1002:1681): RADV says
    only "Created an instance"; drm9's scan has DRM9DEBUG lines since tree
    0b322aebc, one run there names the cause.
@@ -127,15 +131,22 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    build from now (b_ndebug=true, MESA_ASSERTS=1 the developer's), ms per
    frame on the X1 before/after; the printf a frame is gpu(4)'s text and
    the WSI's present (cheap, stays). uiprof.rc to cover all of ui's procs.
-4. Tearing on the processor path (aux/i915, aux/amdgpu: devdraw's screen
-   copied into the one scanned-out object): two screen objects, flips
-   at the vblank (kmsscreen.c/kmsout.c, with the X1 session); a test that
-   counts copies into the scanned-out one; the X1 by eye.
-5. Partial updates on the GPU path: VK_KHR_incremental_present in Mesa's
-   plan9 WSI, the regions to wsys, comp.rs composing the damage only
-   (buffer age), ui's damage as present regions.
-6. A measurement as a script: ui's start time to its first frame and the
-   input-to-pixel latency, QEMU and the X1; and a heap profile of ui's
+4. Tearing on the processor path: done (tree 31be0d5ed two screen
+   objects, a1058f9b5 swap only when on the display; X1 and ThinkBook
+   by eye clean, flips = events). amdflip.rc at the RX 7600's next binding.
+5. Partial updates on the GPU path: A+B done (tree 6653c0d14: the WSI's
+   regions to wsys, comp.rs composing only the damage per image; glage
+   ~20000 instead of ~166000 window pixels a frame). C1 holds already
+   (ui presents only on a change). C2, ui's damage: not a side channel
+   beside Vulkan but VkPresentRegionsKHR chained by wgpu-hal's Vulkan
+   backend, given through a small wgpu API (a crate patch in
+   toolchain/rust; upstream wgpu has requests for present damage), so
+   every wgpu client gains; the design decided when taken on.
+6. The measurement: done for QEMU (tree ae171b460, tests/uiserver/uilat.c,
+   measure.sh): first pixels ~265 ms (VESA) / ~281 ms (venus) after
+   uinew; click → composed pixels 5.7 / 6.6 ms (ui's frame ~3.5-4 ms of
+   it; the scanout not in it). The X1 with the user. Where the start's
+   ~265 ms go (Vulkan instance, fonts, Rust std) belongs to 9. Open: a heap profile of ui's
    frame path: the X1's profile has ~25 % of ui in the pool (treesplay,
    pooldel, poolfreel, blockcheck: 9front's pool checks every block, by
    design) behind mainmem's one lock, Rust's System allocator going
@@ -232,6 +243,10 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- tests/ui text.rc's check after drawtest (no red left, all the text
+  again; tree 3717c15d0) has not been seen failing: run it once against
+  a wsys without the fix (w.drawn = None) to know it catches the kbmap
+  bug.
 - The VFIO guest's /tests lacks `drawcmp` and `workload`: amddraw.rc's
   drawcmp comparison and its workload part FAIL on the RX 7600
   (2026-11-19). drawcmp is built only by tests/draw/run.sh into its own
