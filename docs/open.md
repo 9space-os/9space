@@ -104,11 +104,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   beyond weston and foot (GTK) not ported (L1293); subsurfaces clipped at
   the root (L1346). wlsys(4) BUGS: one output, 32 buffers, clipboard text
   only, no client scaling.
-- Under drawterm/rcpu (33 ms RTT): wsys' own text windows under -k upload
-  pixels for every line, 113 s and 22.5 MB for 3000 lines of output (term:
-  about 1 s). ui on the GPU sends 4.8 MB in 20 s against ui -p's 280 KB (its
-  round trips per frame not yet traced); the rio reference run is still to
-  do (tree MEMORY.md, 2026-11-19 drawterm). A draw(3)-ops back end for ui,
+- Under drawterm/rcpu (33 ms RTT): ui on the GPU sends 4.8 MB in 20 s
+  against ui -p's 280 KB (its round trips per frame not yet traced). wsys'
+  text windows are done (3000 lines: 0.5 s, rio 105 s; tree MEMORY.md,
+  2026-11-19). A draw(3)-ops back end for ui,
   as rio's clients send drawing commands rather than pixels, is the larger
   step after these.
 - wsys does not go back to the GPU: when composing there fails (aux/i915
