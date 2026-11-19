@@ -16,12 +16,11 @@ details (`MEMORY.md` line numbers as of this date, "L").
 - The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
   `pull` on real hardware follow it.
 - Sending fixes upstream:
-  - 9front: the 47 patches in tree `patch-upstream/`, none sent yet. Not
-    yet made into patches: `pcibusno` (bus 0 for root bridges without
-    `_BBN`/`_ADR`), APE's sigaddset/sigprocmask, `INTn_MIN` in `#if`,
-    setvbuf `malloc(0)`, libdraw freeing getenv's string, SIGSEGV for
-    traps, fcntl `EINVAL`, dup/`F_DUPFD` (L409, L1083, L1117, L1272,
-    L1357, L1374).
+  - 9front: the 59 patches in tree `patch-upstream/` (base `cb9e5e7e9`),
+    none sent yet. Not made into a patch: APE's dup/`F_DUPFD` taking the
+    number from `_fdinfo` (L1272): it goes wrong only in a program that
+    mixes native descriptors with APE's (Rust's std with Mesa), which
+    9front has none of.
   - OpenBSD: the drm_linux.c idr/xarray fix (`patches.md`) and older
     findings (fence-wait overflow, `min_array`, `dma_fence_chain_walk`;
     L1107, L1124).
@@ -38,9 +37,18 @@ details (`MEMORY.md` line numbers as of this date, "L").
 
 Plan: attic `dist-docs/plans/x1-daily.md`.
 
-- The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1): the i915 spin
-  it waited for is fixed (tree 991f1c79d); it needs the final kernel on the
-  X1 and so the user at the machine.
+- The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1), first run
+  2026-11-19 with the final kernel: stopped after ~5 rounds when memory ran
+  out (logs: `cache/cli/pxe/soak-2026-11-19/`). Two leaks: the `ui -s`
+  servers of killed ui clients stay (ui session: `ui -c` ends with its
+  client); the sticky `#g` segments (`i915.<pid>.*`, `kpi.<pid>.*`) of an
+  aux/i915 the pager killed stay until reboot (fix: segment(3) create
+  honours ORCLOSE, after the main build). Then: the pager's choice of
+  aux/i915 as victim (FreeBSD's protect(1)) and the i915 page pool never
+  giving chunks back. soak.rc to FAIL on growth of procs and pages from
+  round to round. Rerun after the fixes.
+- `wlan auto` from termrc does not associate at boot (2026-11-19; by hand
+  it does). Cause open; read-only while a soak runs.
 - Volume and mute keys: wsys has kbdtap and riostart starts
   reform/shortcuts under it (tree e2f6a78ef, tests/ui); untested on the X1's
   HDA keys.
