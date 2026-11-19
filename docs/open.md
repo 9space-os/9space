@@ -125,8 +125,9 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   namespace, fixed for term only (L1372).
 - ui: the scene not clipped to the damage before vello encodes it: a
   frame of a small change costs ui's process as much as a whole one
-  (Masonry's passes, vello's encoding; the region saves only GPU work;
-  L1813); no native build with the `gpu` feature, a slow first frame
+  (L1813). Measured in QEMU (venus, spinner): 1.1-1.3 ms of ui per frame,
+  no hotspot in vello's encoding or Masonry: no block for it unless a 60 s
+  profile on the X1 shows one (9space-attic/tools/uiprof). No native build with the `gpu` feature, a slow first frame
   (shader compilation; L1274); a window node's x, y, role set only at
   creation (its width and height follow since tree fe201a126).
 - wsys(4) BUGS: "clients cannot announce theirs again yet" is stale for
