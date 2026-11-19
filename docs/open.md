@@ -111,6 +111,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   do (tree MEMORY.md, 2026-11-19 drawterm). A draw(3)-ops back end for ui,
   as rio's clients send drawing commands rather than pixels, is the larger
   step after these.
+- wsys does not go back to the GPU: when composing there fails (aux/i915
+  killed, a scanout refused: `compfailed`) it composes on the processor,
+  cleanly, but `comp::Comp::start` runs only at its start; a driver that
+  comes back is not used until wsys restarts (X1 soak, 2026-11-19).
 - GPU windows are not seen by draw(3) readers and the software cursor
   (L1359).
 - ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
