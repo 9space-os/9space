@@ -19,7 +19,7 @@ details (`MEMORY.md` line numbers as of this date, "L").
   segments left in #g, /dev/swap back down, aux/i915 restarts. A failed
   reset turns the display off until reboot. The same visit, under wsys -g:
   wsys falls back to the processor and composes on the GPU again once
-  aux/i915 is back (tree cf74a918b, gpuagain cc10773bf; tested in QEMU
+  aux/i915 is back (tree cf74a918b; the drivers in shr(3) since 0b322aebc; tested in QEMU
   with venus, tests/gpu wsysback.rc).
 - The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
   `pull` on real hardware follow it.
