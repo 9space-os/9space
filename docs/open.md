@@ -34,6 +34,10 @@ details (`MEMORY.md` line numbers as of this date, "L").
     L1107, L1124).
   - Mesa: the zink vertex-buffer fix, its merge request text written
     (`cache/mesa/upstream`, L1688).
+  - Mesa: zink's read of deferred scissored clears (tree patch 0047:
+    `zink_fb_clears_apply_region` applied them only when the read lay
+    inside a scissor; main unchanged on 2026-11-19), its merge request
+    text in `cache/mesa/upstream/zink-read-applies-clears.md`.
   - Linux: amdgpu does not bound the firmware's `number_of_points` (L1453).
 - rtw89 in the install profiles, or on every CD as now (L1531).
 - draw(3) on the GPU (glyphs and fills), deferred (L1369).
