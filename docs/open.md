@@ -17,7 +17,10 @@ details (`MEMORY.md` line numbers as of this date, "L").
   fb4a91e54: gpu(3) onexit's GEN6_GDRST, ORCLOSE segments), as tests/gpu's
   killdrv.rc does on virtio: no "engine did not stop", no i915./kpi.
   segments left in #g, /dev/swap back down, aux/i915 restarts. A failed
-  reset turns the display off until reboot.
+  reset turns the display off until reboot. The same visit, under wsys -g:
+  wsys falls back to the processor and composes on the GPU again once
+  aux/i915 is back (tree's next wsys commit, compagain; untested: in QEMU
+  venus aborts every Vulkan process when its driver dies).
 - The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
   `pull` on real hardware follow it.
 - Sending fixes upstream:
@@ -115,10 +118,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   2026-11-19). A draw(3)-ops back end for ui,
   as rio's clients send drawing commands rather than pixels, is the larger
   step after these.
-- wsys does not go back to the GPU: when composing there fails (aux/i915
-  killed, a scanout refused: `compfailed`) it composes on the processor,
-  cleanly, but `comp::Comp::start` runs only at its start; a driver that
-  comes back is not used until wsys restarts (X1 soak, 2026-11-19).
+- Mesa's venus aborts the process (`vn_common.c:271-287`, `vn_ring.c:528`)
+  when the renderer's ring stops: a virtio GPU driver killed takes every
+  Vulkan program with it, wsys included. To report VK_ERROR_DEVICE_LOST
+  instead (a Mesa patch); then tests/gpu/wsysback.rc into run.sh.
 - GPU windows are not seen by draw(3) readers and the software cursor
   (L1359).
 - ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
