@@ -41,8 +41,9 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 - The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1): the i915 spin
   it waited for is fixed (tree 991f1c79d); it needs the final kernel on the
   X1 and so the user at the machine.
-- Volume and mute keys: wsys has no kbdtap (9front's reform/shortcuts
-  style keys need one between kbd(3) and the windows).
+- Volume and mute keys: wsys has kbdtap and riostart starts
+  reform/shortcuts under it (tree e2f6a78ef, tests/ui); untested on the X1's
+  HDA keys.
 - HDMI/DP audio: "no audio codecs found" (the i915 audio power domain);
   the cause of HDA's `waitup timeout` is open (L1756).
 - UEFI: `bootx64.efi` resets the X1 at once; the test with 9front's own
@@ -95,6 +96,13 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   beyond weston and foot (GTK) not ported (L1293); subsurfaces clipped at
   the root (L1346). wlsys(4) BUGS: one output, 32 buffers, clipboard text
   only, no client scaling.
+- Under drawterm/rcpu (33 ms RTT): wsys' own text windows under -k upload
+  pixels for every line, 113 s and 22.5 MB for 3000 lines of output (term:
+  about 1 s). ui on the GPU sends 4.8 MB in 20 s against ui -p's 280 KB (its
+  round trips per frame not yet traced); the rio reference run is still to
+  do (tree MEMORY.md, 2026-11-19 drawterm). A draw(3)-ops back end for ui,
+  as rio's clients send drawing commands rather than pixels, is the larger
+  step after these.
 - GPU windows are not seen by draw(3) readers and the software cursor
   (L1359).
 - ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
