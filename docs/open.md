@@ -13,6 +13,11 @@ details (`MEMORY.md` line numbers as of this date, "L").
 - The update server: its place and key; where files over 100 MB go (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
   refuses them).
+- The X1 with the user there: aux/i915 killed while vkcube draws (tree
+  fb4a91e54: gpu(3) onexit's GEN6_GDRST, ORCLOSE segments), as tests/gpu's
+  killdrv.rc does on virtio: no "engine did not stop", no i915./kpi.
+  segments left in #g, /dev/swap back down, aux/i915 restarts. A failed
+  reset turns the display off until reboot.
 - The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
   `pull` on real hardware follow it.
 - Sending fixes upstream:
