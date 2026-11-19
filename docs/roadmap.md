@@ -30,7 +30,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
 - Phase 0 reached: `build-toolchains` from scratch; the four profiles' CDs
   from one pinned state, each `iso` 7/7; the suites green but for two old
   gaps (386: APE shared memory cannot grow; arm64: no segment(3) in the
-  kernel; `tree/MEMORY.md`). The userland builds with `-O2` (Rust thin LTO,
+  kernel, since added, 2026-11-16; `tree/MEMORY.md`). The userland builds with `-O2` (Rust thin LTO,
   Go `-s -w`). The release step (tag 0.1-preview) waits for the user.
 - Phase 1: wsys is the desktop of the profiles `ui` and `full`
   (`desktop=rio` chooses rio); the hardware matrix is `hardware.md`.
@@ -46,7 +46,8 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   (GitHub, likely). For GitHub: files over 100 MB are refused there (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB stripped),
   objects would need splitting, or another host. Open as well: a file
-  manager (the reference workflow is a test now: `tests/workflow`).
+  manager (the reference workflow is a test now: `tests/workflow`); since
+  done: `files`, 2026-11-16.
 
 ## Progress (2026-11-18)
 
@@ -64,7 +65,8 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
 - Graphics: Mesa 26.2.7. The i915 driver spent a CPU while drawing and
   minutes freeing buffers: the LinuxKPI's xarray and idr (OpenBSD's
   drm_linux.c) find the next entry by walking a splay tree from its start;
-  moving them to a red-black tree is under test.
+  splaying the tree at the index fixed it (tree 991f1c79d, amortized
+  O(log n): closing a client went from minutes to about a second).
 - The gcc port's checks are errors now (device registers volatile,
   sequence points, return mismatch, implicit declarations); zlib 1.4; one
   memory image per `rfork(RFMEM)` family. Fixes for 9front: `patch-upstream`
@@ -73,8 +75,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   chose a local install on the SSD with PXE kept for test kernels, but not
   to wipe the SSD yet: until then it runs by PXE, and the steps without an
   install come first. Open decisions: the update server's place; the
-  0.1-preview tag. Still missing: a file
-  manager.
+  0.1-preview tag. The open tasks, all parts: `open.md`.
 
 ## Phase 0: reference build (weeks)
 
@@ -99,8 +100,8 @@ Goal: a working day on the desktop.
 - Reference workflow without a browser: term, an editor (acme/sam), a file
   manager, a ui client, a draw(3) program, a Wayland program, 9P over the
   network. As one test: `tree/tests/workflow` (2026-11-16; term, sam, paint,
-  uitodo, foot, 9P from the host, on a `ui` CD); the file manager is
-  missing (a skip there).
+  uitodo, foot, the file manager `files`, 9P from the host, on a `ui`
+  CD).
 - The laptop as a daily driver (2026-11-18; the X1 Carbon 3rd, plan in the
   attic: `dist-docs/plans/x1-daily.md`): first the system on its SSD (or PXE
   kept; the user's call), no crash for a day (a soak test on the laptop),

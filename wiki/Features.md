@@ -32,7 +32,7 @@ State of `main`, November 2026. "QEMU" means tested in `tests/` under QEMU,
 | gpu(4): drivers as user-space file servers (`/dev/gpu/N`) | QEMU, hardware |
 | virtio-gpu with venus (Vulkan of the host) | QEMU |
 | AMD amdgpu (Linux 7.3 DRM on the LinuxKPI), Mesa RADV | hardware: RX 7600 (VFIO) |
-| Intel i915 (Linux DRM), Mesa hasvk | hardware: HD 5500 (Linux 6.6 era; 7.3 untested) |
+| Intel i915 (Linux 7.3 DRM on the LinuxKPI), Mesa hasvk | hardware: HD 5500 (X1 Carbon 3rd, the desktop on the GPU) |
 | Vulkan 1.4 (`VK_PLAN9_surface`), OpenGL 4.6 / GLES 3.2 via zink, EGL | QEMU, hardware |
 | Direct scanout, overlay planes | QEMU, hardware |
 

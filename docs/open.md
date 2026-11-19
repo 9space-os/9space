@@ -1,0 +1,173 @@
+# Open tasks
+
+All parts' open tasks in one list, collected on 2026-11-19 from
+`tree/MEMORY.md`, the toolchains' `NOTES.md`, these docs, the plans in the
+attic and the BUGS sections of 9space's own man pages, each checked against
+git history. "Maybe done" marks an item a later commit may have closed.
+Update this list when an item is closed or found; the sources keep the
+details (`MEMORY.md` line numbers as of this date, "L").
+
+## Waiting for the user
+
+- The 0.1-preview tag: whether, where, its name (`roadmap.md`, wiki Releasing).
+- The update server: its place and key; where files over 100 MB go (the
+  `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
+  refuses them).
+- The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
+  `pull` on real hardware follow it.
+- Sending fixes upstream:
+  - 9front: the 47 patches in tree `patch-upstream/`, none sent yet. Not
+    yet made into patches: `pcibusno` (bus 0 for root bridges without
+    `_BBN`/`_ADR`), APE's sigaddset/sigprocmask, `INTn_MIN` in `#if`,
+    setvbuf `malloc(0)`, libdraw freeing getenv's string, SIGSEGV for
+    traps, fcntl `EINVAL`, dup/`F_DUPFD` (L409, L1083, L1117, L1272,
+    L1357, L1374).
+  - OpenBSD: the drm_linux.c idr/xarray fix (`patches.md`) and older
+    findings (fence-wait overflow, `min_array`, `dma_fence_chain_walk`;
+    L1107, L1124).
+  - Mesa: the zink vertex-buffer fix, its merge request text written
+    (`cache/mesa/upstream`, L1688).
+  - Linux: amdgpu does not bound the firmware's `number_of_points` (L1453).
+- rtw89 in the install profiles, or on every CD as now (L1531).
+- draw(3) on the GPU (glyphs and fills), deferred (L1369).
+- The tree's tag `gcc-before-rebase-2026-10-31` looks like a backup ref,
+  which the rules forbid: delete it only with the user's word.
+- Later, by the user's choice: FreeType on upstream's Plan 9 build (L1712).
+
+## The X1 as a daily driver
+
+Plan: attic `dist-docs/plans/x1-daily.md`.
+
+- The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1): the i915 spin
+  it waited for is fixed (tree 991f1c79d); it needs the final kernel on the
+  X1 and so the user at the machine.
+- Volume and mute keys: wsys has no kbdtap.
+- HDMI/DP audio: "no audio codecs found" (the i915 audio power domain);
+  the cause of HDA's `waitup timeout` is open (L1756).
+- UEFI: `bootx64.efi` resets the X1 at once; the test with 9front's own
+  (`stick-9front-efi.img`) is pending (L1726).
+- The second monitor black (pointer visible) after a replug or a login,
+  seen once by the user, not reproduced; needs the user with the monitor.
+- Menus under wsys take the main monitor's scale (L1794).
+- Small: sysname is the IPv6 link-local address; etheriwl's loud
+  "file does not exist" at the first attach (L1726). Bluetooth (8087:0a2a).
+
+## Graphics
+
+- aux/i915's page pool never returns chunks (high-water ~1.2-1.6 GB; not
+  a leak, L1781, L1786).
+- The screen through aux/i915 and aux/amdgpu can tear: no double buffer
+  with flips (L1128).
+- venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
+  the tests now (L1302, L1699).
+- RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
+  buddy blocks left after a failed init (L1074), overlay planes and a
+  second monitor never looked at (L1113, L1213).
+- i915 on the X1: syncobjs only within a process (L1312), `live_rps_power`
+  fails (L1139), a confirming run of the drmirqw fix (L1140), a driver
+  restart untested (L1116).
+- No GPU limits per user (VRAM, contexts; L1115); no shared venus
+  semaphores (L1201); "MESA-LOADER: failed to retrieve device information"
+  with `DRIVER_OVERRIDE` (L1117); no ROM BAR in `#G` (L1073).
+- gpu(4) and gpu(3) BUGS: no MSI, 1 MB command buffers, the host-visible
+  BAR uncached, each frame copied twice, a dma-buf token for one other
+  process. Some entries look stale (amdgpu "no display", "no hotplug";
+  the framebuffer never freed): check them.
+- Mesa 26.3 as a step of its own (L1692).
+
+## Desktop: wsys, ui, Wayland
+
+- Wayland: no linux-dmabuf v4, no linux-drm-syncobj (L1363); clients
+  beyond weston and foot (GTK) not ported (L1293); subsurfaces clipped at
+  the root (L1346). wlsys(4) BUGS: one output, 32 buffers, clipboard text
+  only, no client scaling.
+- GPU windows are not seen by draw(3) readers and the software cursor
+  (L1359).
+- ptyfs: no SIGWINCH on a resize, VTIME/VMIN ignored (L1357); term has no
+  Alt/Meta key; APE's `_getpty` starts ptyfs in the caller's window
+  namespace, fixed for term only (L1372).
+- ui: the scene not clipped to the damage before vello encodes it (L1813);
+  no native build with the `gpu` feature, a slow first frame (shader
+  compilation; L1274); a window node's x, y, role set only at creation.
+- wsys(4) BUGS: some entries look stale (64 segments per Rust thread;
+  "clients cannot announce windows again"): check them.
+- A rio inside a window goes Broken when the window closes; real rio does
+  too, an upstream candidate (L1175).
+- The HiDPI cursor never seen on a real monitor (L1392); AltGr in the
+  Windows drawterm fork (L1575).
+
+## Kernel, APE, the gcc port
+
+- The pager livelocks when only hostowner (noswap) processes run: killbig
+  spins (L1009, L1110, L1124).
+- Not yet checked for the gcc port: a struct's tail padding (kencc rounds,
+  gcc does not) in raw I/O by sizeof (L770); 32-bit `long` wraparound
+  (L605); dtracy's sign extension on 386 (L725); eqn `yylval=(int)s`, gs
+  `sfnts_reader_rlong`, scat `heavens()` (L1628, L1629, L1646).
+- APE: stdio without locks, `_exit`/abort do not end the other threads,
+  no locale but "C", no `<uchar.h>` (gcc `NOTES.md`).
+- acid cannot read the gcc port's ELF symbols (L938, L1574).
+- aux/acpi crashed once in libaml (evnote, L1562); maybe done by aea4f36b9.
+- 386: APE shared memory cannot grow (L1427); 386 and arm64 come later by
+  the user's choice (L1382).
+
+## Toolchains
+
+- Rust: the std tests never ran on arm64 (one processor in the guest), the
+  doc tests never; rustdoc and clippy-driver each carry the whole compiler
+  (~490 MB together); no TCP keepalive; a caught note interrupts blocked
+  calls in all procs; APE's copy procs leak their buffer after a close
+  during a read. Two "open" entries in Rust's `NOTES.md` are done (TCP half
+  close: tree 7e5a710d1; loopback connect under load: patch-upstream 0025):
+  update them once the file's uncommitted work is in.
+- Go: after `syscall.Exec` the other procs go on and hold the inherited
+  fds (a parent never sees EOF); the exit-message patch to carry to each
+  release, the vendored `x/sys/plan9` still old.
+- riscv64: no ISO, the tree never built itself there, musl without real
+  quad `expl`/`logl`/`log1pl`.
+- Building `build.exe` with Go on 9front untested (wiki Toolchains).
+
+## Network
+
+- rtw89: MSI, VHT/HE, 6 GHz, the DMA mask above 64 GB; the "SER cannot
+  recognize error" message at each start (harmless; L1531, L1543, L1568).
+- etheriwl: 40/80 MHz and VHT; an aggregation queue of 64 hung and was not
+  rechecked; the 9000 family's path untested, no card (L1763, L1765).
+- Replica: the signed index has no expiry; no way back on hjfs (L1444).
+- factotum's wpapsk compares 6 bytes of the PTK, not 32 (L1517).
+
+## Tests and the build
+
+- Sporadic, cause not found: tests/boot with an empty console (L1583),
+  wayland "wlvk subsurface" (L1623), wlan "5 GHz preferred" (L1588),
+  gldesk and vktri hangs on venus (L1195, L1211, L1362).
+- tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- Never run: `scripts/build/rc/ape.rc` (no self-build), eframetest on
+  venus (L1266, L1354); firmware loaded from the CD (only its staging
+  checked; L1762).
+- `build.exe -D` rebuilds musl's 12 `x86_64/*.s` each time (L1411); a full
+  gs rebuild under `-D`, seen twice, unexplained (L879).
+- The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
+  baca2517 (L1416).
+
+## The roadmap's later phases
+
+- 1.0 criterion 2, a byte-identical build on two machines with the Rust
+  bootstrap: never tried.
+- Phase 2: the public API frozen with versions (ui(4), uiview, libui,
+  uigo, p9win), a rebase cycle per part, the security model of wsys/ui,
+  signed ISOs, an SBOM, channel `release`.
+- Phase 3: the GPU on arm64, riscv64 drivers, packages.
+
+## Shelved by the user
+
+- Power management (2026-11-19): suspend stages B-D, the PXE root lost
+  after more than 150 s asleep (ufs keepalive), the device that keeps the
+  package out of pc3 and deeper, a load test of the C-states (behind
+  `*cstates=`), `aux/pstate` only with `pstate=`; HWP, CPPC and AMD
+  P-states untested.
+- nix on the X1 (the touchpad dead under nix, its UEFI "no boot devices";
+  L1728).
+- ThinkBook: the power button (GPIO, no event), fingerprint, internal mic,
+  Bluetooth, the IR camera's emitter, tap-and-drag and horizontal
+  scrolling.
