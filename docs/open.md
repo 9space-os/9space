@@ -110,9 +110,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    only "Created an instance"; drm9's scan has DRM9DEBUG lines since tree
    0b322aebc, one run there names the cause.
 3. From the X1's ui profile (60 s, 0.45 ms of ui's first proc a frame, no
-   encode hotspot): Mesa built with asserts? (vk_object_base_assert_valid
-   2.2 %), a printf every frame, the pool's checks (blockcheck); allocation
-   churn ~25 %. uiprof.rc to cover all of ui's procs.
+   encode hotspot): Mesa was built with its asserts (debugoptimized,
+   b_ndebug if-release: vk_object_base_assert_valid 2.2 %): a release
+   build from now (b_ndebug=true, MESA_ASSERTS=1 the developer's), ms per
+   frame on the X1 before/after; the printf a frame is gpu(4)'s text and
+   the WSI's present (cheap, stays). uiprof.rc to cover all of ui's procs.
 4. Tearing on the processor path (aux/i915, aux/amdgpu: devdraw's screen
    copied into the one scanned-out object): two screen objects, flips
    at the vblank (kmsscreen.c/kmsout.c, with the X1 session); a test that
@@ -121,7 +123,13 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    plan9 WSI, the regions to wsys, comp.rs composing the damage only
    (buffer age), ui's damage as present regions.
 6. A measurement as a script: ui's start time to its first frame and the
-   input-to-pixel latency, QEMU and the X1.
+   input-to-pixel latency, QEMU and the X1; and a heap profile of ui's
+   frame path: the X1's profile has ~25 % of ui in the pool (treesplay,
+   pooldel, poolfreel, blockcheck: 9front's pool checks every block, by
+   design) behind mainmem's one lock, Rust's System allocator going
+   through malloc. Fewer allocations a frame first; a size-class cache
+   per thread in Rust's std for plan9 (toolchain/rust) only if that
+   shows nothing.
 7. wsys' menus (button 3, the window menu) in the scale and font of the
    monitor they open on (`drawmenu`: `self.sz`, `self.font`; L1794).
 8. term: no Alt/Meta key; ptyfs: no SIGWINCH on a resize, VTIME/VMIN
