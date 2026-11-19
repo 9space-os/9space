@@ -198,8 +198,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 ## Tests and the build
 
-- Sporadic, cause not found: tests/boot with an empty console (L1583),
-  wayland "wlvk subsurface" (L1623), wlan "5 GHz preferred" (L1588),
+- Sporadic, cause not found: tests/boot with an empty console (L1583;
+  boot-cli now keeps `$CLI_DIR/serial.log`, written by QEMU, to tell a
+  silent guest from a lost pty), wayland "wlvk subsurface" (L1623), wlan
+  "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
 - Never run: `scripts/build/rc/ape.rc` (no self-build), eframetest on
@@ -207,6 +209,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   checked; L1762).
 - `build.exe -D` rebuilds musl's 12 `x86_64/*.s` each time (L1411); a full
   gs rebuild under `-D`, seen twice, unexplained (L879).
+- A `-D` run right after a clean build (tree 66e79df91, 2026-11-19)
+  recompiled 145 files: the pc64 kernel's sources, libsec's generated
+  `secp*.c`/`jacobian.c`, `gram.c`; the kernel came out the same
+  (md5 8547d171…). A no-op should compile nothing; cause open.
 - The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
   baca2517 (L1416).
 
