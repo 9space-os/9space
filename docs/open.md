@@ -82,7 +82,12 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 ## Graphics
 
 - aux/i915's page pool never returns chunks (high-water ~1.2-1.6 GB; not
-  a leak, L1781, L1786).
+  a leak, L1781, L1786). In progress (stability session): the attic's
+  i915-pool.md, (c) a status line, (a) wholly free chunks given back, (b)
+  shrinkers under memory pressure.
+- The LinuxKPI's `DECLARE_DELAYED_WORK` (workqueue.h) is Linux's form and
+  does not compile here (`struct work_struct` has no `entry`); unused so
+  far, `INIT_DELAYED_WORK` at run time instead.
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
 - RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
