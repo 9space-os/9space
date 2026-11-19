@@ -153,8 +153,10 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    through malloc. Fewer allocations a frame first; a size-class cache
    per thread in Rust's std for plan9 (toolchain/rust) only if that
    shows nothing.
-7. wsys' menus (button 3, the window menu) in the scale and font of the
-   monitor they open on (`drawmenu`: `self.sz`, `self.font`; L1794).
+7. wsys' menus in the scale and font of the monitor they open on: done
+   (tree 3924c581b); by eye on the X1 with a second monitor at another
+   scale. The overlay plane with damage (bac452371): glage on the RX
+   7600's plane at its next binding (QEMU has no plane).
 8. term: no Alt/Meta key; ptyfs: no SIGWINCH on a resize, VTIME/VMIN
    ignored (L1357); APE's `_getpty` starts ptyfs in the caller's window
    namespace, fixed for term only (L1372).
@@ -243,6 +245,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- wsysorder.rc read the desktop after vktri's end as frames (X1, "back
+  to 119" = #777777): counts only vktri's frames now (tree 785af7950);
+  confirm on the X1, -O and plain.
 - tests/ui text.rc's check after drawtest (no red left, all the text
   again; tree 3717c15d0) has not been seen failing: run it once against
   a wsys without the fix (w.drawn = None) to know it catches the kbmap
