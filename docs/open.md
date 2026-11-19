@@ -117,8 +117,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 ## Kernel, APE, the gcc port
 
-- The pager livelocks when only hostowner (noswap) processes run: killbig
-  spins (L1009, L1110, L1124).
+- Out of memory with only the host owner's noswap processes left, the
+  machine stays stuck (a noswap server holds the pages; the process
+  killbig killed waits in a mount flush to it): no longer a spinning
+  pager (tree c452a27cf), but nothing frees it either. A way out (kill a
+  noswap process after all? fail the flush?) is open.
 - Not yet checked for the gcc port: a struct's tail padding (kencc rounds,
   gcc does not) in raw I/O by sizeof (L770); 32-bit `long` wraparound in
   `long d = a - b` without a cast (L605); dtracy casting pointers to 64-bit
