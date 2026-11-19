@@ -196,6 +196,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   package out of pc3 and deeper, a load test of the C-states (behind
   `*cstates=`), `aux/pstate` only with `pstate=`; HWP, CPPC and AMD
   P-states untested.
+- aux/power reads a processor's MSRs on the wrong one on an idle
+  machine (its `sleep(0)` after `wired n` yields only when another process
+  is ready) and does not clamp a residency to 100%: one absurd cc7 on the
+  X1. The fix (sleep(1), a reading kept per processor, clamped) is in the
+  attic, `dist-docs/plans/aux-power-wired.patch`, not applied.
 - nix on the X1 (the touchpad dead under nix, its UEFI "no boot devices";
   L1728).
 - ThinkBook: the power button (GPIO, no event), fingerprint, internal mic,
