@@ -55,8 +55,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   aux/i915 as victim (FreeBSD's protect(1)) and the i915 page pool never
   giving chunks back. soak.rc to FAIL on growth of procs and pages from
   round to round. Rerun after the fixes.
-- `wlan auto` from termrc does not associate at boot (2026-11-19; by hand
-  it does). Cause open; read-only while a soak runs.
+- Soaks, 2026-11-19: "busy while idle" for the whole 10 s window, once
+  each: aux/acpi (X1, 18:44), aux/amdgpu (ThinkBook, 21:08), #l1wifi
+  (ThinkBook, 21:11, the first test kernel of the reorder fix: all its CPU
+  since boot in that window). Causes open; soak.rc now records the procs'
+  state and kregs when it fires (tree, soak.rc).
 - Volume and mute keys: wsys has kbdtap and riostart starts
   reform/shortcuts under it (tree e2f6a78ef, tests/ui); untested on the X1's
   HDA keys.
