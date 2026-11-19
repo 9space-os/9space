@@ -28,7 +28,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "80ab85ee55e2030502f1ce00f2a3c45d5b916fc6",
+			"commit": "b35ca779e9dec8de848215a10118cc9303b96806",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -43,27 +43,27 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "c452a27cf8d50251ff7a26a71f3b21790cdf75f9",
+			"commit": "193c73072ceb64958599d8b493371b04d16dd1fe",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "3519e1d568ddcb864e2814c5cb3b52a86065d247",
+			"commit": "feecc2c7a6c9177a144e7534a4c7d0b8f5b8c193",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
 			"branch": "nix",
-			"commit": "36022a6f164ce5c4cc69af082158140a7ca96c8d",
+			"commit": "b23df7096562d412ff924f8399e8b1188e098109",
 			"path": "TREE_NIX"
 		},
 		"tree-riscv": {
 			"branch": "riscv",
-			"commit": "2208c60ea1a84a8681e21f8b53ea106412c34163",
+			"commit": "bd4e921739b45c4590e6e523f2be698e754d0b51",
 			"path": "TREE_RISCV"
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "4cc30a42e930eecc0ace53d02748ad40a1265c11",
+			"commit": "ef5ee57b594c779a7a47c29540ef3e6b87e3ea35",
 			"path": "TREE_UPSTREAM"
 		}
 	}
