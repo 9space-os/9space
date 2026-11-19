@@ -3,7 +3,7 @@
 	"parts": {
 		"gcc": {
 			"branch": "main",
-			"commit": "79a60c9abbc42ead110634c1114772fd3f9b9006",
+			"commit": "49ee5ab8957664dbc7d3a6fa36a9c3ec822962c0",
 			"path": "GCC_DIR"
 		},
 		"go": {
@@ -43,7 +43,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "cf74a918b6f7a423fe15e85c52e91cfa13e4694b",
+			"commit": "66e79df91817225065f61ee847353c8cfe00303f",
 			"path": "TREE"
 		},
 		"tree-gcc": {
