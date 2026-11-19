@@ -222,6 +222,34 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   signed ISOs, an SBOM, channel `release`.
 - Phase 3: the GPU on arm64, riscv64 drivers, packages.
 
+## Hardware: gaps across the machines
+
+The inventory of 2026-11-19 (`hardware.md`: the X1, the ThinkBook, the
+build host); what is missing on more than one machine or blocks one:
+
+- The ThinkBook's APU: RADV finds no Vulkan device (`vkEnumeratePhysicalDevices`
+  zero, no drm9 line with `DRM9DEBUG=3`; the loader or ICD stage first);
+  its rtw89 stalls after two load rounds while associated (an A/B against
+  the kernel before tree be974532b, counters for the block-ack window's
+  old frames, then a window reset as net80211's reorder does); `wlan auto`
+  at boot does not associate on the X1 and the ThinkBook.
+- Bluetooth on all three (X1 8087:0a2a, ThinkBook, host 2357:0604 RTL8761B):
+  9front has none. A project of its own: HCI over USB as an nusb driver
+  with the firmware load, L2CAP/SDP, then HID, then audio; permissive
+  templates only (FreeBSD's netgraph Bluetooth, NetBSD's stack; BlueZ is
+  GPL).
+- HDMI/DP audio: the X1 ("no audio codecs found") and the host's RX 7600
+  (1002:ab30 unknown to `audiohda`; amdgpu's display audio not done).
+- Internal disks: NVMe and AHCI never read or written on real hardware
+  (all machines' disks are off limits by the user's rule); a QEMU NVMe
+  test first (detect, partition, gefs and hjfs, load, the CD's install
+  onto NVMe) before an install on any machine.
+- The build host as a target (plan: attic `dist-docs/plans/host-b550.md`):
+  its devices by VFIO in a guest first (HDA ALC897, the Matisse xHCI with
+  the PCM2902 USB audio, the RX 7600 with its HDMI audio), a native boot
+  from a stick with `*nonvme=1 *noahci=1` only with the user's word (it is
+  the PXE server and the agents' machine).
+
 ## Shelved by the user
 
 - Power management (2026-11-19): suspend stages B-D, the PXE root lost
