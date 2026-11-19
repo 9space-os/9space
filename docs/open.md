@@ -120,13 +120,20 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 - The pager livelocks when only hostowner (noswap) processes run: killbig
   spins (L1009, L1110, L1124).
 - Not yet checked for the gcc port: a struct's tail padding (kencc rounds,
-  gcc does not) in raw I/O by sizeof (L770); 32-bit `long` wraparound
-  (L605); dtracy's sign extension on 386 (L725); eqn `yylval=(int)s`, gs
-  `sfnts_reader_rlong`, scat `heavens()` (L1628, L1629, L1646).
-- APE: stdio without locks, `_exit`/abort do not end the other threads,
-  no locale but "C", no `<uchar.h>` (gcc `NOTES.md`).
+  gcc does not) in raw I/O by sizeof (L770); 32-bit `long` wraparound in
+  `long d = a - b` without a cast (L605); dtracy casting pointers to 64-bit
+  integers, sign-extended by gcc on 386 (L725; its uchar/ushort shifts are
+  done, c95092a33). Known and left: eqn `yylval=(int)s` (a pointer in an
+  int, also in 9front amd64), scat `heavens()` (a projection over the
+  wrong struct), gs' `sfnts_reader_rlong` (four calls in one expression,
+  a gs bug; L1628, L1629, L1646).
+- APE: stdio without locks (`fopen` no longer gives two threads one FILE,
+  tree aacb318f6; a shared FILE is unguarded); `_exit`/abort end the
+  whole program only in native programs with Rust's std (`__plan9_exit`,
+  tree 11a5cf69e), a C program's other pthreads go on; no locale but "C"
+  (gcc `NOTES.md`, whose "`<uchar.h>` is missing" is stale: tree
+  5265aca8a).
 - acid cannot read the gcc port's ELF symbols (L938, L1574).
-- aux/acpi crashed once in libaml (evnote, L1562); maybe done by aea4f36b9.
 - 386: APE shared memory cannot grow (L1427); 386 and arm64 come later by
   the user's choice (L1382).
 
@@ -150,10 +157,14 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 - rtw89: MSI, VHT/HE, 6 GHz, the DMA mask above 64 GB; the "SER cannot
   recognize error" message at each start (harmless; L1531, L1543, L1568).
-- etheriwl: 40/80 MHz and VHT; an aggregation queue of 64 hung and was not
-  rechecked; the 9000 family's path untested, no card (L1763, L1765).
+- etheriwl: 40/80 MHz and VHT; an aggregation queue of 64 (`Aggqmax` 16
+  by default, ctl `aggq`) hung the 7265D before the tx-status fix
+  (tree b9a54d270) and was not rechecked after it; the 9000 family's path
+  untested, no card (L1763, L1765).
 - Replica: the signed index has no expiry; no way back on hjfs (L1444).
-- factotum's wpapsk compares 6 bytes of the PTK, not 32 (L1517).
+- factotum's wpapsk `calcptk` orders the two nonces by their first 6
+  bytes (`memcmp(..., Eaddrlen)`), not all 32: a wrong PTK only when those
+  6 bytes are equal; 9front's code, an upstream candidate (L1517).
 
 ## Tests and the build
 
