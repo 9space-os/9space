@@ -253,11 +253,16 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   `ulong - ulong` into a 64-bit `long` (clang-query, 108 places): real in
   pc/i8253.c `i8253timerset` and port/segment.c's idle image order;
   pointers to (u)vlong on 386, sign-extended by gcc: dtracy's arguments.
-  Fixes made, in the next build block (gcc branch, upstream 0061/0062).
-  Open: expressions with plan9-extension member names (`&x.Lock`) are
-  dropped by clang, so not checked; 386 and arm64 objects only where a
-  directory's last build was theirs; sudoku's save files (12 bytes a cell
-  against 6c's 16). Known and left: eqn `yylval=(int)s` (a pointer in an
+  Fixes made (gcc a1778c553, 75dcc306c, d806af79b; main ceba80e85;
+  upstream 0061/0062). The clang checks again over a copy where every
+  embedded member is `union { Lock; Lock Lock; }` (both access paths, the
+  same layout), the kernel's register globals (`m`, `up`) plain externs
+  and `-ferror-limit=0` (clang had stopped after 20 errors a file):
+  errors 8065 in 1761 files before, 6152 in 1554 after (the rest old
+  K&R files and local headers), and the same 105 and 58 places as without
+  it: nothing missed (`padcheck/transform.py`). Open: 386 and arm64
+  objects only where a directory's last build was theirs; sudoku's save
+  files (12 bytes a cell against 6c's 16). Known and left: eqn `yylval=(int)s` (a pointer in an
   int, also in 9front amd64), scat `heavens()` (a projection over the
   wrong struct), gs' `sfnts_reader_rlong` (four calls in one expression,
   a gs bug; L1628, L1629, L1646).
