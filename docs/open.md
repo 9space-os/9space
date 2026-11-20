@@ -91,9 +91,16 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   /dev/swap's free line). On the X1 (2026-11-20): under a hog the reserve
   chunk went back, nobody killed, the driver lived; the cost of the
   lookups' count is none measurable (vkcube within 0.1 %, drawspeed equal
-  over 10 runs a side). Open: a bigger case (a client freeing hundreds of
-  MB, then the hog), and "memory short" counted per episode, not per
-  second.
+  over 10 runs a side). "memory short" counts episodes and seconds since
+  cd5115f52. The GPU drivers are noswap since c0a610b20 (gpu(4)): on the
+  X1's hog soak (2026-11-20, attic hw/x1-hogsoak-20261120) aux/i915 lived
+  and the pool gave 8 chunks back, but the pager killed wsys, vkcube and
+  wbar first (each bigger than a hog child): wsys to be noswap too
+  (wsys(4), FreeBSD's protect(1); patch ready, the ui session's area).
+  Open: the soak again with it and a slower hog (the pool giving back
+  over seconds), and a client freeing hundreds of MB. An option for the
+  user, not planned: a kill priority per process (Linux's oom_score_adj:
+  clients before the compositor) instead of the on/off of noswap.
 - The LinuxKPI's `DECLARE_DELAYED_WORK` (workqueue.h) is Linux's form and
   does not compile here (`struct work_struct` has no `entry`); unused so
   far, `INIT_DELAYED_WORK` at run time instead.
