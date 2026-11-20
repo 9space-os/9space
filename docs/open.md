@@ -199,7 +199,7 @@ tearing check, the GPU return under wsys -g (above).
 
 Smaller: ui's scene not clipped to the damage before vello encodes it
 (measured: no encode hotspot in QEMU or on the X1, no block for it);
-wsys(4) BUGS: "Rust's threads take 64" of ~250 segments: check; a rio
+a rio
 inside a window goes Broken when the window closes (real rio too, an
 upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
