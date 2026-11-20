@@ -226,11 +226,20 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   killbig killed waits in a mount flush to it): no longer a spinning
   pager (tree c452a27cf), but nothing frees it either. A way out (kill a
   noswap process after all? fail the flush?) is open.
-- Not yet checked for the gcc port: a struct's tail padding (kencc rounds,
-  gcc does not) in raw I/O by sizeof (L770); 32-bit `long` wraparound in
-  `long d = a - b` without a cast (L605); dtracy casting pointers to 64-bit
-  integers, sign-extended by gcc on 386 (L725; its uchar/ushort shifts are
-  done, c95092a33). Known and left: eqn `yylval=(int)s` (a pointer in an
+- Checked for the gcc port (2026-11-20, by tool; the scripts in the attic,
+  `dist-docs/plans/padcheck/`): a struct's layout as 6c/8c give it
+  (padded to 8/4 at the end, struct members aligned to 8/4) against gcc's
+  DWARF for every object: 1469 structs differ, 13 of them in raw I/O by
+  sizeof, none wrong with gcc (scat's records are 8c's sizes; Udphdr is
+  52 as udp(3) wants, 6c's 56 is a 9front bug in tftpfs and socksd);
+  `ulong - ulong` into a 64-bit `long` (clang-query, 108 places): real in
+  pc/i8253.c `i8253timerset` and port/segment.c's idle image order;
+  pointers to (u)vlong on 386, sign-extended by gcc: dtracy's arguments.
+  Fixes made, in the next build block (gcc branch, upstream 0061/0062).
+  Open: expressions with plan9-extension member names (`&x.Lock`) are
+  dropped by clang, so not checked; 386 and arm64 objects only where a
+  directory's last build was theirs; sudoku's save files (12 bytes a cell
+  against 6c's 16). Known and left: eqn `yylval=(int)s` (a pointer in an
   int, also in 9front amd64), scat `heavens()` (a projection over the
   wrong struct), gs' `sfnts_reader_rlong` (four calls in one expression,
   a gs bug; L1628, L1629, L1646).
@@ -350,16 +359,15 @@ build host); what is missing on more than one machine or blocks one:
 
 ## Shelved by the user
 
-- Power management (2026-11-19): suspend stages B-D, the PXE root lost
-  after more than 150 s asleep (ufs keepalive), the device that keeps the
-  package out of pc3 and deeper, a load test of the C-states (behind
-  `*cstates=`), `aux/pstate` only with `pstate=`; HWP, CPPC and AMD
-  P-states untested.
-- aux/power reads a processor's MSRs on the wrong one on an idle
-  machine (its `sleep(0)` after `wired n` yields only when another process
-  is ready) and does not clamp a residency to 100%: one absurd cc7 on the
-  X1. The fix (sleep(1), a reading kept per processor, clamped) is in the
-  attic, `dist-docs/plans/aux-power-wired.patch`, not applied.
+- Suspend/resume: shelved again (user, 2026-11-20): stages B-D (the
+  drivers around the sleep, the lid). Done before: the PXE root survives
+  a long sleep (ufs without TCP keepalive, tree f90b2651b, not yet the
+  laptops' running ufs: with the user); aux/power right (2328f9717).
+- Power management in operation: `aux/pstate` on by default on both
+  laptops (`pstate=auto` in their machine files, tree 9794dc663; X1
+  intel-eist, ThinkBook amd-cppc). Waiting for the user at the machine:
+  the C-states' load test (`*cstates=`) and which device keeps the
+  package out of pc3 and deeper. HWP untested.
 - nix on the X1 (the touchpad dead under nix, its UEFI "no boot devices";
   L1728).
 - ThinkBook: the power button (GPIO, no event), fingerprint, internal mic,
