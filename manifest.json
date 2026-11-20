@@ -43,12 +43,12 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "43cc8e40a05df6e6078c4cd92d56c7d6dadbac79",
+			"commit": "08b75cbb97bf49ac819ab55e851a1d2ec630af03",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "feecc2c7a6c9177a144e7534a4c7d0b8f5b8c193",
+			"commit": "d806af79b7e8eea3995e72e95b3a0cc7dd0b3376",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
@@ -63,7 +63,7 @@
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "ccc1e37571c9f8b57fec1bebbde2474a2aebab1e",
+			"commit": "f4f999a207b83fd892d09accdb69292e90f21bf4",
 			"path": "TREE_UPSTREAM"
 		}
 	}
