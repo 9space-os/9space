@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "3e6722fca7ef14e16194df55d711e9f8c8dbf490",
+			"commit": "37d2a4ab5353fa14ac7abd79ca977ffcf10dd021",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
@@ -13,17 +13,17 @@
 		},
 		"browser/servo": {
 			"branch": "plan9",
-			"commit": "188b77515d3d1823330bdb21dd6d01bc81cad559",
+			"commit": "db2f6d6212c5cbf72e6e1eb4836d01c83b22daac",
 			"path": "BROWSER_DIR/servo"
 		},
 		"gcc": {
 			"branch": "main",
-			"commit": "ccefa5ba399f260ff715365422693c022c9c2b23",
+			"commit": "fabf42ef2a88fde206a3203e758352192ffe859e",
 			"path": "GCC_DIR"
 		},
 		"go": {
 			"branch": "main",
-			"commit": "130562448521a09ab690bd3b73b37341fcf02ce6",
+			"commit": "7d5c8cb2064f91983b4ec3271d012cba91f6dad3",
 			"path": "GO_DIR"
 		},
 		"go/go": {
@@ -43,7 +43,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "9c5004d0f2b23cdbb652a86e9704115dfaf3aa17",
+			"commit": "385951f692b563f9848b6af9dda34f01d70abf34",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -58,7 +58,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "627ade4065920a34266cc130d71067cf750e5593",
+			"commit": "969846bfca389b6049962c7277105268652333a3",
 			"path": "TREE"
 		},
 		"tree-gcc": {
