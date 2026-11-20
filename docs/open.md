@@ -169,8 +169,12 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 9. ui: a slow first frame (shader compilation, no pipeline cache across
    starts; L1274), no native build with the `gpu` feature, a window
    node's x, y, role set only at creation.
-10. GPU windows not seen by draw(3) readers and the software cursor
-    (L1359).
+10. GPU windows and draw(3) readers: documented (wsys(4) BUGS): under -g
+    draw(3)'s screen image lacks the GPU windows, /dev/screen in a window
+    has them. Low priority, until it shows on real hardware: the soft
+    cursor (vga hwgc soft) under GPU windows, only when
+    kmsout_cursor_image fails; fix: comp.rs draws the soft cursor as the
+    top layer (its damage the old and new cursor rects).
 
 Later, by the user's choice: Wayland (no linux-dmabuf v4, no
 linux-drm-syncobj, L1363; clients beyond weston and foot not ported,
@@ -183,9 +187,7 @@ tearing check, the GPU return under wsys -g (above).
 
 Smaller: ui's scene not clipped to the damage before vello encodes it
 (measured: no encode hotspot in QEMU or on the X1, no block for it);
-wsys(4) BUGS "clients cannot announce theirs again yet" is stale for
-p9win's windows and Mesa's WSI (say which still cannot: draw(3)
-programs?), "Rust's threads take 64" of ~250 segments: check; a rio
+wsys(4) BUGS: "Rust's threads take 64" of ~250 segments: check; a rio
 inside a window goes Broken when the window closes (real rio too, an
 upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
