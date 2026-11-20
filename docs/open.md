@@ -122,6 +122,17 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   the killed virtiogpu in "Queueing", the new one in "Stat", vktri in
   "Open", the closeprocs in "Queueing"; its kernel stacks are not read yet
   (rc's dd cannot seek to a kernel address; acid -k, else a pread helper).
+- aux/amdgpu killed on the ThinkBook (amdlost, 2026-11-20, attic
+  hw/thinkbook-amdlost-20261120): (A) wsys Broken in Mesa's
+  util_streaming_load_memcpy reading a VRAM BO's Phys segment at its base
+  after the driver died, though Phys segments are made "lost" like Sticky
+  ones (p9_segphys, devsegment.c): a window before the ORCLOSE close or a
+  removal by name; needs a repro with a trace. (B) the restarted driver
+  fails its probe: "psp reg (0x16080) wait timed out ... PSP create ring
+  failed ... hw_init of IP block <psp> failed -22", then a MODE2 reset: the
+  killed driver leaves the PSP where no firmware loads; Linux resets the
+  ASIC before probing one already initialised (to look at in OpenBSD's
+  amdgpu first). Until then no gpu -> cpu -> gpu on the ThinkBook.
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
 - RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
