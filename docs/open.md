@@ -105,23 +105,23 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   does not compile here (`struct work_struct` has no `entry`); unused so
   far, `INIT_DELAYED_WORK` at run time instead.
 - The GPU restart path under host I/O load (tests/gpu wsysback, QEMU with
-  venus, 2026-11-20): two sporadic defects, seen only between ~10:15 and
-  11:00 while the host was busy (an 87 GB rm -rf at ~10:30, the X1's PXE
-  boot at 10:40), never in the 24 runs after it. (1) A vktri started
-  fresh after the driver's restart gets VK_ERROR_DEVICE_LOST on its first
-  submit: the new driver serves (/shr/gpu/0 fine, kmesg clean), but the
-  client's context never submits ("ctx 3 capset 4 fence 0/0"): venus
-  decides "lost" before the driver. (2) A hang of 300 s: the killed
-  virtiogpu in "Queueing", the new one in "Stat", vktri in "Open", the
-  closeprocs in "Queueing". Suspected: a timing race in the restart path
-  that the load exposes; a correct restart must hand a fresh client
-  neither. Not "owner going" (0c6a48036; as often without it) nor
-  segment.c's idle image order (only exec's text images; 4 of 17 runs
-  with it, 0 of 14 without, all of them in that window). Next: a
-  deterministic repro with an artificial load on the host's disk (dd or
-  fio) during wsysback, and the capture script (each waiting proc's kregs
-  and 8 KB of its kernel stack, symbolized against the booted kernel;
-  attic hw/wsysback-20261120/).
+  venus, 2026-11-20): reproduced with an artificial load on the host's disk
+  (attic hw/wsysback-20261120/iorepro: a 4 GB-file writer with fsync and a
+  small-file storm): 2 FAIL and 1 hang in 16 runs, against 0 in 24 without
+  load. (1) A vktri started fresh after the driver's restart gets
+  VK_ERROR_DEVICE_LOST on its first submit: venus says "the renderer is
+  lost (ring fatal error on submit)" (MESA_LOG_LEVEL=debug): its new ring
+  already carries VK_RING_STATUS_FATAL_BIT_MESA, which only the host's
+  renderer (virglrenderer) sets; its context never submitted ("fence 0/0"),
+  the new driver fine, kmesg clean. So the host marks the fresh ring fatal
+  under load, or our side makes it before its memory is ready and the load
+  only stretches that; "plan9: import ...: no such export" (the old
+  driver's WSI buffers) shortly before. Not "owner going" (0c6a48036) nor
+  segment.c's idle image order (cleared by numbers). Next: the host
+  renderer's log, the ring's setup order (ui session). (2) A hang of 300 s:
+  the killed virtiogpu in "Queueing", the new one in "Stat", vktri in
+  "Open", the closeprocs in "Queueing"; its kernel stacks are not read yet
+  (rc's dd cannot seek to a kernel address; acid -k, else a pread helper).
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
 - RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
