@@ -71,9 +71,11 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   keeps its notices. Exceptions the user accepted: Bison-generated parsers,
   dual-licensed files (a permissive choice), FreeBSD's BSD-4-Clause
   (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept), and
-  MPL-2.0 for the browser part only: Servo and SpiderMonkey (mozjs) and the
-  patches to them in `browser/` (`browser/LICENSES.md`); our own files there
-  are MIT, and no MPL code goes into the tree.
+  MPL-2.0 for the browser only: Servo and SpiderMonkey (mozjs) and the
+  patches to them in `browser/` (`browser/LICENSES.md`), and the patches of
+  the browser's MPL crates.io crates in `toolchain/rust/patches/crates`
+  (webdriver, wr_glyph_rasterizer: all crates.io crates live there); our own
+  files are MIT, and no MPL code goes into the tree.
 - Git: commit only your own files (`git add <files>`, not `-A` in a tree with
   build output); never commit build files (`.o`, `.d`, logs). Other agents
   may have uncommitted work in a part (`toolchain/rust`: crate patches):
