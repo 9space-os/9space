@@ -314,6 +314,11 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   not in three runs alone. Next time, before the kill: `cat
   /proc/N/kregs` and the kernel stack (`dd -if /proc/N/mem -bs 8 -iseek
   $((sp/8)) -count 1024`) of those processes, with the guest's 9pc64.
+- Sporadic, 2026-11-20 (the X1 session): wsysback's "after: FAIL -4": a
+  fresh vktri's ctx 3 never submits (fence 0/0) while the new driver
+  serves and kmesg is clean, so the device loss arises in venus before
+  the driver; clustered under host I/O load (10:15-11:00): a race in the
+  restart path.
 - Sporadic, 2026-11-20: tests/uiserver's uilost boot once printed no
   lines (the venus guest up, the MCP call in run.sh came back empty);
   the debug run and the next full run were green.
