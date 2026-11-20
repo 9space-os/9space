@@ -84,8 +84,12 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 - The LinuxKPI page pool (aux/i915, aux/amdgpu) gives memory back since
   tree 33d5e2fdd (i915-pool.md: (c) 231668ae3 the status line, (a)
   2aaa5c5e0 wholly free chunks, (b) 33d5e2fdd under memory pressure, with
-  /dev/swap's free line). Open: the X1 soak under real memory pressure (a
-  hog), and the cost of the lookups' count on the X1 (vkcube, drawspeed).
+  /dev/swap's free line). On the X1 (2026-11-20): under a hog the reserve
+  chunk went back, nobody killed, the driver lived; the cost of the
+  lookups' count is none measurable (vkcube within 0.1 %, drawspeed equal
+  over 10 runs a side). Open: a bigger case (a client freeing hundreds of
+  MB, then the hog), and "memory short" counted per episode, not per
+  second.
 - The LinuxKPI's `DECLARE_DELAYED_WORK` (workqueue.h) is Linux's form and
   does not compile here (`struct work_struct` has no `entry`); unused so
   far, `INIT_DELAYED_WORK` at run time instead.
