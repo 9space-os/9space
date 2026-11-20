@@ -90,6 +90,11 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   bound it (`sudo tree/scripts/guest/vfio-gpu.sh bind <pid of the long-lived
   parent>`); no guest while binding or releasing.
 - Documentation only in English: `dist/docs`, the wiki, READMEs, NOTES.md, comments. Exception: the tree's `MEMORY.md` stays German.
+- The wiki (`dist/wiki`) is the way in for people who want to work with 9space
+  and must always be current: a change to anything a wiki page describes
+  (a command, a path, a build step, a device file, a default) updates that
+  page in the same slot, tried by following it; no pin with a page known to be
+  stale.
 - Fix causes, not symptoms; close open ends (hangs, unrun tests) before new work.
 - Clean solutions over workarounds, even when they change compatibility
   with 9front (an interface, a type, a syscall's arguments): change every
