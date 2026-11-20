@@ -136,31 +136,27 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   "Open", the closeprocs in "Queueing"; its kernel stacks are not read yet
   (rc's dd cannot seek to a kernel address; acid -k, else a pread helper).
 - aux/amdgpu killed on the ThinkBook (amdlost, 2026-11-20, attic
-  hw/thinkbook-amdlost-20261120): (A) wsys Broken in Mesa's
-  util_streaming_load_memcpy reading a VRAM BO's Phys segment at its base
-  after the driver died. Cause found (code, 2026-11-20): the LinuxKPI makes
-  its segments ORCLOSE only once p9_onexit armed the reset (p9dev.c
-  segorclose), and aux/amdgpu never calls p9_onexit: its clients' views
-  are never removed, so "lost" never takes effect; the pager queue going
-  dead (pagerqdead) flushes no PTEs and pagerpa ignores dead, so mapped
-  VRAM stays live and writable (aliasing the next driver's memory), an
-  unmapped page faults: the process dies. Fix: the views (alias, phys:
-  they own no pages) always ORCLOSE + lost, the page-owning sticky
-  segments only after the reset; a dead pager queue revokes its segment
-  too. Check: amdlost on the ThinkBook, a guest test of a pager segment
-  whose driver dies without onexit. (B) the restarted driver
+  hw/thinkbook-amdlost-20261120): (A) fixed (tree 969846bfc, 2026-11-20):
+  the LinuxKPI made its views ORCLOSE only after p9_onexit, which aux/amdgpu
+  never calls, and a dead pager queue revoked nothing; now the views are
+  always ORCLOSE (aux/gpu/gpuseg.c, the one place for the drivers' #g
+  segments) and a dead queue revokes its pager segments. tests/gpu
+  segrevoke "pager dead" failed before (the client killed at an unmapped
+  page, its write in the bar), passes after; on AMD hardware still to be
+  run (the RX 7600 by VFIO). (B) the restarted driver
   fails its probe: "psp reg (0x16080) wait timed out ... PSP create ring
   failed ... hw_init of IP block <psp> failed -22", then a MODE2 reset: the
   killed driver leaves the PSP where no firmware loads; Linux resets the
   ASIC before probing one already initialised (to look at in OpenBSD's
-  amdgpu first). Until then no gpu -> cpu -> gpu on the ThinkBook. B is
-  also why aux/amdgpu arms no reset at exit (no p9_onexit): it needs an
-  onexit sequence, so that its page-owning segments go with it too.
+  amdgpu first). Testable only on the RX 7600 by VFIO now (the ThinkBook
+  is no longer a test machine, 2026-11-20). B is also why aux/amdgpu arms
+  no reset at exit (no p9_onexit): it needs an onexit sequence, so that its
+  page-owning segments go with it too.
 - A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu once
   its views are always ORCLOSE, defect A's fix) hold one open ORCLOSE file
   per client view, so all clients together have at most MAXNFD (5000,
-  portdat.h) views of one driver, its own fds included. To measure in an
-  X1 slot: how many buffer objects ui (vello) and servoshell hold. Later,
+  portdat.h) views of one driver, its own fds included. To measure in a
+  guest (venus): how many buffer objects ui (vello) and servoshell hold. Later,
   a design without a file per view (the kernel removing a dead driver's
   views by their maker).
 - The #g segment handling of the drivers is there twice: virtiogpu.c and
@@ -386,12 +382,17 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
-- Sporadic, 2026-11-20: tests/gpu's wsysback hung once for 300 s (tree
-  e94dbb71d's run): the killed aux/virtiogpu in Queueing, the new one in
-  Stat, vktri in Open, two closeprocs in Queueing, wsys in Semacquire;
-  not in three runs alone. Next time, before the kill: `cat
-  /proc/N/kregs` and the kernel stack (`dd -if /proc/N/mem -bs 8 -iseek
-  $((sp/8)) -count 1024`) of those processes, with the guest's 9pc64.
+- Sporadic, 2026-11-20: tests/guest's apegnutest once failed its pty part
+  (tree 969846bfc's run): "^C: interrupt to the note group" first, then
+  the VMIN 3 and VMIN 0/VTIME 3 checks behind it (they read what was
+  left); the next run was green, 331 of 331. ptyfs' VMIN/VTIME are new
+  (4ee185d0f). Log: cache/stability/logs/guest-defecta-fail1-console.log.
+- Sporadic, 2026-11-20: tests/gpu's wsysback hung for 300 s (tree
+  e94dbb71d's run, again in 627ade406+'s joint run without host load):
+  the killed aux/virtiogpu in Queueing, the new one in Stat, vktri in
+  Open, closeprocs in Queueing, wsys in Semacquire. Its kernel stacks are
+  read by itself next time (tree ac44f4f5b: tests/gpu/kstacks.rc, acid -k,
+  resolved by scripts/debug/kstack.py).
 - Sporadic, 2026-11-20: tests/uiserver's uilost boot once printed no
   lines (the venus guest up, the MCP call in run.sh came back empty);
   the debug run and the next full run were green.
