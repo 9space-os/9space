@@ -45,8 +45,9 @@ and `dist/bin/fetch`:
 - `toolchain/rust/fetch.sh`: Rust's nightly source archive and libc's crate
   (signatures, `sha256.txt`) as the repositories `rust/` (its git data in
   `rust.git`) and `libc/`, our patches on their branch `plan9`; then
-  `rust/bootstrap.toml`, `crates/` (the crates.io crates we change, fetched and
-  checked against crates.io's index) and `cargo-plan9.toml`.
+  `rust/bootstrap.toml`, `crates/` (the crates.io crates we change, the
+  browser's too, fetched and checked against crates.io's index) and
+  `cargo-plan9.toml`.
 - `toolchain/go/fetch.sh`: Go's release archive as `go/`, our patches on its
   branch `plan9`.
 - `dist/bin/fetch`: the archives of `distfiles.list` (Mesa, Wayland, SDL3, …)
@@ -244,7 +245,7 @@ Then rebuild what changed:
 | only the tree | `dist/bin/build-all amd64 386 arm64` (`build.exe -D`: only what is out of date; seconds when nothing is) |
 | gcc's patches or `sources.txt` | `cd toolchain/gcc && rm -rf src && ./fetch.sh && cd ../..`, then `dist/bin/build-toolchains -from gcc-amd64` (Rust and the tree depend on gcc) |
 | Rust's patches (`toolchain/rust/patches/*`, not `crates`) | `cd toolchain/rust && scripts/rust-patches.sh apply && cd ../..`, then `dist/bin/build-toolchains -from rust-stage1` |
-| a crate patch (`toolchain/rust/patches/crates`) | `cd toolchain/rust && scripts/crates-patch.sh apply && scripts/cargo-config.sh && cd ../..`, then `dist/bin/build-toolchains -from cargo-amd64` |
+| a crate patch (`toolchain/rust/patches/crates`) | `cd toolchain/rust && scripts/crates-patch.sh apply && scripts/cargo-config.sh && cd ../..`, then `dist/bin/build-toolchains -from cargo-amd64`; for a crate of the browser (dlib, imsz, inventory, ipc-channel, libsqlite3-sys 0.36.0, mozangle, rustls-platform-verifier 0.7.1, surfman, webdriver, wr_glyph_rasterizer) `browser/build.sh` instead |
 | Rust's `sources.txt` (a new nightly) | `cd toolchain/rust && rm -rf rust rust.git libc && ./fetch.sh && cd ../..`, then `-from rust-stage1` |
 | Go's patches or `sources.txt` | `cd toolchain/go && rm -rf go && ./fetch.sh && cd ../..`, then `-from go-amd64` |
 | `distfiles.list` | `dist/bin/fetch`, then `dist/bin/build-all amd64 386 arm64` |

@@ -32,7 +32,7 @@ them (see [[Branches]]):
 | `toolchain/go/go` | Go's release archive (`fetch.sh`) as a repository; the port on branch `plan9` | go1.27.3 |
 | `tools/plan9port` | rc, yacc and the generators of the host build (`PLAN9PORT`); 9fans' repository, unchanged: its `INSTALL` writes the install path into ~75 files, `bin/repos` knows that | github.com/9fans/plan9port |
 | `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9front system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
-| `browser` | `fetch.sh`, `prepare.sh`, `build.sh`, `patches/` (servo, mozjs, crates), `webfs-rs/`; MPL-2.0 for Servo's and mozjs' parts (`LICENSES.md`) | servo/servo (a nightly's commit), servo/mozjs, servo/stylo |
+| `browser` | `fetch.sh`, `prepare.sh`, `build.sh`, `patches/` (servo, mozjs, crates: stylo's, a git source Servo brings), `webfs-rs/`, `tests/`; the crates.io crates it changes are `toolchain/rust`'s (`patches/crates`, `cargo-plan9.toml`); MPL-2.0 for Servo's and mozjs' parts (`LICENSES.md`) | servo/servo (a nightly's commit), servo/mozjs, servo/stylo |
 | `browser/servo`, `mozjs` | the archives of those commits (`fetch.sh`) as repositories of their own, tag `pristine`; the port on branch `plan9` (from `patches/`) | servo/servo, servo/mozjs |
 
 Outside 9space, referenced by `dist/paths.env`:
