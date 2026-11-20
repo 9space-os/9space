@@ -302,6 +302,16 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - riscv64: no ISO, the tree never built itself there, musl without real
   quad `expl`/`logl`/`log1pl`.
 - Building `build.exe` with Go on 9front untested (wiki Toolchains).
+- rust-analyzer (the user, 2026-11-20): (1) on the Linux host, a
+  `rust-analyzer.toml` per workspace (the tree's, toolchain/rust's, browser's)
+  so that it analyses for `x86_64-unknown-plan9` with the stage-1 rustc's
+  sysroot and the right cargo config (paths from paths.env), so that
+  plan9-only code is not shown inactive; (2) ported to 9space: built by
+  toolchain/rust for plan9 next to rustc, clippy and rustfmt (stage2 tools),
+  run on 9space as an LSP server for editors there; needs the plan9 std's
+  process, pipe and file-watching parts it uses (polling, since there is no
+  inotify); (3) later both cargo and rust-analyzer for the host from
+  toolchain/rust too, so the builds need no rustup.
 
 ## Network
 
