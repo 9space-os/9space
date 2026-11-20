@@ -113,26 +113,66 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   lost (ring fatal error on submit)" (MESA_LOG_LEVEL=debug): its new ring
   already carries VK_RING_STATUS_FATAL_BIT_MESA, which only the host's
   renderer (virglrenderer) sets; its context never submitted ("fence 0/0"),
-  the new driver fine, kmesg clean. So the host marks the fresh ring fatal
-  under load, or our side makes it before its memory is ready and the load
-  only stretches that; "plan9: import ...: no such export" (the old
-  driver's WSI buffers) shortly before. Not "owner going" (0c6a48036) nor
-  segment.c's idle image order (cleared by numbers). Next: the host
-  renderer's log, the ring's setup order (ui session). (2) A hang of 300 s:
+  the new driver fine, kmesg clean. The host's journal (not
+  VIRGL_LOG_FILE) says why, 15 times on 2026-11-20: `vkr_ring_thread:
+  cmd_size(N) > ring->buffer.size(131072)`, N 1.5 to 4.2 M: the new ring's
+  control memory holds an old ring's tail counter, memory aliased between
+  an old and a new ring across the driver's restart: the guest's shmem
+  cache, or QEMU's deferred blob unmap at a hostmem offset the new driver
+  hands out again. Cause found (code, 2026-11-20): venus's shmem, the
+  ring's control memory too, is a host blob, and vn_renderer_plan9 maps
+  it by attaching the kernel physseg of the whole hostmem BAR
+  (gpu0bar4[cw], devgpu.c) for the process's life; no #g segment, so
+  nothing revokes it when the driver dies: the across vktri writes its
+  old ring's tail at the offset the new driver gives a new ring. The same
+  is an isolation gap without any restart: every venus client sees every
+  other client's host blobs, and its own freed ones. Fix (ui session):
+  per mapped host blob a #g alias segment of the BAR in virtiogpu
+  (ORCLOSE, lost), attached per bo; unmap removes it. Not the context ids
+  (destroyold, reverted), not "owner going" (0c6a48036) nor segment.c's
+  idle image order (attic hw/wsysback-20261120/destroyold/,
+  journal-ringfatal.txt). (2) A hang of 300 s:
   the killed virtiogpu in "Queueing", the new one in "Stat", vktri in
   "Open", the closeprocs in "Queueing"; its kernel stacks are not read yet
   (rc's dd cannot seek to a kernel address; acid -k, else a pread helper).
 - aux/amdgpu killed on the ThinkBook (amdlost, 2026-11-20, attic
   hw/thinkbook-amdlost-20261120): (A) wsys Broken in Mesa's
   util_streaming_load_memcpy reading a VRAM BO's Phys segment at its base
-  after the driver died, though Phys segments are made "lost" like Sticky
-  ones (p9_segphys, devsegment.c): a window before the ORCLOSE close or a
-  removal by name; needs a repro with a trace. (B) the restarted driver
+  after the driver died. Cause found (code, 2026-11-20): the LinuxKPI makes
+  its segments ORCLOSE only once p9_onexit armed the reset (p9dev.c
+  segorclose), and aux/amdgpu never calls p9_onexit: its clients' views
+  are never removed, so "lost" never takes effect; the pager queue going
+  dead (pagerqdead) flushes no PTEs and pagerpa ignores dead, so mapped
+  VRAM stays live and writable (aliasing the next driver's memory), an
+  unmapped page faults: the process dies. Fix: the views (alias, phys:
+  they own no pages) always ORCLOSE + lost, the page-owning sticky
+  segments only after the reset; a dead pager queue revokes its segment
+  too. Check: amdlost on the ThinkBook, a guest test of a pager segment
+  whose driver dies without onexit. (B) the restarted driver
   fails its probe: "psp reg (0x16080) wait timed out ... PSP create ring
   failed ... hw_init of IP block <psp> failed -22", then a MODE2 reset: the
   killed driver leaves the PSP where no firmware loads; Linux resets the
   ASIC before probing one already initialised (to look at in OpenBSD's
-  amdgpu first). Until then no gpu -> cpu -> gpu on the ThinkBook.
+  amdgpu first). Until then no gpu -> cpu -> gpu on the ThinkBook. B is
+  also why aux/amdgpu arms no reset at exit (no p9_onexit): it needs an
+  onexit sequence, so that its page-owning segments go with it too.
+- A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu once
+  its views are always ORCLOSE, defect A's fix) hold one open ORCLOSE file
+  per client view, so all clients together have at most MAXNFD (5000,
+  portdat.h) views of one driver, its own fds included. To measure in an
+  X1 slot: how many buffer objects ui (vello) and servoshell hold. Later,
+  a design without a file per view (the kernel removing a dead driver's
+  views by their maker).
+- The #g segment handling of the drivers is there twice: virtiogpu.c and
+  the LinuxKPI's p9dev.c each have segcreate, rmseg and the ORCLOSE
+  table, and both need the same rule (views ORCLOSE always, page-owning
+  segments after the reset at exit). One library for the drivers'
+  segments (modularity rule).
+- Isolation between clients of one driver: the per-object views give "a
+  client maps only its own objects, views end at unmap and at the
+  driver's death", not isolation between users' processes, which reach
+  each other anyway as one user (#g by name, /proc/N/mem). Drivers per
+  user (or views per user) are a design question.
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
 - RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
@@ -312,6 +352,18 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   process, pipe and file-watching parts it uses (polling, since there is no
   inotify); (3) later both cargo and rust-analyzer for the host from
   toolchain/rust too, so the builds need no rustup.
+- The script review's findings (2026-11-20), the toolchains' part
+  ((a) and (b) fixed): (c) x86_64-unknown-linux-gnu hard-coded as rust's build host
+  (install.sh, tests/rustc.sh, cargo-build.sh). (d) gcc's build.sh usage
+  stops before BUILD, OUTDIR, PLAN9; gcc tests/mk.sh ignores BUILD;
+  gcc fetch.sh's key branch has no keys/ (dead), autoconf 2.69 listed
+  but built by nobody; rust's async.sh and std-runner.sh let PLAN9_RISCV override PLAN9; rust
+  guest.sh's arm64 SMP=1 (the wfe hang is fixed; check *ncpu first);
+  rust-patches.sh's `ids "$d"` argument unused; crates-patch.sh's
+  libp9.a check silent without the amd64 tree; the installed READMEs say
+  "9front-rust", "9front-gcc", "9front-go" and go's "no cgo" (wrong);
+  go build.sh keeps build/gocache after a make.bash; go tests/guest.sh's
+  cp fallback lacks rust's rm -rf; rust tools/csstress.rc has no header.
 
 ## Network
 
@@ -363,6 +415,31 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   (md5 8547d171…). A no-op should compile nothing; cause open.
 - The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
   baca2517 (L1416).
+- The script review's code findings (2026-11-20; the whole list: attic
+  dist-docs/plans/scriptreview/FINDINGS.md; (a) and (b) fixed), the
+  tree's part: (c) hardcodings:
+  tests/gcc/gcc.py's `'16.2'`; scripts/linux/kbuild.py guesses Linux (6,6)
+  without VERSION; census.py, undef.py and gencmds.py match gcc's
+  messages in German and English (LC_ALL=C instead); sdl3/vendor.py's
+  version numbers not from VERSION, mesa/vendor.py's KeyError for arm64,
+  wayland/build.sh's ARCH=amd64; hw/soak.py's -w/-H defaults are this
+  LAN's addresses (from the machine files instead); hw/pxe.sh's OVMF
+  paths (paths.env as boot-cli.sh) and its QMP helper taking an event for
+  the reply. (d) small: rc scripts behind their .sh (gen-9syscall,
+  gen-initcode-i, gen-bootfs, gen-rebootcode-i: no arm64; rc/ape.rc's
+  lists by hand, no cxxwidgets; rc/check-install.rc ignores -r), paths.sh
+  sourced twice (gen-bootfs.sh, gen-sd53c8xx-i.sh), dead code
+  (find-added-casts.py), gencmds' warning names `6.` for every objtype,
+  mkinstall.py's P9P twice, check-install.py's options by hand,
+  find-clobbered/find-narrow-mmio check only a manifest's first
+  configuration, stage-dist.sh's `gccproto` holds every extra proto,
+  build-kencc.sh passes -smp twice, mcp-guest/vfio-test/pxe ignore
+  PLAN9 for ROOT, boot-cli.sh builds ufs for disk and CD boots too,
+  vfio-test.sh drops the arguments after `$1` without MCP, tests/wayland
+  sources common.sh twice, tests/boot's ncpu in both branches,
+  tests/static's numbering (va_arg under 5.), wlan/run.sh's misplaced
+  WPA2 comment, tests/run.sh's default list without sdl, glfw, winit,
+  uiserver, wayland (by name only, said so).
 
 ## Documentation
 

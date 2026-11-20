@@ -26,3 +26,4 @@ wayland-protocols-1.47.tar.xz	5fd4349bcbc9bab9a46f8cf77d1f434296a7a052c87440a094
 cacert-2026-11-05.pem	427c064216761a1e72a8b30f0d954d08cb6e4435a82091fb865afd20c8497285	https://curl.se/ca/cacert-2026-11-05.pem
 zlib-1.4.tar.gz	02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584	https://zlib.net/zlib-1.4.tar.gz
 zlib-1.4.tar.gz.asc	db39f00c5546358d34521f7c98bb082c3322af123db0ddb53910a57b6439301f	https://zlib.net/zlib-1.4.tar.gz.asc
+u-boot-2026.07.tar.bz2	78e8bfc382fe388f9b55aa1daf8c563522a037779b5d4c349d1415e381f1243e	https://ftp.denx.de/pub/u-boot/u-boot-2026.07.tar.bz2
