@@ -171,9 +171,16 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    (AltGr, right Alt); (3) Esc as the prefix only (works today).
    Recommended: (1). Also open: APE's `_getpty` starts ptyfs in the
    caller's window namespace, fixed for term only (L1372).
-9. ui: a slow first frame (shader compilation, no pipeline cache across
-   starts; L1274), no native build with the `gpu` feature, a window
-   node's x, y, role set only at creation.
+9. ui's start: done (tree 029c15f2e fonts late, f32415f7f pipeline cache;
+   venus: first frame painted 392 → 96 ms warm, uilat 281 → 140 ms;
+   UITIME=file for the phases). Small follow-ups: the Vulkan instance and
+   device made while the fonts load (a thread; at most ~36 ms now); on a
+   machine without a GPU, skip the Vulkan try (~30-40 ms on VESA) after a
+   look at gpu(4)'s /shr/gpu*. Also: a system font index (names and faces
+   to files, made at install or on a change) that ui and fontconfig (the
+   Servo study scans /lib/font/ttf each start) could both use. Open from
+   before: no native build with the `gpu` feature, a window node's x, y,
+   role set only at creation.
 10. GPU windows and draw(3) readers: documented (wsys(4) BUGS): under -g
     draw(3)'s screen image lacks the GPU windows, /dev/screen in a window
     has them. Low priority, until it shows on real hardware: the soft
