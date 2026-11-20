@@ -343,20 +343,27 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
   baca2517 (L1416).
 
-## Documentation for developers
+## Documentation
 
-- No clear entry point (the user, 2026-11-20: as important as the next
-  technical feature). A developer must quickly find out: how to write a ui
-  application; how it talks to the system (files and 9P, /mnt/wsys,
-  /dev/theme, the plumber, webfs); how to test it (tests/ui, uiserver, a
-  QEMU guest, tools/mcp); how to contribute a part without understanding the
-  whole system (repositories, branches, which tests per area, licences).
-  The material exists only scattered: ui(4), uiview, uigo, uitodo, the wiki's
-  Building/Toolchains/Desktop, the tests' READMEs. Plan: a wiki page
-  "Developing" as the entry, a short path through these four questions with a
-  worked example (a small ui program from nothing to a test in a guest),
-  linking the man pages as the reference; dist/docs stays the internal
-  planning. Source of the note: attic dist-docs/documentation.md.
+- The user, 2026-11-20: "9space muss so dokumentiert werden, dass
+  Interessierte damit arbeiten können": as important as the next technical
+  feature. Today the material is scattered (man pages ui(4), uiview, uigo,
+  uitodo; the wiki's Building/Toolchains/Desktop; the tests' READMEs) and
+  there is no entry point. The wiki becomes the reader's way in (dist/docs
+  stays the internal planning; the man pages stay the reference):
+  - Getting started: what 9space is; try it (the CD in QEMU, on hardware:
+    the machines of hardware.md), first steps on the desktop. (X1 session)
+  - Using: the desktop (wsys, windows, the bar, keys, theme, monitors), the
+    network and WLAN, the GPU, files and the usual programs. (ui session for
+    the desktop, X1 session for network/hardware)
+  - Developing: a ui application from nothing to a test in a guest, with a
+    worked example; how it talks to the system (files and 9P, /mnt/wsys,
+    /dev/theme, the plumber, webfs); testing (tests/ui, uiserver, QEMU,
+    tools/mcp); gcc, Rust and Go programs. (ui session; toolchains: X1)
+  - Contributing: the parts and repositories, branches, which tests per
+    area, the licence rules, how a change gets in. (X1 session)
+  Written between the technical slots, without a guest; each page tried
+  out by following it on a clean state. Source: attic dist-docs/documentation.md.
 
 ## The roadmap's later phases
 
