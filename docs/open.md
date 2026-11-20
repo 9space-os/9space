@@ -152,6 +152,19 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   is no longer a test machine, 2026-11-20). B is also why aux/amdgpu arms
   no reset at exit (no p9_onexit): it needs an onexit sequence, so that its
   page-owning segments go with it too.
+  On the RX 7600 by VFIO (2026-11-20, attic hw/rx7600-vfio-20261120):
+  A holds (Broken 0, wsys back on the GPU), B does not occur on Navi33 (the
+  re-probe goes through), amdgpu9's lost handling works (RADV "context is
+  lost", vktri a new device). ui's panic at its GPU retry was wgpu-core's
+  (toolchain/rust 774f997, tree fdcebe36c). Open: (C) a new driver's views
+  get the old one's addresses (p9dev.c's segnext from the same base), a
+  client still holding the old lost views fails segattach ("segments
+  overlap") and RADV then faults on a shader whose upload failed (the X1
+  session's fix is designed: a view's va 0 through devsegment's range
+  allocator, segnext gone; RADV's missing check is the ui session's Mesa
+  patch). (D) the
+  new aux/amdgpu's probe takes 23 s after a restart, and wsys' backoff
+  (2+4+8+16 s) adds about 10 s before it composes on the GPU again.
 - A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu once
   its views are always ORCLOSE, defect A's fix) hold one open ORCLOSE file
   per client view, so all clients together have at most MAXNFD (5000,
