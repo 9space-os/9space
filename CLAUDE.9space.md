@@ -101,3 +101,8 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   part that depends on it (the tree, the toolchains' libc crate and std,
   Go's syscalls, the man pages) instead of routing around the defect, and
   note the difference to 9front in the man page and `tree/MEMORY.md`.
+- Develop modularly where possible and fitting: code used in more than one
+  place lives once, as a library or crate of its own with a clear interface
+  (e.g. the 9P code in `sys/src/rust/plan9/ninep`, not a copy per program);
+  a program is built from such parts instead of growing one large file. No
+  copies of code between programs or parts; a fix then lands in one place.
