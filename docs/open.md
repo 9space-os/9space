@@ -34,6 +34,10 @@ details (`MEMORY.md` line numbers as of this date, "L").
     L1107, L1124).
   - Mesa: the zink vertex-buffer fix, its merge request text written
     (`cache/mesa/upstream`, L1688).
+  - wgpu: wgpu-core's Surface::present/discard return on an invalid
+    (lost) device before they take the acquired texture, so the
+    swapchain can never be destroyed (a panic in wgpu-hal); trunk has
+    the same order (2026-11-20). toolchain/rust ad26ee2's patch.
   - Mesa: zink's read of deferred scissored clears (tree patch 0047:
     `zink_fb_clears_apply_region` applied them only when the read lay
     inside a scissor; main unchanged on 2026-11-19), its merge request
@@ -181,6 +185,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    Servo study scans /lib/font/ttf each start) could both use. Open from
    before: no native build with the `gpu` feature, a window node's x, y,
    role set only at creation.
+Next: venus with ring.lost answers calls with VK_ERROR_OUT_OF_HOST_MEMORY
+    (Mesa patch 0045: a dropped reply), not DEVICE_LOST, so programs guess
+    (vktri asks vkDeviceWaitIdle, ui takes wgpu's out of memory as a loss):
+    a patch 0048, lost → VK_ERROR_DEVICE_LOST in every call (tree
+    97d9d6926, cae49b997, f4e0ad758: programs across a driver restart).
 10. GPU windows and draw(3) readers: documented (wsys(4) BUGS): under -g
     draw(3)'s screen image lacks the GPU windows, /dev/screen in a window
     has them. Low priority, until it shows on real hardware: the soft
@@ -268,10 +277,6 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - wsysorder.rc read the desktop after vktri's end as frames (X1, "back
   to 119" = #777777): counts only vktri's frames now (tree 785af7950);
   confirm on the X1, -O and plain.
-- tests/ui text.rc's check after drawtest (no red left, all the text
-  again; tree 3717c15d0) has not been seen failing: run it once against
-  a wsys without the fix (w.drawn = None) to know it catches the kbmap
-  bug.
 - The VFIO guest's /tests lacks `drawcmp` and `workload`: amddraw.rc's
   drawcmp comparison and its workload part FAIL on the RX 7600
   (2026-11-19). drawcmp is built only by tests/draw/run.sh into its own
