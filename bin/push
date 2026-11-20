@@ -5,18 +5,19 @@
               nix, riscv as fast-forwards, and upstream (the one rebased branch,
               dist/docs/upstream.md) with --force-with-lease: only over the commit
               last seen there
-  gcc rust go mcp dist
+  gcc rust go mcp browser dist
               their branch to its remote (origin), fast-forward only
 
 A branch equal to its remote-tracking ref is left out; one that is not ahead
 of it (diverged: someone pushed elsewhere) is not pushed but reported: fetch
 and merge first. Only remotes under github.com/9space-os are pushed to;
 plan9port (9fans') and the repositories without a remote (rust/rust,
-rust/libc, go/go: their changes travel as patches) are never pushed.
+rust/libc, go/go, browser/servo, browser/mozjs: their changes travel as
+patches) are never pushed.
 
   -n          only say what it would push
 
-parts: tree gcc rust go mcp dist (default: all). After pushing the tree or a
+parts: tree gcc rust go mcp browser dist (default: all). After pushing the tree or a
 toolchain: bin/pin, then push dist."""
 import os, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,7 @@ import parts
 TREE_BRANCHES = ['front', 'gcc', 'main', 'nix', 'riscv']
 REBASED = ['upstream']
 PARTS = [('tree', 'TREE'), ('gcc', 'GCC_DIR'), ('rust', 'RUST_DIR'), ('go', 'GO_DIR'),
-	('mcp', 'MCP_DIR'), ('dist', 'DIST')]
+	('mcp', 'MCP_DIR'), ('browser', 'BROWSER_DIR'), ('dist', 'DIST')]
 
 def ref(d, r):
 	return parts.git(d, 'rev-parse', '--verify', '-q', r)

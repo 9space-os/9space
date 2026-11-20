@@ -16,6 +16,7 @@ it is not a git repository itself, each part is one.
 | `toolchain/rust/` | Rust for 9front; `rust/`, `libc/`, `llvm-project/` are repositories of their own | yes |
 | `toolchain/go/` | Go for 9front; `go/` is a repository of its own | yes |
 | `tools/mcp/` | MCP server: an agent on Linux works on a 9front guest | yes |
+| `browser/` | Servo for 9space (servoshell, servoshot, webfs-rs); `servo/`, `mozjs/` are repositories of their own (from archives, the port on branch `plan9`); MPL-2.0, see Rules | yes |
 | `tools/plan9port/` | Plan 9 from User Space (`PLAN9PORT`: rc, yacc, the host build's generators); 9fans' repository, unchanged, built by its `./INSTALL` | yes (9fans') |
 | `distfiles/` | the releases' archives other projects' sources come from | no (data) |
 | `dist/` | the distribution: `paths.env`, `manifest.json`, `bin/`, `docs/` | yes |
@@ -69,7 +70,10 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   written by hand from usage, never generated from the original; copied code
   keeps its notices. Exceptions the user accepted: Bison-generated parsers,
   dual-licensed files (a permissive choice), FreeBSD's BSD-4-Clause
-  (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept).
+  (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept), and
+  MPL-2.0 for the browser part only: Servo and SpiderMonkey (mozjs) and the
+  patches to them in `browser/` (`browser/LICENSES.md`); our own files there
+  are MIT, and no MPL code goes into the tree.
 - Git: commit only your own files (`git add <files>`, not `-A` in a tree with
   build output); never commit build files (`.o`, `.d`, logs). Other agents
   may have uncommitted work in a part (`toolchain/rust`: crate patches):

@@ -11,11 +11,11 @@ bring them up to date, where dist/paths.env puts them.
                               all: gcc nix riscv upstream), where paths.env puts them
                               (TREE_GCC, ...): only to work on several branches at
                               once; a branch without one is fast-forwarded as a ref
-  --sources                   then each toolchain's ./fetch.sh (the release archives
-                              and the patches) and bin/fetch (distfiles/)
+  --sources                   then each toolchain's and the browser's ./fetch.sh (the
+                              release archives and the patches) and bin/fetch (distfiles/)
   -n                          only say what it would do
 
-parts: tree gcc rust go mcp plan9port (default: all).  GitHub: $NINESPACE_GITHUB, default
+parts: tree gcc rust go mcp browser plan9port (default: all).  GitHub: $NINESPACE_GITHUB, default
 https://github.com/9space-os (for private repositories: git@github.com:9space-os).
 
   git clone https://github.com/9space-os/9space ~/Devel/9space/dist
@@ -32,6 +32,7 @@ REPOS = {
 	'rust': ('RUST_DIR', GITHUB + '/rust.git', 'main'),
 	'go': ('GO_DIR', GITHUB + '/go.git', 'main'),
 	'mcp': ('MCP_DIR', GITHUB + '/mcp.git', 'main'),
+	'browser': ('BROWSER_DIR', GITHUB + '/browser.git', 'main'),
 	'plan9port': ('PLAN9PORT', 'https://github.com/9fans/plan9port.git', 'master'),
 }
 # the tree's worktrees: paths.env variable, branch
@@ -136,7 +137,7 @@ for w in want:
 
 if sources and not bad:
 	print('sources')
-	for name in ('gcc', 'rust', 'go'):
+	for name in ('gcc', 'rust', 'go', 'browser'):
 		if name in want:
 			run(['./fetch.sh'], cwd=vals[REPOS[name][0]])
 	run([os.path.join(parts.HERE, 'bin', 'fetch')])

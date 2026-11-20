@@ -31,5 +31,6 @@ The parts (in ~/Devel/9space, beside this repository, `dist/`):
 | `toolchain/rust` | Rust for 9front |
 | `toolchain/go` | Go for 9front |
 | `tools/mcp` | MCP server: an agent on Linux works on 9front |
+| `browser` | Servo for 9space: servoshell, servoshot, webfs-rs (MPL-2.0: Servo's licence) |
 | `tools/plan9port` | Plan 9 from User Space: rc, yacc, the host build's generators (9fans', unchanged) |
 | `distfiles` | the releases' archives other projects' sources come from (DISTFILES) |

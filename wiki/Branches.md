@@ -45,4 +45,5 @@ another branch: its working tree holds `main`'s build.
 | `toolchain/rust` | `main` | `rust/` (with cargo, backtrace, llvm-project inside), `libc/`: branch `plan9` |
 | `toolchain/go` | `main` | `go/`: branch `plan9` |
 | `tools/mcp` | `main` | — |
+| `browser` | `main` | `servo/`, `mozjs/`: branch `plan9` |
 | `dist` | `main` | — |
