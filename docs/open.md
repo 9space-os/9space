@@ -343,6 +343,21 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
   baca2517 (L1416).
 
+## Documentation for developers
+
+- No clear entry point (the user, 2026-11-20: as important as the next
+  technical feature). A developer must quickly find out: how to write a ui
+  application; how it talks to the system (files and 9P, /mnt/wsys,
+  /dev/theme, the plumber, webfs); how to test it (tests/ui, uiserver, a
+  QEMU guest, tools/mcp); how to contribute a part without understanding the
+  whole system (repositories, branches, which tests per area, licences).
+  The material exists only scattered: ui(4), uiview, uigo, uitodo, the wiki's
+  Building/Toolchains/Desktop, the tests' READMEs. Plan: a wiki page
+  "Developing" as the entry, a short path through these four questions with a
+  worked example (a small ui program from nothing to a test in a guest),
+  linking the man pages as the reference; dist/docs stays the internal
+  planning. Source of the note: attic dist-docs/documentation.md.
+
 ## The roadmap's later phases
 
 - 1.0 criterion 2, a byte-identical build on two machines with the Rust
