@@ -1,6 +1,21 @@
 {
 	"name": "9space",
 	"parts": {
+		"browser": {
+			"branch": "main",
+			"commit": "f1f3aa172891cdbefac1a722042783ed70d72e37",
+			"path": "BROWSER_DIR"
+		},
+		"browser/mozjs": {
+			"branch": "plan9",
+			"commit": "d39abe3a344f4a0b9948fe1cef6007ce016a8856",
+			"path": "BROWSER_DIR/mozjs"
+		},
+		"browser/servo": {
+			"branch": "plan9",
+			"commit": "188b77515d3d1823330bdb21dd6d01bc81cad559",
+			"path": "BROWSER_DIR/servo"
+		},
 		"gcc": {
 			"branch": "main",
 			"commit": "49ee5ab8957664dbc7d3a6fa36a9c3ec822962c0",
