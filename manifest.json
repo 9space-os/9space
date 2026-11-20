@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "f1f3aa172891cdbefac1a722042783ed70d72e37",
+			"commit": "3e6722fca7ef14e16194df55d711e9f8c8dbf490",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
