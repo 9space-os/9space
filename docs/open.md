@@ -81,10 +81,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 ## Graphics
 
-- aux/i915's page pool never returns chunks (high-water ~1.2-1.6 GB; not
-  a leak, L1781, L1786). In progress (stability session): the attic's
-  i915-pool.md, (c) a status line, (a) wholly free chunks given back, (b)
-  shrinkers under memory pressure.
+- The LinuxKPI page pool (aux/i915, aux/amdgpu) gives memory back since
+  tree 33d5e2fdd (i915-pool.md: (c) 231668ae3 the status line, (a)
+  2aaa5c5e0 wholly free chunks, (b) 33d5e2fdd under memory pressure, with
+  /dev/swap's free line). Open: the X1 soak under real memory pressure (a
+  hog), and the cost of the lookups' count on the X1 (vkcube, drawspeed).
 - The LinuxKPI's `DECLARE_DELAYED_WORK` (workqueue.h) is Linux's form and
   does not compile here (`struct work_struct` has no `entry`); unused so
   far, `INIT_DELAYED_WORK` at run time instead.
