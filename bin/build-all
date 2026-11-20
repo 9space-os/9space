@@ -7,7 +7,7 @@
 #      out/<arch> (RUST_DIR), Go's out/<arch> (GO_DIR); a missing one is
 #      reported, not built (their builds take hours: build.sh, install.sh
 #      of each toolchain), and the tree's build skips what needs it
-#   2. the tree for each ARCH (default amd64): build.exe -D (the build tool,
+#   2. the tree for each ARCH (amd64 386 arm64; default amd64): build.exe -D (the build tool,
 #      sys/src/cmd/build/build.exe, built first with the host's go if missing)
 #   3. -iso: the install CD of amd64 with Rust and Go on it
 #      (scripts/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
@@ -21,6 +21,15 @@ iso=0
 [ "$1" = -iso ] && { iso=1; shift; }
 arches=("$@")
 [ ${#arches[@]} -gt 0 ] || arches=(amd64)
+# the main branch's architectures; riscv64 is the tree's branch riscv (tree-riscv),
+# built by hand (wiki: Building, "Not in build-toolchains")
+for a in "${arches[@]}"; do
+	case $a in
+	amd64|386|arm64) ;;
+	riscv64) echo "build-all: riscv64 is the tree's branch riscv, not main: wiki Building, \"Not in build-toolchains\"" >&2; exit 2 ;;
+	*) echo "build-all: no architecture $a (amd64 386 arm64)" >&2; exit 2 ;;
+	esac
+done
 
 exec 9>"$HERE/.build-all.lock"
 flock -n 9 || { echo "build-all: another build-all runs" >&2; exit 1; }

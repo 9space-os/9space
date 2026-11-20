@@ -17,7 +17,8 @@
 #
 # Each step's output goes to dist/logs/<step>.log; the first failing step stops the run
 # and prints its log's end. -from STEP starts there (after a fix: the steps before it
-# are done). -n prints the steps only. One run at a time.
+# are done; a STEP not in this run is refused, with the list). -n prints the steps
+# only. One run at a time.
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 dry=0 from=
@@ -44,6 +45,17 @@ fi
 rtarget(){ case $1 in amd64) echo x86_64-unknown-plan9;; 386) echo i686-unknown-plan9;; arm64) echo aarch64-unknown-plan9;;
 	*) echo "build-toolchains: no architecture $1 (amd64 386 arm64)" >&2; exit 2;; esac; }
 for a in "${arches[@]}"; do rtarget "$a" >/dev/null; done
+# -from: one of the steps of this run (an unknown name would skip them all)
+if [ -n "$from" ]; then
+	steps="tree-first"
+	for a in "${arches[@]}"; do steps="$steps gcc-$a"; done
+	steps="$steps rust-stage1"
+	for a in "${arches[@]}"; do steps="$steps llvm-$a rustc-$a stage1-again-$a cargo-$a install-$a"; done
+	for a in "${arches[@]}"; do steps="$steps go-$a"; done
+	steps="$steps tree"
+	case " $steps " in *" $from "*) ;; *)
+		echo "build-toolchains: no step $from in this run; the steps: $steps" >&2; exit 2 ;; esac
+fi
 
 step(){
 	local name=$1 t; shift
