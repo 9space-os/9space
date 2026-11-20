@@ -60,7 +60,7 @@ pacman -S --needed rustup cmake ninja && rustup default stable
 | Harvey's `ufs` (`go install github.com/Harvey-OS/ninep/cmd/ufs@latest`; `~/go/bin/ufs` or on `PATH`) | serves the guest's root from the host (`boot-cli.sh`) | |
 | grub (`grub-mkrescue`) | the guest's multiboot ISO (`boot-cli.sh`, amd64 and 386) | |
 | rsync | the guest's root, kept between boots: only what differs is written (`gen-ufs-root.sh`) | |
-| edk2 OVMF (`/usr/share/edk2/x64/OVMF_CODE.4m.fd`, or `OVMF_CODE=`) | UEFI boots (`UEFI=1`, `tests/iso`) | |
+| edk2 OVMF (where `OVMF_CODE` and `OVMF_VARS` of `dist/paths.env` say: `/usr/share/edk2/x64/OVMF_{CODE,VARS}.4m.fd` on Arch; another distribution changes them there) | UEFI boots (`UEFI=1`, `tests/iso`, `pxe.sh QEMU=1`) | |
 | mtools (`mcopy`, `mformat`) | FAT images for guests | |
 | e2fsprogs (`mkfs.ext4`, `debugfs`) | self-hosting build, toolchain tests in the guest | |
 | ImageMagick (`convert`) | disk images (`mkdisk.sh`) | |
