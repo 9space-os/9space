@@ -23,7 +23,7 @@
 		},
 		"go": {
 			"branch": "main",
-			"commit": "7d5c8cb2064f91983b4ec3271d012cba91f6dad3",
+			"commit": "372106cd6077ab2a45641efff185d35668aa2c04",
 			"path": "GO_DIR"
 		},
 		"go/go": {
@@ -43,7 +43,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "385951f692b563f9848b6af9dda34f01d70abf34",
+			"commit": "774f997e4716bf2fd17b00c2aaf330356761fe79",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -58,7 +58,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "969846bfca389b6049962c7277105268652333a3",
+			"commit": "213dc8819414f1284921a949dd80c46a61778ecd",
 			"path": "TREE"
 		},
 		"tree-gcc": {
