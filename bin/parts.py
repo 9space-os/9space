@@ -1,9 +1,10 @@
 """bin/parts.py: 9space's parts, from paths.env and manifest.json (for
-bin/status and bin/pin).
+bin/status, pin, push, repos, fetch, cacert).
 
 manifest.json: {"name", "parts": {part: {"path": a paths.env variable or
 a path below it ("RUST_DIR/rust"), "branch", "commit"}}}.  A part is a git
-repository (or a worktree of one)."""
+repository, a worktree of one, or (BRANCHES) a branch of the tree that has no
+worktree: its ref in the tree."""
 import fnmatch, json, os, re, subprocess
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

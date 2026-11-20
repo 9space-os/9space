@@ -7,7 +7,8 @@
 #      out/<arch> (RUST_DIR), Go's out/<arch> (GO_DIR); a missing one is
 #      reported, not built (their builds take hours: build.sh, install.sh
 #      of each toolchain), and the tree's build skips what needs it
-#   2. the tree for each ARCH (default amd64): build.exe -D
+#   2. the tree for each ARCH (default amd64): build.exe -D (the build tool,
+#      sys/src/cmd/build/build.exe, built first with the host's go if missing)
 #   3. -iso: the install CD of amd64 with Rust and Go on it
 #      (scripts/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
 #      installation profiles (minimal, gpu, ui, full; -dev): dist/bin/mkcd

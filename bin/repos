@@ -12,7 +12,8 @@ bring them up to date, where dist/paths.env puts them.
                               (TREE_GCC, ...): only to work on several branches at
                               once; a branch without one is fast-forwarded as a ref
   --sources                   then each toolchain's and the browser's ./fetch.sh (the
-                              release archives and the patches) and bin/fetch (distfiles/)
+                              release archives and the patches) and bin/fetch (distfiles/);
+                              only when every part came through
   -n                          only say what it would do
 
 parts: tree gcc rust go mcp browser plan9port (default: all).  GitHub: $NINESPACE_GITHUB, default

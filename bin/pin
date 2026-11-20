@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""pin [-f]: manifest.json from the parts' heads (their branch and commit).
-Refuses while a part has changed tracked files, unless -f (then it says
-which: their changes are not in the pinned commit)."""
+"""pin [-f]: manifest.json from the parts' heads (their branch and commit;
+dist, the manifest's own repository, is not pinned). A part that is not
+here (a worktree not made, a part not cloned) keeps its pin. Refuses while a
+part has changed tracked files (expected-changes' do not count), unless -f
+(then it says which: their changes are not in the pinned commit)."""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import parts

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""status: each part of 9space against manifest.json: where it is, its
-branch and commit, whether that is the manifest's (=), changed files. A
-branch of the tree without its worktree: its ref in tree."""
+"""status: each part of 9space (parts.PARTS) against manifest.json: its
+branch and commit, and then = (the manifest's commit), +N (N commits after
+it), differs (not after it), or "not pinned"; "no repository" with the path
+where none is. Then the changed tracked files ("N changed"), those that
+expected-changes allows counted apart. A branch of the tree without its
+worktree: its ref in tree. Exit 1 if a pinned part is at another commit."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import parts

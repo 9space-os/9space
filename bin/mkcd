@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mkcd [-dev LIST] [-mcp] [-ini 'name=value...'] [-o ISO] PROFILE [ARCH]: the install CD of
+# mkcd [-dev LIST] [-mcp] [-ini 'name=value...'] [-o ISO] [-noreplica] PROFILE [ARCH]: the install CD of
 # one installation profile, from the main branch's build (dist/bin/build-all, or
 # build-toolchains); the system installed from the CD has what the CD has.
 #
@@ -20,7 +20,9 @@
 #              /sys/lib/mcp/deny), any profile
 #   -ini       lines name=value for the CD's plan9.ini (mkiso.sh's PLAN9INI),
 #              e.g. -ini 'monitor=virtiogpu'
-#   -o ISO     default $CLI_DIR/9space-PROFILE[-dev-LIST][-mcp].ARCH.iso
+#   -o ISO     default $CLI_DIR/9space-PROFILE[-dev-LIST][-mcp].ARCH.iso (no -dev part
+#              for full with all three)
+#   -noreplica not published for pull(1) (below)
 #   ARCH       amd64 (default) or 386
 #
 # The CD's tree is also published for pull(1) (updates over HTTP), unless -noreplica:
@@ -31,7 +33,8 @@
 # first run, tree/scripts/replica/publish.py -g). There is no server yet: REPLICA_BASE's
 # default is a placeholder (GitHub, likely), pull on such a CD fails to reach it.
 #
-# Takes a QEMU guest (one at a time: it shares CLI_DIR, 9space/cache/cli, with the others).
+# Takes a QEMU guest (one at a time: it shares CLI_DIR, 9space/cache/cli, with the others),
+# and build-all's lock (the CD is made from the tree's build).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
