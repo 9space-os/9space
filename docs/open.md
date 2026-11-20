@@ -192,11 +192,11 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    Servo study scans /lib/font/ttf each start) could both use. Open from
    before: no native build with the `gpu` feature, a window node's x, y,
    role set only at creation.
-Next: venus with ring.lost answers calls with VK_ERROR_OUT_OF_HOST_MEMORY
-    (Mesa patch 0045: a dropped reply), not DEVICE_LOST, so programs guess
-    (vktri asks vkDeviceWaitIdle, ui takes wgpu's out of memory as a loss):
-    a patch 0048, lost → VK_ERROR_DEVICE_LOST in every call (tree
-    97d9d6926, cae49b997, f4e0ad758: programs across a driver restart).
+After a GPU driver's loss: venus done (Mesa 0048, tree e94dbb71d). hasvk on
+    the X1: new objects after the loss have no map and hasvk writes through
+    it (ui's crash); drm9 then gives local memory for them (written, the X1
+    tests it). Next: the same in amdgpu9.c for RADV (libdrm_amdgpu's BO
+    allocation and map after the loss).
 10. GPU windows and draw(3) readers: documented (wsys(4) BUGS): under -g
     draw(3)'s screen image lacks the GPU windows, /dev/screen in a window
     has them. Low priority, until it shows on real hardware: the soft
@@ -281,6 +281,15 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- Sporadic, 2026-11-20: tests/gpu's wsysback hung once for 300 s (tree
+  e94dbb71d's run): the killed aux/virtiogpu in Queueing, the new one in
+  Stat, vktri in Open, two closeprocs in Queueing, wsys in Semacquire;
+  not in three runs alone. Next time, before the kill: `cat
+  /proc/N/kregs` and the kernel stack (`dd -if /proc/N/mem -bs 8 -iseek
+  $((sp/8)) -count 1024`) of those processes, with the guest's 9pc64.
+- Sporadic, 2026-11-20: tests/uiserver's uilost boot once printed no
+  lines (the venus guest up, the MCP call in run.sh came back empty);
+  the debug run and the next full run were green.
 - wsysorder.rc read the desktop after vktri's end as frames (X1, "back
   to 119" = #777777): counts only vktri's frames now (tree 785af7950);
   confirm on the X1, -O and plain.
