@@ -106,3 +106,7 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   (e.g. the 9P code in `sys/src/rust/plan9/ninep`, not a copy per program);
   a program is built from such parts instead of growing one large file. No
   copies of code between programs or parts; a fix then lands in one place.
+  A generated mirror is not a copy in this sense when one side is the
+  master, a script makes the mirror and `tests/static` checks it (the tree's
+  `sys/src/rust/crates` and `plan9/p9win` from `toolchain/rust`, so that the
+  tree builds on its own).
