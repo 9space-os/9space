@@ -157,9 +157,15 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    (tree 3924c581b); by eye on the X1 with a second monitor at another
    scale. The overlay plane with damage (bac452371): glage on the RX
    7600's plane at its next binding (QEMU has no plane).
-8. term: no Alt/Meta key; ptyfs: no SIGWINCH on a resize, VTIME/VMIN
-   ignored (L1357); APE's `_getpty` starts ptyfs in the caller's window
-   namespace, fixed for term only (L1372).
+8. term and ptyfs: SIGWINCH (to the processes that catch it only) and
+   VMIN/VTIME done (tree 4ee185d0f). Open: Alt/Meta, the user's word.
+   kbdfs starts a compose at Alt's press, so Alt+key never reaches term
+   as a chord. Options: (1) compose only on Alt pressed and released
+   alone, Alt+key a chord, which term sends as ESC+key (changes 9front's
+   input for everyone: kbdfs(8), MEMORY); (2) Meta on another key
+   (AltGr, right Alt); (3) Esc as the prefix only (works today).
+   Recommended: (1). Also open: APE's `_getpty` starts ptyfs in the
+   caller's window namespace, fixed for term only (L1372).
 9. ui: a slow first frame (shader compilation, no pipeline cache across
    starts; L1274), no native build with the `gpu` feature, a window
    node's x, y, role set only at creation.
