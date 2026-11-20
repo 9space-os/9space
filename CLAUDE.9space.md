@@ -35,8 +35,9 @@ the attic into git: a copy of 9space must carry no GPL material.
   `$DISTFILES/x`); in each toolchain `scripts/9space-paths.sh` (after
   `TOP=`). Never write a sibling path (`../9front-gcc`, `~/Devel/...`) into a
   script.
-- `~/Devel/9front*` are symlinks of the old layout, kept until the
-  toolchains are rebuilt from here; then they go.
+- The old layout's symlinks (`~/Devel/9front-gcc`, `-rust`, `-go`, ...) are
+  gone: a name of them in a file is stale and gets replaced by the part's
+  path (`toolchain/gcc`, `GCC_DIR`).
 
 ## Tools (dist/bin)
 
