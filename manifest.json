@@ -28,7 +28,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "ad26ee29f2c0024cdf615a7f0f6fcabdeb9f7f64",
+			"commit": "6717fc08c3567ae6abd13d2879af181a794a771b",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -43,7 +43,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "08b75cbb97bf49ac819ab55e851a1d2ec630af03",
+			"commit": "9de411b4c7c5b9b6604b9c016550e754d810b8d8",
 			"path": "TREE"
 		},
 		"tree-gcc": {
