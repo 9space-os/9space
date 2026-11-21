@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "110b4985e5f83e020d0950af568621b46d5e966b",
+			"commit": "13b01ddb65dfab0ab0a2c59056e5a19e5c485216",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
@@ -43,7 +43,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "faee713fd03b2ef17fbf09ae8661518602be59e8",
+			"commit": "317d09481542278014201ce87ee56ef41340b053",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -53,12 +53,12 @@
 		},
 		"rust/rust": {
 			"branch": "plan9",
-			"commit": "cdb25d905ee0aacaeadb554fe90a49b2f1f1caf7",
+			"commit": "a4498ff0b5fda37d2e8278062918f1ab1d7f7af7",
 			"path": "RUST_DIR/rust"
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "9883f441482a86996aba6b091a392d9f94d57f7f",
+			"commit": "9299f3880495ab62b6a2589f25370d308e5964bd",
 			"path": "TREE"
 		},
 		"tree-gcc": {
