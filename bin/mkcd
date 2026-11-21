@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mkcd [-dev LIST] [-mcp] [-ini 'name=value...'] [-o ISO] [-noreplica] PROFILE [ARCH]: the install CD of
+# mkcd [-dev LIST] [-mcp] [-browser] [-ini 'name=value...'] [-o ISO] [-noreplica] PROFILE [ARCH]: the install CD of
 # one installation profile, from the main branch's build (dist/bin/build-all, or
 # build-toolchains); the system installed from the CD has what the CD has.
 #
@@ -18,9 +18,14 @@
 #              Rust links with gcc: rust takes gcc along
 #   -mcp       the MCP server too (tools/mcp: /$objtype/bin/9front-mcp, its deny list
 #              /sys/lib/mcp/deny), any profile
+#   -browser   the browser too (browser/: servoshell and webfs-rs in /$objtype/bin,
+#              /rc/bin/browser, browser(1), its licences and the MPL's source offer in
+#              /sys/lib/browser, the CA roots); profile full (wsys, the fonts, a GPU
+#              driver), amd64; it takes
+#              browser/out/amd64 as browser/build.sh left it
 #   -ini       lines name=value for the CD's plan9.ini (mkiso.sh's PLAN9INI),
 #              e.g. -ini 'monitor=virtiogpu'
-#   -o ISO     default $CLI_DIR/9space-PROFILE[-dev-LIST][-mcp].ARCH.iso (no -dev part
+#   -o ISO     default $CLI_DIR/9space-PROFILE[-dev-LIST][-mcp][-browser].ARCH.iso (no -dev part
 #              for full with all three)
 #   -noreplica not published for pull(1) (below)
 #   ARCH       amd64 (default) or 386
@@ -37,13 +42,14 @@
 # and build-all's lock (the CD is made from the tree's build).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
-dev=- ini= out= mcp= replica=1
+usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
+dev=- ini= out= mcp= browser= replica=1
 while [ $# -gt 0 ]; do
 	case $1 in
 	-dev)	[ $# -ge 2 ] || usage; dev=$2; shift 2 ;;
 	-ini)	[ $# -ge 2 ] || usage; ini=$2; shift 2 ;;
 	-mcp)	mcp=1; shift ;;
+	-browser) browser=1; shift ;;
 	-noreplica) replica=; shift ;;
 	-o)	[ $# -ge 2 ] || usage; out=$2; shift 2 ;;
 	-*)	usage ;;
@@ -59,6 +65,12 @@ if [ $profile = nix ]; then
 	replica=	# the branch nix has no pull(1) client
 fi
 case $arch in amd64|386) ;; *) echo "mkcd: the CD is for amd64 or 386, not $arch" >&2; exit 2 ;; esac
+# the browser runs in wsys with the ui group's fonts on a GPU driver (the gpu group): the
+# profile full; it is built for amd64
+if [ -n "$browser" ]; then
+	[ $profile = full ] || { echo "mkcd: -browser needs the profile full (wsys and the fonts, a GPU driver)" >&2; exit 2; }
+	[ $arch = amd64 ] || { echo "mkcd: -browser: the browser is built for amd64 only" >&2; exit 2; }
+fi
 if [ "$dev" = - ]; then
 	[ $profile = full ] && dev=all || dev=none
 fi
@@ -81,13 +93,14 @@ fi
 name=9space-$profile
 [ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
 [ -n "$mcp" ] && name=$name-mcp
+[ -n "$browser" ] && name=$name-browser
 out=${out:-$CLI_DIR/$name.$arch.iso}
 
 # with build-all's lock: the CD is made from the tree's build
 exec 9>"$HERE/.build-all.lock"
 flock -n 9 || { echo "mkcd: build-all runs" >&2; exit 1; }
 
-echo "mkcd: $profile, languages: ${dev:-none}${mcp:+, MCP server}, $arch -> $out"
+echo "mkcd: $profile, languages: ${dev:-none}${mcp:+, MCP server}${browser:+, the browser}, $arch -> $out"
 cd "$TREE"
 if [ -n "$replica" ]; then
 	# placeholder: no update server yet (GitHub, likely); the URL the CDs' pull(1) asks
@@ -105,6 +118,6 @@ fi
 if [ $profile = nix ]; then
 	DEV=$dev objtype=$arch scripts/guest/mkiso.sh "$out"
 else
-	PROFILE=$profile DEV=$dev MCP=$mcp PLAN9INI=$ini objtype=$arch scripts/guest/mkiso.sh "$out"
+	PROFILE=$profile DEV=$dev MCP=$mcp BROWSER=$browser PLAN9INI=$ini objtype=$arch scripts/guest/mkiso.sh "$out"
 fi
 ls -l "$out"

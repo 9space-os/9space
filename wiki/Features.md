@@ -46,6 +46,7 @@ State of `main`, November 2026. "QEMU" means tested in `tests/` under QEMU,
 | **ui**: widgets described through files (`ui(4)`), drawn by vello on wgpu or vello_cpu | QEMU |
 | Wayland clients via `wlsys` (foot terminal, weston examples) | QEMU |
 | SDL3, GLFW, winit, egui/eframe, iced | QEMU |
+| **Browser**: Servo (nightly 2026-11-19) with SpiderMonkey's JIT, WebRender on zink; `webfs-rs` for its requests; `browser [url]` (browser(1)); on the CD with `dist/bin/mkcd -browser` (ui, full) | QEMU: six real sites (Wikipedia, tagesschau, heise, GitHub, MDN) load, input; hardware: X1 (an earlier build) |
 
 ## Tools
 

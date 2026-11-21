@@ -145,12 +145,30 @@ can fetch crates and modules over https.
 `/sys/lib/mcp/deny`. It lets an agent on another machine work on the installed
 system; how to start it and what guards it: `tools/mcp/README.md`.
 
+`-browser` puts the browser on the CD, with `full` (it runs in wsys, with the desktop's
+fonts, and draws on a GPU driver of the `gpu` group), amd64 only: Servo for 9space's `servoshell` and `webfs-rs` in
+`/$objtype/bin`, the script `browser` (`browser [url]`, browser(1)) in `/rc/bin`, the
+CA roots, and in `/sys/lib/browser` its licences (Servo and SpiderMonkey are
+MPL-2.0: `browser/LICENSES.md`) with the MPL's source offer (`SOURCES`: the archives
+and the commits of the patch series the programs are built from). It takes the
+programs as `browser/build.sh` left them in `browser/out/amd64`: build the browser
+first (after `build-toolchains`, on the tree's build):
+
+```sh
+browser/fetch.sh && browser/build.sh          # once fetched; ~50 min from scratch
+dist/bin/mkcd -browser full                   # 9space-full-browser.amd64.iso
+```
+
+Before handing such a CD to others, the commits `SOURCES` names (the browser's and
+the Rust toolchain's) must be public: the MPL's source offer points at them.
+
 ```sh
 dist/bin/mkcd minimal                         # 9space-minimal.amd64.iso
 dist/bin/mkcd -dev all minimal                # minimal with gcc, Rust and Go
 dist/bin/mkcd -dev rust gpu                   # 9space-gpu-dev-rust.amd64.iso
 dist/bin/mkcd -ini 'desktop=rio' ui           # rio instead of wsys, the ui CD's default
 dist/bin/mkcd -mcp minimal                    # with the MCP server: 9space-minimal-mcp.amd64.iso
+dist/bin/mkcd -mcp -browser full              # 9space-full-mcp-browser.amd64.iso
 dist/bin/mkcd -o /tmp/x.iso full 386          # 386 (no GPU stack there)
 ```
 
