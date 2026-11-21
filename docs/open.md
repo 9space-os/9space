@@ -24,8 +24,9 @@ details (`MEMORY.md` line numbers as of this date, "L").
 - The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
   `pull` on real hardware follow it.
 - Sending fixes upstream:
-  - 9front: the 59 patches in tree `patch-upstream/` (base `cb9e5e7e9`),
-    none sent yet. Not made into a patch: APE's dup/`F_DUPFD` taking the
+  - 9front: the 65 patches in tree `patch-upstream/` (base `cb9e5e7e9`;
+    0064/0065 of 2026-11-21: shr(3)'s walk and chan.c's createdir held a
+    lock across a remote walk, the killdrv deadlock), none sent yet. Not made into a patch: APE's dup/`F_DUPFD` taking the
     number from `_fdinfo` (L1272): it goes wrong only in a program that
     mixes native descriptors with APE's (Rust's std with Mesa), which
     9front has none of.
@@ -67,7 +68,14 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   each: aux/acpi (X1, 18:44), aux/amdgpu (ThinkBook, 21:08), #l1wifi
   (ThinkBook, 21:11, the first test kernel of the reorder fix: all its CPU
   since boot in that window). Causes open; soak.rc now records the procs'
-  state and kregs when it fires (tree, soak.rc).
+  state and kregs when it fires (tree, soak.rc). aux/acpi's (2026-11-21, the
+  X1: ~3% of a processor at idle, all system time): ec.c's ecwait polls
+  with delay(1), 1 ms of busy waiting per poll, ~25-45 ms per _Q/_BST;
+  the fix after OpenBSD's acpiec_wait (300 polls of microdelay(1) first)
+  is in the stability session's clone (branch ecwait), its X1 test (acpi's
+  system time per 10 s, before 300-370 ms; battery, brightness, lid) with
+  the user, then patch-upstream 0066. Separate: ec.c holds the spinlock
+  ec.Lock across waits of up to 1 s.
 - Volume and mute keys: wsys has kbdtap and riostart starts
   reform/shortcuts under it (tree e2f6a78ef, tests/ui); untested on the X1's
   HDA keys.
@@ -131,10 +139,16 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   (ORCLOSE, lost), attached per bo; unmap removes it. Not the context ids
   (destroyold, reverted), not "owner going" (0c6a48036) nor segment.c's
   idle image order (attic hw/wsysback-20261120/destroyold/,
-  journal-ringfatal.txt). (2) A hang of 300 s:
+  journal-ringfatal.txt). Fixed (tree 9883f4414, 2026-11-21): each mapped
+  blob in a #g segment of its own (`map r seg va size info`; Mesa's venus
+  renderer, wsys' import and gpuctxtest with the faults past the blob and
+  after unmap); iorepro 16 under the host load: all ok, 0 `cmd_size` lines
+  (15 before). (2) A hang of 300 s:
   the killed virtiogpu in "Queueing", the new one in "Stat", vktri in
   "Open", the closeprocs in "Queueing"; its kernel stacks are not read yet
   (rc's dd cannot seek to a kernel address; acid -k, else a pread helper).
+  Maybe killdrv's devshr deadlock (fixed 2026-11-21, patch-upstream 0064):
+  read its stacks if it comes again.
 - aux/amdgpu killed on the ThinkBook (amdlost, 2026-11-20, attic
   hw/thinkbook-amdlost-20261120): (A) fixed (tree 969846bfc, 2026-11-20):
   the LinuxKPI made its views ORCLOSE only after p9_onexit, which aux/amdgpu
@@ -165,6 +179,9 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   patch). (D) the
   new aux/amdgpu's probe takes 23 s after a restart, and wsys' backoff
   (2+4+8+16 s) adds about 10 s before it composes on the GPU again.
+  On hold (the user, 2026-11-21): the RX 7600 is released from VFIO and
+  stays the host's (venus); A on AMD, B, C, D and the RADV check wait for
+  an AMD machine.
 - A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu once
   its views are always ORCLOSE, defect A's fix) hold one open ORCLOSE file
   per client view, so all clients together have at most MAXNFD (5000,
@@ -184,7 +201,7 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   user (or views per user) are a design question.
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
-- RX 7600 by VFIO: the IH ring re-arm and "IH ring overflow" (L1086, L1701),
+- RX 7600 by VFIO (on hold, see above): the IH ring re-arm and "IH ring overflow" (L1086, L1701),
   buddy blocks left after a failed init (L1074), overlay planes and a
   second monitor never looked at (L1113, L1213).
 - i915 on the X1: syncobjs only within a process (L1312), `live_rps_power`
@@ -338,7 +355,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Toolchains
 
-- Rust: the std tests never ran on arm64 (one processor in the guest), the
+- Rust: the std tests never ran on arm64 (one processor in the guest; nor
+  tests/exitrace, the 2026-11-21 fix of a program's end killing too few
+  procs: toolchain/rust b92d626, amd64 and 386 ok), the
   doc tests never; rustdoc and clippy-driver each carry the whole compiler
   (~490 MB together); no TCP keepalive; a caught note interrupts blocked
   calls in all procs; APE's copy procs leak their buffer after a close
@@ -351,7 +370,8 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - riscv64: no ISO, the tree never built itself there, musl without real
   quad `expl`/`logl`/`log1pl`.
 - Building `build.exe` with Go on 9front untested (wiki Toolchains).
-- rust-analyzer (the user, 2026-11-20): (1) on the Linux host, a
+- rust-analyzer (the user, 2026-11-20; shelved 2026-11-21: the current tasks
+  first): (1) on the Linux host, a
   `rust-analyzer.toml` per workspace (the tree's, toolchain/rust's, browser's)
   so that it analyses for `x86_64-unknown-plan9` with the stage-1 rustc's
   sysroot and the right cargo config (paths from paths.env), so that
@@ -395,12 +415,36 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   "5 GHz preferred" (L1588; 0 of 10 on 2026-11-19),
   gldesk and vktri hangs on venus (L1195, L1211, L1362).
 - tests/gpu still has a fixed `sleep 8` (vkdraw; L1668).
+- tests/static's rc syntax check covers only some test directories:
+  tests/uiserver and others are not parsed, and quote and redirection
+  mistakes (an apostrophe in an echo, `window ... 'cmd >file'`, whose
+  redirection window(1) takes as its own) reached guests twice
+  (2026-11-21); a shared helper for a window running a command with
+  redirections is planned (ui session).
+- wsys writes a diagnostic line in several writes (Rust's unbuffered
+  stderr, format pieces), so a test's echo can land inside it: tests/gpu's
+  `^back: the GPU composes again` missed once (2026-11-21). One write per
+  line in wsys, and greps that need no line start (ui session).
+- scripts/mesa/patches.sh rewrites sys/src/mesa/patches from scratch (rm,
+  then format-patch overlay..HEAD); the series has gaps (0017, 0040), so a
+  rerun renumbers ~30 patches. Renumber once on purpose, or add only new
+  commits (and -N as rust-patches.sh does since toolchain/rust 7693b8b).
+  scripts/mesa/vendor.py takes any intended change outside the arch dir
+  for a conflict; VENDOR_FRESH=1 then overwrites every conflict unseen:
+  accept changes from commits after the last vendoring, or list them.
+- Sporadic, 2026-11-21: a whole guest froze once during browser realweb
+  (run 73 of 90, tree be821f7e1: the console and rc's watchdog silent for
+  79 min); 1 in 163 runs, not caught. Ready for the next one: browser
+  tests/guest.sh QEMU_DEBUG (qmp and serial), the kernel kept in
+  cache/browser/runs/freeze/; take `info registers -a` 2-3 times, `info
+  cpus`, gdb's bt per vCPU before killing it.
 - Sporadic, 2026-11-20: tests/guest's apegnutest once failed its pty part
   (tree 969846bfc's run): "^C: interrupt to the note group" first, then
   the VMIN 3 and VMIN 0/VTIME 3 checks behind it (they read what was
   left); the next run was green, 331 of 331. ptyfs' VMIN/VTIME are new
   (4ee185d0f). Log: cache/stability/logs/guest-defecta-fail1-console.log.
-- Sporadic, 2026-11-20: tests/gpu's wsysback hung for 300 s (tree
+- Sporadic, 2026-11-20 (maybe the devshr deadlock, fixed 2026-11-21):
+  tests/gpu's wsysback hung for 300 s (tree
   e94dbb71d's run, again in 627ade406+'s joint run without host load):
   the killed aux/virtiogpu in Queueing, the new one in Stat, vktri in
   Open, closeprocs in Queueing, wsys in Semacquire. Its kernel stacks are
@@ -515,6 +559,11 @@ build host); what is missing on more than one machine or blocks one:
   the PXE server and the agents' machine).
 
 ## Shelved by the user
+
+- claude9 (2026-11-21): talking to Claude, or a local LLM by llama.cpp's
+  OpenAI-style server, from 9space, working through 9front-mcp; the plan in
+  the attic (dist-docs/plans/claude9.md), not to be built until the user
+  takes it up again.
 
 - Suspend/resume: shelved again (user, 2026-11-20): stages B-D (the
   drivers around the sleep, the lid). Done before: the PXE root survives

@@ -59,6 +59,16 @@ if not if(test -e /lib/theme/9space)
 A theme of one's own: copy `/lib/theme/9space` to `$home/lib/theme` and
 change it; the profile above prefers it.
 
+The same goes for `$home/bin/rc/riostart`: the new one starts the
+desktop's helpers so that wsys keeps them going (wsys(4), "helpers"):
+wbar and stats with `window -restart`, reform's volume and mute keys with
+`echo helper -restart reform/shortcuts '</mnt/wsys/kbdtap >/mnt/wsys/kbdtap' >/mnt/wsys/wctl`.
+When the pager kills one of them for memory, or it crashes, wsys starts it
+again (after a crash at most 5 times in 10 minutes; wctl `restart` or
+button 3's menu start it by hand). An older riostart of one's own starts
+them without `-restart`: they stay gone once killed. Take over those lines
+from `/sys/lib/dist/usr/glenda/bin/rc/riostart`.
+
 ## Its keys
 
 Besides `back`, `border`, `borderinactive`, `window`, `text`, `select`,
