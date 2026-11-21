@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "37d2a4ab5353fa14ac7abd79ca977ffcf10dd021",
+			"commit": "110b4985e5f83e020d0950af568621b46d5e966b",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
@@ -13,7 +13,7 @@
 		},
 		"browser/servo": {
 			"branch": "plan9",
-			"commit": "db2f6d6212c5cbf72e6e1eb4836d01c83b22daac",
+			"commit": "0d93a018bf5448635b3d874b1efa80ecf0774475",
 			"path": "BROWSER_DIR/servo"
 		},
 		"gcc": {
@@ -43,7 +43,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "774f997e4716bf2fd17b00c2aaf330356761fe79",
+			"commit": "faee713fd03b2ef17fbf09ae8661518602be59e8",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -53,17 +53,17 @@
 		},
 		"rust/rust": {
 			"branch": "plan9",
-			"commit": "4e715c66675883483c5bba4922ddc14eebf9e7d8",
+			"commit": "cdb25d905ee0aacaeadb554fe90a49b2f1f1caf7",
 			"path": "RUST_DIR/rust"
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "213dc8819414f1284921a949dd80c46a61778ecd",
+			"commit": "9883f441482a86996aba6b091a392d9f94d57f7f",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "60dcc909e9cd24e755559c8b507b7fde7f11ad39",
+			"commit": "09b12fd1eba770412b3e91a768aeeebbe0a8c7a5",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
@@ -78,7 +78,7 @@
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "a314ba072f6bae30950efdadf4f207a109a16b12",
+			"commit": "4a0fbe002194a4830bc5f3a1a2dfff1f7e27047e",
 			"path": "TREE_UPSTREAM"
 		}
 	}
