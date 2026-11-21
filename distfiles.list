@@ -11,7 +11,7 @@ foot-1.28.0.tar.gz	4296be402b5684d049534598e69db92b918f92beac9dab76b585207045f0b
 freetype-2.15.0.tar.xz	93cd47eb719c325107f2d3cf087d06299e944c3b48a40b55537302304dea1dd5	https://download.savannah.gnu.org/releases/freetype/freetype-2.15.0.tar.xz
 freetype-2.15.0.tar.xz.sig	6664ef375e30abffaf16d124d878ae2d4903d7af260692da7e975442eeca3462	https://download.savannah.gnu.org/releases/freetype/freetype-2.15.0.tar.xz.sig
 glfw-3.5.1.zip	ea79bc5feffc254c87291980c2d0bce9acebb68c4983b79f961dcd2cb8a611a0	https://github.com/glfw/glfw/releases/download/3.5.1/glfw-3.5.1.zip
-image-v0.48.0.tar.gz	23d30f8c929ad063d897273b4094418a3d6a059f15192ea06ccd8b860b01dedc	https://go.googlesource.com/image/+archive/refs/tags/v0.48.0.tar.gz
+image-v0.48.0.zip	49489602fe3caf8a606a62422037b70daabaf579a0606359d838c545e3d8121f	https://proxy.golang.org/golang.org/x/image/@v/v0.48.0.zip
 libffi-3.5.2.tar.gz	f3a3082a23b37c293a4fcd1053147b371f2ff91fa7ea1b2a52e335676bac82dc	https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz
 libxkbcommon-1.13.2.tar.gz	acc4d5f7c3cbba5f9f8d08d8bdbeede84ecede46792f47929aa9321873385528	https://github.com/xkbcommon/libxkbcommon/archive/refs/tags/xkbcommon-1.13.2.tar.gz
 mozjs-98b5cfe02dbe00f347aa85fe0cc6bb66791f6342.tar.gz	31bb81d513b14eded1a05f3ae030f6db8b705c4c08d6d73d4517b2997c0e1838	https://github.com/servo/mozjs/archive/98b5cfe02dbe00f347aa85fe0cc6bb66791f6342.tar.gz
