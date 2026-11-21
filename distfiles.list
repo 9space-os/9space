@@ -1,6 +1,6 @@
 # the releases' archives in DISTFILES (paths.env): name, sha256, where from ("-": unknown);
 # bin/fetch checks them and fetches the missing ones
-Inter-4.1.zip	9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e	-
+Inter-4.1.zip	9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e	https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
 SDL3-3.4.20.tar.gz	f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f	https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-3.4.20.tar.gz
 expat-2.10.0.tar.gz	5466a341f9c692ef7a958a6881311be597f8e1ce345984cf78414f54793dea4c	https://github.com/libexpat/libexpat/releases/download/R_2_10_0/expat-2.10.0.tar.gz
 expat-2.10.0.tar.gz.asc	2941bd050fa96fdf6deaac7e724f0755f2a65babc85a68d375087a2581c5ccd7	https://github.com/libexpat/libexpat/releases/download/R_2_10_0/expat-2.10.0.tar.gz.asc
@@ -11,7 +11,7 @@ foot-1.28.0.tar.gz	4296be402b5684d049534598e69db92b918f92beac9dab76b585207045f0b
 freetype-2.15.0.tar.xz	93cd47eb719c325107f2d3cf087d06299e944c3b48a40b55537302304dea1dd5	https://download.savannah.gnu.org/releases/freetype/freetype-2.15.0.tar.xz
 freetype-2.15.0.tar.xz.sig	6664ef375e30abffaf16d124d878ae2d4903d7af260692da7e975442eeca3462	https://download.savannah.gnu.org/releases/freetype/freetype-2.15.0.tar.xz.sig
 glfw-3.5.1.zip	ea79bc5feffc254c87291980c2d0bce9acebb68c4983b79f961dcd2cb8a611a0	https://github.com/glfw/glfw/releases/download/3.5.1/glfw-3.5.1.zip
-image-v0.48.0.tar.gz	23d30f8c929ad063d897273b4094418a3d6a059f15192ea06ccd8b860b01dedc	-
+image-v0.48.0.tar.gz	23d30f8c929ad063d897273b4094418a3d6a059f15192ea06ccd8b860b01dedc	https://go.googlesource.com/image/+archive/refs/tags/v0.48.0.tar.gz
 libffi-3.5.2.tar.gz	f3a3082a23b37c293a4fcd1053147b371f2ff91fa7ea1b2a52e335676bac82dc	https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz
 libxkbcommon-1.13.2.tar.gz	acc4d5f7c3cbba5f9f8d08d8bdbeede84ecede46792f47929aa9321873385528	https://github.com/xkbcommon/libxkbcommon/archive/refs/tags/xkbcommon-1.13.2.tar.gz
 mozjs-98b5cfe02dbe00f347aa85fe0cc6bb66791f6342.tar.gz	31bb81d513b14eded1a05f3ae030f6db8b705c4c08d6d73d4517b2997c0e1838	https://github.com/servo/mozjs/archive/98b5cfe02dbe00f347aa85fe0cc6bb66791f6342.tar.gz
@@ -26,4 +26,4 @@ wayland-protocols-1.47.tar.xz	5fd4349bcbc9bab9a46f8cf77d1f434296a7a052c87440a094
 cacert-2026-11-05.pem	427c064216761a1e72a8b30f0d954d08cb6e4435a82091fb865afd20c8497285	https://curl.se/ca/cacert-2026-11-05.pem
 zlib-1.4.tar.gz	02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584	https://zlib.net/zlib-1.4.tar.gz
 zlib-1.4.tar.gz.asc	db39f00c5546358d34521f7c98bb082c3322af123db0ddb53910a57b6439301f	https://zlib.net/zlib-1.4.tar.gz.asc
-u-boot-2026.07.tar.bz2	78e8bfc382fe388f9b55aa1daf8c563522a037779b5d4c349d1415e381f1243e	https://ftp.denx.de/pub/u-boot/u-boot-2026.07.tar.bz2
+u-boot-2026.07.tar.bz2	78e8bfc382fe388f9b55aa1daf8c563522a037779b5d4c349d1415e381f1243e	https://mirror.cyberbits.eu/u-boot/u-boot-2026.07.tar.bz2
