@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# build-profile [-n] [-cd [MKCD-OPTION...]] PROFILE [ARCH...]: the tree for one installation
+# profile, only what its CD has (tree/scripts/guest/profiles), with the toolchains
+# build-toolchains made. ARCH: amd64 (default), 386, arm64.
+#
+#   PROFILE   minimal  the base system: rio, VESA
+#             gpu      + the GPU stack: Linux's DRM drivers on the LinuxKPI (i915,
+#                      amdgpu), Mesa (APE, the cross gcc)
+#             ui       + the desktop: APE's ports (Wayland, foot, the fonts' libraries,
+#                      Mesa for wsys), the Rust programs (wsys, ui, term)
+#             full     gpu and ui: the whole tree
+#
+# The groups of build.$ARCH.json (dist/lib/tree-build.sh) each profile builds:
+#
+#   all       prep libc libs klibs cmds kernelgen kernel, the install step's
+#             kernel a.out; amd64: of linux the LinuxKPI and aux/rtw89 (WLAN, on
+#             every CD)
+#   gpu       linux (aux/i915, aux/amdgpu), ape
+#   ui        ape, rust
+#
+# Then scripts/build/check-install.py -r -x: everything the profile has is there, what
+# it leaves out is not missing (CACHE/build/PROFILE.ARCH.omitted). The output goes to
+# the terminal; -n prints the steps only. -cd then makes the CD of each ARCH (amd64,
+# 386) with dist/bin/mkcd, the options before PROFILE handed on (-dev, -mcp,
+# -browser, -ini, -o, -noreplica).
+#
+# One run at a time, and not with build-all or mkcd (build-all's lock).
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+usage(){ echo "usage: build-profile [-n] [-cd [-dev LIST] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica]] minimal|gpu|ui|full [amd64|386|arm64...]" >&2; exit 2; }
+dry=0 cd=0 mkcd=()
+while [ $# -gt 0 ]; do
+	case $1 in
+	-n)	dry=1; shift ;;
+	-cd)	cd=1; shift ;;
+	-dev|-ini|-o)	[ $# -ge 2 ] || usage; mkcd+=("$1" "$2"); shift 2 ;;
+	-mcp|-browser|-noreplica)	mkcd+=("$1"); shift ;;
+	-*)	usage ;;
+	*)	break ;;
+	esac
+done
+[ $# -ge 1 ] || usage
+profile=$1; shift
+case $profile in
+minimal|gpu|ui|full) ;;
+nix) echo "build-profile: nix is the tree's branch nix: wiki Building, \"Installation profiles\"" >&2; exit 2 ;;
+*) usage ;;
+esac
+[ ${#mkcd[@]} = 0 ] || [ $cd = 1 ] || { echo "build-profile: ${mkcd[*]}: mkcd's options, with -cd" >&2; exit 2; }
+arches=("$@")
+[ ${#arches[@]} -gt 0 ] || arches=(amd64)
+for a in "${arches[@]}"; do
+	case $a in amd64|386|arm64) ;; *) echo "build-profile: no architecture $a (amd64 386 arm64)" >&2; exit 2 ;; esac
+done
+. "$HERE/lib/tree-build.sh"	# TREE, GCC_DIR, RUST_DIR, CACHE; tb_groups, tb_projects
+PROFILES=$TREE/scripts/guest/profiles
+
+# the profile's groups (scripts/guest/profiles)
+keep=$(awk -v p="$profile" '$1 == "profile" && $2 == p { for(i = 3; i <= NF; i++) printf " %s", $i }' "$PROFILES")
+has(){ case " $keep " in *" $1 "*) return 0 ;; esac; return 1; }
+gpu=0 ui=0
+has gpu && gpu=1
+has ui && ui=1
+
+# the toolchains the groups need: said now, not after the base system's build (-n: a warning)
+need(){ echo "build-profile: $profile needs $*: dist/bin/build-toolchains" >&2; [ $dry = 1 ] || exit 1; }
+triple(){ case $1 in amd64) echo x86_64-pc-plan9;; 386) echo i686-pc-plan9;; arm64) echo aarch64-pc-plan9;; esac; }
+for a in "${arches[@]}"; do
+	if [ $a = amd64 ] && [ $((gpu + ui)) -gt 0 ] && [ ! -x "$GCC_DIR/build/$a/cross/bin/$(triple $a)-gcc" ]; then
+		need "gcc's cross compiler for $a (Mesa, APE's ports)"
+	fi
+done
+if [ $ui = 1 ] && [ ! -x "$RUST_DIR/rust/build/host/stage1/bin/rustc" ]; then
+	need "Rust (wsys, ui, term)"
+fi
+run(){
+	if [ $dry = 1 ]; then echo "step  $*"; return 0; fi
+	echo "$(date +%H:%M) $*"
+	"$@"
+}
+
+if [ $dry = 0 ]; then
+	exec 9>"$HERE/.build-all.lock"
+	flock -n 9 || { echo "build-profile: build-all, build-profile, mkcd or build-toolchains runs" >&2; exit 1; }
+	tb_buildexe
+fi
+for a in "${arches[@]}"; do
+	echo "build-profile: $profile for $a (groups:${keep:- none})"
+	run tb_groups $a prep libc libs klibs cmds
+	if [ $a = amd64 ]; then
+		if [ $gpu = 1 ]; then
+			run tb_groups $a linux
+		else
+			# the LinuxKPI and aux/rtw89 (WLAN, every profile), not the DRM drivers
+			run tb_projects $a linux-base linux '^/sys/src/(linux|cmd/aux/rtw89)/'
+		fi
+	fi
+	late=()
+	[ $((gpu + ui)) -gt 0 ] && late+=(ape)
+	[ $ui = 1 ] && late+=(rust)
+	run tb_groups $a "${late[@]}" kernelgen kernel
+	# the install step (build.$a.json's install) without its check: the kernel's a.out
+	post=$(python3 -c "import json, sys
+for b in json.load(open(sys.argv[1])):
+	if b['Name'] == 'install':
+		print('\n'.join(c for c in b.get('Post', []) if 'check-install' not in c))" "$TREE/build.$a.json")
+	while read -r c; do
+		[ -n "$c" ] && run bash -c "cd '$TREE' && $c"
+	done <<< "$post"
+	# the profile's omitted paths, as stage-dist.sh writes them
+	om=$CACHE/build/$profile.$a.omitted
+	if [ $dry = 0 ]; then
+		mkdir -p "$CACHE/build"
+		awk -v keep=" $keep " '/^[a-z]/ && $1 != "profile" && index(keep, " " $1 " ") == 0 { print "/" $2 }' "$PROFILES" |
+			sed "s/\$objtype/$a/" > "$om"
+	fi
+	run bash -c "cd '$TREE' && objtype=$a python3 scripts/build/check-install.py -r -x '$om' | grep -v '^broken'; exit \${PIPESTATUS[0]}"
+done
+if [ $dry = 0 ]; then
+	exec 9>&-	# mkcd takes the lock itself
+	echo "$(date +%H:%M) build-profile: $profile done (${arches[*]})"
+fi
+
+if [ $cd = 1 ]; then
+	for a in "${arches[@]}"; do
+		case $a in
+		amd64|386) run "$HERE/bin/mkcd" "${mkcd[@]}" $profile $a ;;
+		*) echo "build-profile: no CD for $a (mkcd: amd64, 386)" >&2 ;;
+		esac
+	done
+elif [ $dry = 0 ]; then
+	echo "the CD: dist/bin/mkcd $profile ${arches[0]} (or build-profile -cd)"
+fi

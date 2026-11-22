@@ -14,7 +14,7 @@ scripts use the standard library only.
 | python3 | generators, build steps, tests | 3.14 |
 | go | the build tool (`sys/src/cmd/build`) | go1.27 |
 | git | the repositories, the source archives made repositories | |
-| flock (util-linux) | one `build-all`/`build-toolchains` at a time | |
+| flock (util-linux) | one `build-all`/`build-profile`/`build-toolchains` at a time | |
 | curl, gpg, gpgv, sha256sum | `fetch.sh` of each toolchain, `dist/bin/fetch` | |
 | [plan9port](https://github.com/9fans/plan9port) | rc, yacc and generators of the host build (`PLAN9PORT`, `tools/plan9port`) | |
 
@@ -34,7 +34,7 @@ fontconfig freetype2` on Arch); the build of 9space uses none of those.
 | Tool | For |
 |---|---|
 | `riscv64-linux-gnu-gcc` (on `PATH`) | `ARCH=riscv64` (branch `riscv` only): the kernel's initcode and reboot code. Arch: `riscv64-linux-gnu-gcc` |
-| `aarch64-linux-musl-gcc` (on `PATH`) | `ARCH=arm64`: the kernel's initcode and reboot code. Arch: AUR `aarch64-linux-musl-cross-bin`; elsewhere musl.cc's `aarch64-linux-musl-cross` |
+| `aarch64-linux-musl-gcc` (on `PATH`) | `ARCH=arm64`: the kernel's initcode and reboot code. Arch: AUR `aarch64-linux-musl-cross-bin`; elsewhere musl.cc's `aarch64-linux-musl-cross`. Its binutils (2.44) hang in `ar`/`nm`/`ranlib` on LLVM 23's `/usr/lib/bfd-plugins/LLVMgold.so`: the scripts use `gcc-ar` etc. ([[Building-by-hand]]) |
 
 ## Toolchains
 

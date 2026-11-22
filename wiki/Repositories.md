@@ -7,6 +7,7 @@ them (see [[Branches]]):
 
 ```
 9space/
+├── CLAUDE.md          symbolic link to dist/CLAUDE.9space.md (the agents' guide)
 ├── dist/              the distribution: paths, manifest, tools, docs
 ├── tree/              9space's tree (9front's)
 ├── toolchain/
@@ -23,7 +24,7 @@ them (see [[Branches]]):
 
 | Repository | Holds | Upstream it builds on |
 |---|---|---|
-| `dist` | `paths.env` (all paths), `manifest.json` (commits that belong together), `bin/` (`repos`, `status`, `pin`, `fetch`, `build-toolchains`, `build-all`, `mkcd`, `wiki`), `docs/` (roadmap, upstream, patches), this wiki | — |
+| `dist` | `paths.env` (all paths), `manifest.json` (commits that belong together), `bin/` (`repos`, `status`, `pin`, `fetch`, `build-toolchains`, `build-profile`, `build-all`, `clean-build`, `mkcd`, `wiki`, `pxe`; `lib/tree-build.sh`), `docs/` (roadmap, upstream, patches), this wiki | — |
 | `tree` | 9front with the gcc port, the GPU stack, wsys, ui, tests, build tool (`sys/src/cmd/build`) | github.com/9front/9front |
 | `toolchain/gcc` | `build.sh`, `fetch.sh`, `patches/` (gcc.patch, binutils.patch), `plan9/` (gccmk) | gcc 16.2.0, binutils 2.47 |
 | `toolchain/rust` | `patches/` (rust, cargo, backtrace, llvm-project, libc, crates), `crates/`, `scripts/`, `tests/` | rust-lang/rust, rust-lang/libc |

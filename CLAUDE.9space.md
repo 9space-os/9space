@@ -53,14 +53,21 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `fetch [-n]`: the archives of `distfiles.list` into `distfiles/`, checked by sha256.
 - `cacert [-n]`: the CA roots to curl's newest `cacert-DATE.pem` (DISTFILES and
   `distfiles.list`), before each release.
-- `build-toolchains [-n] [-from STEP] [ARCH...]`: the whole chain from scratch
-  (tree, gcc, Rust, Go, tree again), one log per step in `dist/logs/`; the
-  build the wiki's Building page describes. Keep the two in step.
+- `build-toolchains [-n] [-from STEP] [ARCH...]`: the toolchains from scratch
+  (the tree's base for them, gcc, Rust, Go), one log per step in `dist/logs/`; the
+  build the wiki's Building page describes. Keep the two in step, and
+  wiki/Building-by-hand.md (the single steps) too.
+- `build-profile [-n] [-cd [mkcd options]] PROFILE [ARCH...]`: the tree for one
+  installation profile (only its groups of build.$ARCH.json, dist/lib/tree-build.sh),
+  checked with check-install.py -x; `-cd` then runs mkcd.
+- `clean-build [-n] [-y] [-downloads] [-cli] [PART...]`: removes what the build
+  made (the tree: git clean -fdx; the toolchains' build/out), for a fresh build.
+  Destructive: only when asked, `-n` first.
 - `pxe [start|stop|restart|status]`: the PXE services for the test machines
   in the background (dnsmasq by sudo, ufs serving `CLI_DIR/pxe/ufsroot` on
   5650), e.g. after a host reboot; the root and conf stay
   `tree/scripts/hw/pxe.sh`'s.
-- `build-all [-iso] [ARCH...]`: checks the toolchains, builds the tree
+- `build-all [-iso] [ARCH...]`: checks the toolchains, builds the whole tree
   (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go.
 
 Docs: `dist/docs/roadmap.md` (phases, 1.0 criteria), `upstream.md` (bringing

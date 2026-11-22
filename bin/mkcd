@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # mkcd [-dev LIST] [-mcp] [-browser] [-ini 'name=value...'] [-o ISO] [-noreplica] PROFILE [ARCH]: the install CD of
-# one installation profile, from the main branch's build (dist/bin/build-all, or
-# build-toolchains); the system installed from the CD has what the CD has.
+# one installation profile, from the main branch's build (dist/bin/build-profile
+# PROFILE, or build-all: everything); the system installed from the CD has what the CD has.
 #
 #   PROFILE  (tree/scripts/guest/profiles)
 #     minimal  9front built with gcc: rio, VESA

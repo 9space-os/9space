@@ -5,7 +5,7 @@ Everything is built on a Linux host (x86-64) from the repositories of
 The result is 9space for amd64, 386 and arm64 (the 9front tree built with gcc),
 with gcc, Rust and Go for 9space, and an install CD.
 
-From scratch it is a handful of commands (sections 2–4) and about three hours,
+From scratch it is a handful of commands (sections 2–5) and about three hours,
 mostly gcc and Rust. Later builds are incremental and take minutes.
 
 | Part | Where | What it is |
@@ -30,9 +30,15 @@ and "Toolchains"; for the CD and the tests also "Guests". Disk: about
 ```sh
 mkdir -p ~/Devel/9space && cd ~/Devel/9space
 git clone https://github.com/9space-os/9space dist
+ln -s dist/CLAUDE.9space.md CLAUDE.md
 dist/bin/repos --sources
 (cd tools/plan9port && ./INSTALL)
 ```
+
+`CLAUDE.md` in `~/Devel/9space` is a symbolic link to `dist/CLAUDE.9space.md`,
+the guide for agents (Claude Code) working in the whole directory. It is not a copy:
+the directory is not a repository, so the guide lives in `dist` and is changed
+there only.
 
 `dist/bin/repos` clones every part where `paths.env` puts it: the tree with its
 branches (`main` checked out; `gcc`, `nix`, `riscv`, `upstream` as refs: a worktree
@@ -57,18 +63,20 @@ plan9port's `./INSTALL` builds it in place (a few minutes). It writes its own
 directory into about 75 of its files; that is expected, and `dist/bin/repos`
 knows it.
 
-## 3. Toolchains and tree
+## 3. Toolchains
 
 ```sh
 dist/bin/build-toolchains            # amd64 386 arm64; or name the architectures
 ```
 
-It runs these steps in order, each one's output in `dist/logs/<step>.log`,
-and stops at the first failure, showing the end of its log:
+It builds gcc, Rust and Go for 9space, and of the tree only what they are built
+against. The tree of an installation profile comes after it (section 4). It runs
+these steps in order, each one's output in `dist/logs/<step>.log`, and stops at
+the first failure, showing the end of its log:
 
 | Step | Runs | Time here |
 |---|---|---|
-| `tree-first` | `dist/bin/build-all`: the tree without the toolchains (gcc's cross compiler is built against its libraries) | 10 min |
+| `tree-base` | of the tree, for each arch: `prep`, `libc`, `libs` and APE's libraries (`sys/src/ape/lib/*`): gcc's sysroot, what the toolchains link against | a few min |
 | `gcc-A` | `toolchain/gcc`: `objtype=A ./build.sh cross hostlibs native plan9` | 10 min per arch |
 | `rust-stage1` | `toolchain/rust/rust`: `./x build --stage 1 library --target <Linux and the arches>` (downloads Rust's stage-0 compiler and its LLVM) | 10 min |
 | `llvm-A` | `objtype=A scripts/build-llvm.sh`: LLVM for 9space | 15 min per arch |
@@ -77,11 +85,12 @@ and stops at the first failure, showing the end of its log:
 | `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space | 5 min |
 | `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9space | 1 min |
 | `go-A` | `toolchain/go`: `objtype=A scripts/build.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
-| `tree` | `dist/bin/build-all` again, now with the APE parts (Mesa, Wayland, SDL3, …) and the Rust programs (wsys, term, ui) | 10 min |
 
-A is amd64, 386, arm64; T is the Rust target (`x86_64-unknown-plan9`,
+The times are those of the development machine; a smaller one (a laptop) takes
+several times as long. A is amd64, 386, arm64; T is the Rust target (`x86_64-unknown-plan9`,
 `i686-unknown-plan9`, `aarch64-unknown-plan9`). `dist/bin/build-toolchains -n`
-prints the steps with their full commands.
+prints the steps with their full commands. The steps one by one, by hand:
+[[Building by hand|Building-by-hand]].
 
 When a step fails, read its log and fix the cause. Then continue from that
 step; the steps before it are done:
@@ -90,10 +99,43 @@ step; the steps before it are done:
 dist/bin/build-toolchains -from rustc-386
 ```
 
-The tree's build ends with `NNN files expected, ok` for each architecture
-(`dist/logs/tree.log`).
+(`-from tree-first`, the step's old name, still works: it means `tree-base`.)
 
-## 4. Boot loaders and the CD
+## 4. The tree of a profile
+
+```sh
+dist/bin/build-profile full                   # amd64; or: build-profile ui amd64 386
+```
+
+`build-profile PROFILE [ARCH...]` builds of the tree only what the profile's CD
+has (the profiles: section 5, "Installation profiles"), with what
+`build-toolchains` made. These are the groups of the tree's top manifest
+`build.$ARCH.json` it builds:
+
+| Profile | Groups | Needs |
+|---|---|---|
+| every one | `prep libc libs klibs cmds kernelgen kernel`, the kernel's a.out; amd64: of `linux` the LinuxKPI and `aux/rtw89` (WLAN, on every CD) | the host's gcc |
+| `gpu` | + `linux` (aux/i915, aux/amdgpu), `ape` (Mesa) | gcc's cross compiler |
+| `ui` | + `ape` (Wayland, foot, the fonts' libraries, Mesa for wsys), `rust` (wsys, ui, term, …) | gcc's cross compiler, Rust |
+| `full` | all of them: the whole tree | both |
+
+It ends with `scripts/build/check-install.py -x`: everything the profile has is
+there, and what it leaves out is not missing (`NNN files expected, ok`). What a
+profile leaves out is listed in `cache/build/PROFILE.ARCH.omitted`. `-n` prints
+the steps only. `-cd` makes the CD right after (amd64, 386); `mkcd`'s options
+go before the profile:
+
+```sh
+dist/bin/build-profile -cd minimal            # then dist/bin/mkcd minimal
+dist/bin/build-profile -cd -dev rust -mcp ui  # mkcd -dev rust -mcp ui
+```
+
+The builds are incremental (`build.exe -D`): a later `build-profile full` after
+`build-profile minimal` builds only the missing groups. `dist/bin/build-all
+[ARCH...]` builds the whole tree, as `build-profile full` does, without the check
+against a profile.
+
+## 5. Boot loaders and the CD
 
 The boot loaders are built with the Plan 9 C compilers (from 9front) inside the
 built system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
@@ -101,6 +143,11 @@ built system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
 ```sh
 cd tree && scripts/guest/build-boot.sh && cd ..
 dist/bin/mkcd full                    # ~/Devel/9space/cache/cli/9space-full.amd64.iso
+
+The CD of a profile needs the tree built for it (section 4): `mkcd minimal`
+after `build-profile minimal`, `mkcd full` after `build-profile full`. A CD of a
+profile the build does not cover stops at stage-dist's check
+("distribution incomplete").
 ```
 
 ### Installation profiles
@@ -174,8 +221,9 @@ dist/bin/mkcd -o /tmp/x.iso full 386          # 386 (no GPU stack there)
 
 The CDs go to `~/Devel/9space/cache/cli` (`-o` for another place). `-ini` takes
 lines `name=value` for the CD's `plan9.ini`. The groups and their files are
-listed in `tree/scripts/guest/profiles`. `mkcd` needs the tree's build and
-takes a QEMU guest (one at a time); it does not start while `build-all` runs.
+listed in `tree/scripts/guest/profiles`. `mkcd` needs the tree's build for the
+profile (`dist/bin/build-profile PROFILE`) and takes a QEMU guest (one at a time); it does not start while `build-all` or
+`build-profile` runs.
 
 The ISO is hybrid (BIOS, UEFI, CD or USB stick). At boot it asks for the
 screen (`monitor`, default `vesa`):
@@ -235,7 +283,7 @@ screen. If `monitor` names a GPU driver anyway, it says so and takes VESA.
 The guest that makes the CD holds the whole image in memory: it gets 6 GB
 (`MEM=` to change; `mkcd` runs `tree/scripts/guest/mkiso.sh`).
 
-## 5. Tests
+## 6. Tests
 
 ```sh
 cd tree
@@ -260,19 +308,38 @@ Then rebuild what changed:
 
 | What changed | Then |
 |---|---|
-| only the tree | `dist/bin/build-all amd64 386 arm64` (`build.exe -D`: only what is out of date; seconds when nothing is) |
-| gcc's patches or `sources.txt` | `cd toolchain/gcc && rm -rf src && ./fetch.sh && cd ../..`, then `dist/bin/build-toolchains -from gcc-amd64` (Rust and the tree depend on gcc) |
+| only the tree | `dist/bin/build-profile PROFILE [ARCH...]`, or everything: `dist/bin/build-all amd64 386 arm64` (`build.exe -D`: only what is out of date; seconds when nothing is) |
+| gcc's patches or `sources.txt` | `cd toolchain/gcc && rm -rf src && ./fetch.sh && cd ../..`, then `dist/bin/build-toolchains -from gcc-amd64` (Rust and the tree depend on gcc), then `dist/bin/build-profile PROFILE` |
 | Rust's patches (`toolchain/rust/patches/*`, not `crates`) | `cd toolchain/rust && scripts/rust-patches.sh apply && cd ../..`, then `dist/bin/build-toolchains -from rust-stage1` |
 | a crate patch (`toolchain/rust/patches/crates`) | `cd toolchain/rust && scripts/crates-patch.sh apply && scripts/cargo-config.sh && cd ../..`, then `dist/bin/build-toolchains -from cargo-amd64`; for a crate of the browser (dlib, imsz, inventory, ipc-channel, libsqlite3-sys 0.36.0, mozangle, rustls-platform-verifier 0.7.1, surfman, webdriver, wr_glyph_rasterizer) `browser/build.sh` instead |
 | Rust's `sources.txt` (a new nightly) | `cd toolchain/rust && rm -rf rust rust.git libc && ./fetch.sh && cd ../..`, then `-from rust-stage1` |
 | Go's patches or `sources.txt` | `cd toolchain/go && rm -rf go && ./fetch.sh && cd ../..`, then `-from go-amd64` |
-| `distfiles.list` | `dist/bin/fetch`, then `dist/bin/build-all amd64 386 arm64` |
+| `distfiles.list` | `dist/bin/fetch`, then `dist/bin/build-profile PROFILE` (or `build-all amd64 386 arm64`) |
 | plan9port | `cd tools/plan9port && git checkout . && git pull && ./INSTALL` (`dist/bin/repos` says so too) |
 
 `rm -rf src`, `go` or `rust` throws away work in those directories; the
 patches are the record (each toolchain's README says how to write them back).
 `rust-patches.sh apply` stops by itself if `plan9` has commits of its own
 that the patches lack.
+
+## From scratch again
+
+```sh
+dist/bin/clean-build -n          # what would go
+dist/bin/clean-build             # asks, then removes it
+dist/bin/build-toolchains && dist/bin/build-profile full
+```
+
+`clean-build` removes everything the build made: in the tree every file git
+does not track (`git clean -fdx`, but `tests/hw/results/`), the toolchains'
+`build/` and `out/` directories, Go's `go/bin` and `go/pkg`, `cache/build`,
+`cache/mesa` and `dist/logs`. `build.exe -clean` is not enough for that: it knows
+only the manifests' objects, not what their steps and the installs make. The
+sources and the downloaded archives stay. So does Rust's download cache
+(`rust/build/cache`), unless `-downloads`. The guests' images and CDs
+(`cache/cli`) go only with `-cli`. Single parts: `clean-build rust go`. Before it
+asks, it lists the tree's untracked files that look like sources, since a new
+file not yet in git would be lost too. It does not start while a build runs.
 
 ## Not in `build-toolchains`
 

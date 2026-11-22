@@ -26,7 +26,8 @@ dist/bin/status          # each part against manifest.json
 ```
 
 Then rebuild what changed (the table in [[Building]], "Later: updating"), or
-everything from scratch with `dist/bin/build-toolchains`.
+everything from scratch with `dist/bin/build-toolchains`, then the tree with
+`dist/bin/build-profile full amd64 386 arm64`.
 
 ## 3. The CA roots
 

@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# clean-build [-n] [-y] [-downloads] [-cli] [PART...]: everything the build made, for a
+# fresh build (dist/bin/build-toolchains, then build-profile). PART (default all):
+#
+#   tree      every file git does not track (git clean -fdx): objects, generated
+#             sources, what is installed in /$objtype, /acme/bin, /rc/bin, the boot
+#             loaders, build.exe. build.exe -clean is not enough: it knows only the
+#             manifests, not what their steps (ape.sh, cargo.sh, gen-*.sh) and the
+#             installs make
+#   gcc       toolchain/gcc: build/ (the cross compilers, sysroot), out/, build-*/, out-*/
+#   rust      toolchain/rust: rust/build/ (but its download cache, rust/build/cache:
+#             Rust's stage-0 compiler), build/ (LLVM), out/, logs/, tests/out/
+#   go        toolchain/go: build/, out/, go/bin/, go/pkg/ (the host Go too)
+#   cache     CACHE/build, CACHE/mesa (APE's and the Rust crates' work directories)
+#   logs      dist/logs/
+#
+# The sources stay: the parts' repositories, their src/, rust/, go/, crates/, the
+# archives (dl/, distfiles/), plan9port; in the tree tests/hw/results/ (results of
+# runs on real hardware, not made again by a build). -downloads also removes rust/build/cache.
+# -cli also removes CLI_DIR (cache/cli: the guests' images, the CDs, their logs).
+#
+# -n shows what would go. Without -y it asks first, and shows the untracked files of
+# the tree that look like sources (.c, .h, .go, .rs, ...): most are generated, but a
+# new file not yet added to git would be lost too. Not while a build runs (the locks
+# of build-all, build-profile, mkcd and build-toolchains).
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+usage(){ echo "usage: clean-build [-n] [-y] [-downloads] [-cli] [tree gcc rust go cache logs]" >&2; exit 2; }
+dry=0 yes=0 downloads=0 cli=0
+while [ $# -gt 0 ]; do
+	case $1 in
+	-n)	dry=1; shift ;;
+	-y)	yes=1; shift ;;
+	-downloads) downloads=1; shift ;;
+	-cli)	cli=1; shift ;;
+	-*)	usage ;;
+	*)	break ;;
+	esac
+done
+parts=("$@")
+[ ${#parts[@]} -gt 0 ] || parts=(tree gcc rust go cache logs)
+for p in "${parts[@]}"; do
+	case $p in tree|gcc|rust|go|cache|logs) ;; *) echo "clean-build: no part $p" >&2; usage ;; esac
+done
+want(){ case " ${parts[*]} " in *" $1 "*) return 0 ;; esac; return 1; }
+
+TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
+ROOT=$TREE
+. "$TREE/scripts/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR, CACHE, CLI_DIR (paths.env)
+
+# no build at the same time: both locks, held to the end
+if [ $dry = 0 ]; then
+	exec 8>"$HERE/.build-toolchains.lock" 9>"$HERE/.build-all.lock"
+	flock -n 8 && flock -n 9 || { echo "clean-build: a build runs (build-toolchains, build-all, build-profile or mkcd)" >&2; exit 1; }
+fi
+
+# what goes: directories and files that exist
+gone=()
+add(){ local f; for f; do [ -e "$f" ] && gone+=("$f"); done; return 0; }
+if want gcc; then
+	add "$GCC_DIR/build" "$GCC_DIR/out" "$GCC_DIR"/build-* "$GCC_DIR"/out-*
+fi
+if want rust; then
+	if [ -d "$RUST_DIR/rust/build" ]; then
+		if [ $downloads = 1 ]; then
+			add "$RUST_DIR/rust/build"
+		else
+			for f in "$RUST_DIR/rust/build"/* "$RUST_DIR/rust/build"/.[!.]*; do
+				[ "$(basename "$f")" = cache ] || add "$f"
+			done
+		fi
+	fi
+	add "$RUST_DIR/build" "$RUST_DIR/out" "$RUST_DIR/logs" "$RUST_DIR/tests/out"
+fi
+if want go; then
+	add "$GO_DIR/build" "$GO_DIR/out" "$GO_DIR/go/bin" "$GO_DIR/go/pkg"
+fi
+if want cache; then
+	add "$CACHE/build" "$CACHE/mesa"
+fi
+[ $cli = 1 ] && add "$CLI_DIR"
+if want logs; then
+	add "$HERE"/logs/* "$HERE"/logs/.start
+fi
+
+# the tree: what git does not track, but what is kept
+keep=(-e /tests/hw/results/)
+ntree=0
+if want tree; then
+	ntree=$(git -C "$TREE" ls-files --others -x /tests/hw/results/ | wc -l)
+	srclike=$(git -C "$TREE" ls-files --others --exclude-standard |
+		grep -E '\.(c|h|cc|hh|cpp|go|rs|py|sh|rc|json|toml|md|y|l|ms|man)$|/mkfile$' || true)
+fi
+
+echo "clean-build: removes"
+for f in "${gone[@]}"; do
+	printf '  %-70s %s\n' "${f#"$(dirname "$HERE")"/}" "$(du -sh "$f" 2>/dev/null | cut -f1)"
+done
+if want tree; then
+	echo "  ${TREE#"$(dirname "$HERE")"/}: $ntree files git does not track (git clean -fdx)"
+	if [ -n "$srclike" ]; then
+		echo "clean-build: of them, these look like sources (most are generated; a file of"
+		echo "your own not yet in git would be lost):"
+		echo "$srclike" | sed -E 's|/[^/]+$||' | sort | uniq -c | sort -rn | sed 's/^/   /'
+		echo "  all of them: git -C ${TREE#"$(dirname "$HERE")"/} ls-files --others --exclude-standard"
+	fi
+fi
+[ ${#gone[@]} -gt 0 ] || [ "$ntree" -gt 0 ] || { echo "clean-build: nothing to remove"; exit 0; }
+[ $dry = 1 ] && exit 0
+if [ $yes = 0 ]; then
+	read -r -p "remove all that? (yes/no) " a
+	[ "$a" = yes ] || { echo "clean-build: nothing removed"; exit 1; }
+fi
+
+for f in "${gone[@]}"; do
+	rm -rf -- "$f"
+done
+if want tree && [ "$ntree" -gt 0 ]; then
+	git -C "$TREE" clean -fdxq "${keep[@]}"
+fi
+echo "clean-build: done. Fresh build: dist/bin/build-toolchains, then dist/bin/build-profile PROFILE"

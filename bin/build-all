@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # build-all [-iso] [ARCH...]: 9space from the parts paths.env names, with
-# what is there of the toolchains.
+# what is there of the toolchains: the whole tree, every profile's parts. For
+# one installation profile only: dist/bin/build-profile PROFILE.
 #
 #   1. checks the toolchains: gcc's cross compiler and its install tree
 #      (GCC_DIR/build/<arch>/cross, out/<arch>), Rust's stage-1 rustc and
@@ -34,10 +35,9 @@ done
 exec 9>"$HERE/.build-all.lock"
 flock -n 9 || { echo "build-all: another build-all runs" >&2; exit 1; }
 
-# the parts (scripts/lib/paths.sh of the tree reads paths.env)
-TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
-ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"
+# the parts (scripts/lib/paths.sh of the tree reads paths.env); tb_run: build.exe -D,
+# on arm64 with gcc's ar, nm, ranlib (dist/lib/tree-build.sh)
+. "$HERE/lib/tree-build.sh"
 
 triple(){ case $1 in amd64) echo x86_64-pc-plan9;; 386) echo i686-pc-plan9;; arm64) echo aarch64-pc-plan9;; esac; }
 for a in "${arches[@]}"; do
@@ -49,12 +49,12 @@ for a in "${arches[@]}"; do
 done
 [ -x "$RUST_DIR/rust/build/host/stage1/bin/rustc" ] || echo "build-all: no stage-1 rustc ($RUST_DIR): the Rust programs not built" >&2
 
-cd "$TREE"
-[ -x sys/src/cmd/build/build.exe ] || (cd sys/src/cmd/build && GO111MODULE=off go build -o build.exe .)
+tb_buildexe
 for a in "${arches[@]}"; do
 	echo "build-all: the tree for $a"
-	CC=gcc ARCH=$a sys/src/cmd/build/build.exe -D
+	tb_run $a
 done
+cd "$TREE"
 
 if [ $iso = 1 ]; then
 	echo "build-all: the amd64 CD"

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# build-toolchains [-n] [-from STEP] [ARCH...]: gcc, Rust and Go for 9front and the tree,
-# from scratch, in the one order that works (wiki: Building). ARCH: amd64 386 arm64
-# (default all three). Needs the sources: dist/bin/repos --sources.
+# build-toolchains [-n] [-from STEP] [ARCH...]: gcc, Rust and Go for 9front, from
+# scratch, in the one order that works (wiki: Building). ARCH: amd64 386 arm64
+# (default all three). Needs the sources: dist/bin/repos --sources. Only the
+# toolchains: the tree of an installation profile is dist/bin/build-profile's.
 #
-#   tree-first     the tree without the toolchains (build-all): the libraries gcc's
-#                  cross compiler is built against
+#   tree-base      of the tree only what the toolchains are built against (gcc's
+#                  sysroot, APE): prep, libc, the libraries, APE's libraries
+#                  (dist/lib/tree-build.sh), for each ARCH
 #   gcc-A          toolchain/gcc: build.sh cross hostlibs native plan9 (objtype=A)
 #   rust-stage1    toolchain/rust: ./x build --stage 1 library (Linux + the ARCHes' targets)
 #   llvm-A         scripts/build-llvm.sh: LLVM for 9front
@@ -13,7 +15,8 @@
 #   cargo-A        scripts/build-cargo.sh: cargo for 9front
 #   install-A      scripts/install.sh: out/A (/A/rust on 9front)
 #   go-A           toolchain/go: scripts/build.sh, scripts/install.sh (the host Go once)
-#   tree           the tree again, now complete (build-all): APE parts, Rust programs
+#
+# Then: dist/bin/build-profile PROFILE (the tree for one profile), dist/bin/mkcd.
 #
 # Each step's output goes to dist/logs/<step>.log; the first failing step stops the run
 # and prints its log's end. -from STEP starts there (after a fix: the steps before it
@@ -32,9 +35,7 @@ while [ $# -gt 0 ]; do
 done
 arches=("$@")
 [ ${#arches[@]} -gt 0 ] || arches=(amd64 386 arm64)
-TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
-ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR
+. "$HERE/lib/tree-build.sh"	# TREE, GCC_DIR, RUST_DIR, GO_DIR; tb_groups, tb_projects
 LOGS=$HERE/logs
 mkdir -p "$LOGS"
 if [ $dry = 0 ]; then
@@ -46,13 +47,17 @@ rtarget(){ case $1 in amd64) echo x86_64-unknown-plan9;; 386) echo i686-unknown-
 	*) echo "build-toolchains: no architecture $1 (amd64 386 arm64)" >&2; exit 2;; esac; }
 for a in "${arches[@]}"; do rtarget "$a" >/dev/null; done
 # -from: one of the steps of this run (an unknown name would skip them all)
+# the steps' old names: tree-first is tree-base now, tree is build-profile's
+case $from in
+tree-first) from=tree-base ;;
+tree) echo "build-toolchains: the tree is not built here any more: dist/bin/build-profile PROFILE ${arches[*]}" >&2; exit 2 ;;
+esac
 if [ -n "$from" ]; then
-	steps="tree-first"
+	steps="tree-base"
 	for a in "${arches[@]}"; do steps="$steps gcc-$a"; done
 	steps="$steps rust-stage1"
 	for a in "${arches[@]}"; do steps="$steps llvm-$a rustc-$a stage1-again-$a cargo-$a install-$a"; done
 	for a in "${arches[@]}"; do steps="$steps go-$a"; done
-	steps="$steps tree"
 	case " $steps " in *" $from "*) ;; *)
 		echo "build-toolchains: no step $from in this run; the steps: $steps" >&2; exit 2 ;; esac
 fi
@@ -90,7 +95,21 @@ step(){
 all=x86_64-unknown-linux-gnu
 for a in "${arches[@]}"; do all=$all,$(rtarget "$a"); done
 
-step tree-first "$HERE/bin/build-all" "${arches[@]}"
+# of the tree what the toolchains need, with build-all's lock (the tree's objects):
+# a function, under step's if (no set -e): every command checked
+treebase(){
+	exec 9>"$HERE/.build-all.lock"
+	flock -n 9 || { echo "build-toolchains: build-all or build-profile runs"; return 1; }
+	tb_buildexe || return 1
+	for a in "${arches[@]}"; do
+		echo "tree-base: $a: prep, libc, the libraries"
+		tb_groups $a prep libc libs || return 1
+		echo "tree-base: $a: APE's libraries"
+		tb_projects $a toolchain-base cmds '^/sys/src/ape/lib/' || return 1
+	done
+	exec 9>&-
+}
+step tree-base treebase
 for a in "${arches[@]}"; do
 	step gcc-$a env objtype=$a bash -c "cd '$GCC_DIR' && ./build.sh cross hostlibs native plan9"
 done
@@ -108,5 +127,7 @@ for a in "${arches[@]}"; do
 	step go-$a env objtype=$a HOST=$host bash -c "cd '$GO_DIR' && scripts/build.sh && scripts/install.sh"
 	host=0
 done
-step tree "$HERE/bin/build-all" "${arches[@]}"
-[ $dry = 1 ] || echo "$(date +%H:%M) build-toolchains: done (${arches[*]})"
+if [ $dry = 0 ]; then
+	echo "$(date +%H:%M) build-toolchains: done (${arches[*]})"
+	echo "next: the tree of a profile, e.g. dist/bin/build-profile full; then dist/bin/mkcd full"
+fi

@@ -13,9 +13,12 @@ Go for it.  This repository holds what ties the parts together:
   fast-forwards them), `status` (each part against the manifest), `pin` (the
   manifest from the parts' heads), `fetch` (the archives of
   `distfiles.list` into DISTFILES, checked by sha256), `build-toolchains [-n] [-from STEP] [ARCH...]`
-  (gcc, Rust, Go and the tree from scratch, step by step, logs in `logs/`),
+  (gcc, Rust and Go from scratch, with the part of the tree they need, step by
+  step, logs in `logs/`), `build-profile [-n] [-cd] PROFILE [ARCH...]` (the tree
+  for one installation profile, only its parts, optionally its CD),
   `build-all [-iso] [ARCH...]`
-  (checks the toolchains, builds the tree, optionally the amd64 CD)
+  (checks the toolchains, builds the whole tree, optionally the amd64 CD),
+  `clean-build [-n] [PART...]` (removes what the build made, for a fresh build)
 - `CLAUDE.9space.md`: the guide for agents working in ~/Devel/9space
   (its `CLAUDE.md` is a symlink to it)
 - `wiki/`: the English documentation (GitHub wiki format: Home, Repositories,
