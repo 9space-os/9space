@@ -18,6 +18,10 @@ bring them up to date, where dist/paths.env puts them.
 
 parts: tree gcc rust go mcp browser plan9port (default: all).  GitHub: $NINESPACE_GITHUB, default
 https://github.com/9space-os (for private repositories: git@github.com:9space-os).
+Pushing is each developer's choice: with $NINESPACE_PUSH set (e.g.
+NINESPACE_PUSH=git@github.com:9space-os, pushes by SSH) the remotes of 9space-os
+(dist's own too) get the push URL $NINESPACE_PUSH/NAME, fetching stays as it is; a
+push URL already set stays. Unset (the default): no push URL is touched.
 
   git clone https://github.com/9space-os/9space ~/Devel/9space/dist
   ~/Devel/9space/dist/bin/repos --sources"""
@@ -27,6 +31,7 @@ import parts
 
 GITHUB = os.environ.get('NINESPACE_GITHUB', 'https://github.com/9space-os').rstrip('/')
 NINEFRONT = 'https://github.com/9front/9front.git'
+PUSH = os.environ.get('NINESPACE_PUSH', '').rstrip('/')
 # part: paths.env variable, repository, branch
 REPOS = {
 	'gcc': ('GCC_DIR', GITHUB + '/gcc.git', 'main'),
@@ -73,6 +78,16 @@ def installed_only(d):
 				return False
 	return True
 
+def pushurl(d, remote):
+	"""with NINESPACE_PUSH: a remote of 9space-os by HTTPS pushes to PUSH, unless a push URL is set"""
+	if not PUSH or not os.path.isdir(d):
+		return
+	u = git(d, 'remote', 'get-url', remote) or ''
+	pre = 'https://github.com/9space-os/'
+	if not u.startswith(pre) or git(d, 'config', '--get', 'remote.%s.pushurl' % remote):
+		return
+	run(['git', '-C', d, 'remote', 'set-url', '--push', remote, PUSH + '/' + u[len(pre):]])
+
 def update(d, remote, branch):
 	"""fast-forward the checkout d (on branch) to remote/branch, if clean"""
 	cur = git(d, 'rev-parse', '--abbrev-ref', 'HEAD')
@@ -103,6 +118,7 @@ def tree():
 		run(['git', '-C', main, 'branch', '-q', '--track', 'front', '9space/front'])
 	else:
 		run(['git', '-C', main, 'fetch', '-q', '9space'])
+	pushurl(main, '9space')
 	for var, branch in WORKTREES:
 		d = vals[var]
 		if os.path.isdir(d):
@@ -127,7 +143,10 @@ def repo(name):
 	else:
 		run(['git', '-C', d, 'fetch', '-q', 'origin'])
 		update(d, 'origin', branch)
+	pushurl(d, 'origin')
 
+print('dist (%s)' % parts.HERE)
+pushurl(parts.HERE, 'origin')
 for w in want:
 	try:
 		tree() if w == 'tree' else repo(w)

@@ -43,7 +43,10 @@ there only.
 `dist/bin/repos` clones every part where `paths.env` puts it: the tree with its
 branches (`main` checked out; `gcc`, `nix`, `riscv`, `upstream` as refs: a worktree
 for one of them only with `--worktrees=riscv` etc.), gcc, Rust,
-Go, mcp and plan9port. `--sources` then runs each toolchain's `./fetch.sh`
+Go, mcp and plan9port, by HTTPS (no key needed). How you push is up to you; to push
+by SSH, `NINESPACE_PUSH=git@github.com:9space-os dist/bin/repos` gives the remotes
+of 9space-os (`dist`'s too) that push URL and leaves fetching as it is (a push URL
+already set stays). `--sources` then runs each toolchain's `./fetch.sh`
 and `dist/bin/fetch`:
 
 - `toolchain/gcc/fetch.sh`: gcc, binutils, gmp, mpfr, mpc (GNU's signatures,
