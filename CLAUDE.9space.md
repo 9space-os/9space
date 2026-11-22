@@ -56,6 +56,10 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `build-toolchains [-n] [-from STEP] [ARCH...]`: the whole chain from scratch
   (tree, gcc, Rust, Go, tree again), one log per step in `dist/logs/`; the
   build the wiki's Building page describes. Keep the two in step.
+- `pxe [start|stop|restart|status]`: the PXE services for the test machines
+  in the background (dnsmasq by sudo, ufs serving `CLI_DIR/pxe/ufsroot` on
+  5650), e.g. after a host reboot; the root and conf stay
+  `tree/scripts/hw/pxe.sh`'s.
 - `build-all [-iso] [ARCH...]`: checks the toolchains, builds the tree
   (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go.
 

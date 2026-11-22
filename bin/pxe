@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# pxe [start|stop|restart|status]: the host's PXE services for the test
+# machines (the X1), in the background, after a reboot with one command:
+#
+#   dnsmasq  proxy DHCP and TFTP (as root, by sudo): the conf that
+#            tree/scripts/hw/pxe.sh wrote (CLI_DIR/pxe/dnsmasq.conf); the
+#            build in CACHE/dnsmasq (DNSMASQ=), which has the fix for 2.93's
+#            TFTP block cache (tree MEMORY.md, "BIOS-PXE bad magic"); else the
+#            system's dnsmasq
+#   ufs      the machines' root (PXE_DIR/ufsroot, files glenda's) on the conf's
+#            interface, port UFS_PORT (5650), as pxe.sh's last line serves it;
+#            our ufs (tree/scripts/hw/ufs, built into CLI_DIR/ufs if missing)
+#
+# The root, the kernels and the plan9.ini files stay pxe.sh's (making and
+# refreshing them); this only starts what serves them. Logs and pid files in
+# PXE_DIR: dnsmasq.log, ufs.log, ufs.pid. Default: start; a service that runs
+# already is left alone.
+#   env: PXE_DIR (default CLI_DIR/pxe), UFS_PORT (5650), HOSTIP (the
+#   interface's address), DNSMASQ
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
+ROOT=$TREE
+. "$TREE/scripts/lib/paths.sh"
+die() { echo "pxe: $*" >&2; exit 1; }
+
+P=${PXE_DIR:-$CLI_DIR/pxe}
+C=$CLI_DIR/pxe/dnsmasq.conf	# one for every PXE_DIR (pxe.sh)
+UFS_PORT=${UFS_PORT:-5650}
+DNSMASQ=${DNSMASQ:-$CACHE/dnsmasq/src/dnsmasq}
+[ -x "$DNSMASQ" ] || DNSMASQ=$(command -v dnsmasq) || die "no dnsmasq ($CACHE/dnsmasq/src/dnsmasq or the system's)"
+
+# the dnsmasq itself, not the sudo above it
+dnspid() { pgrep -f -- "^[^ ]*/dnsmasq --no-daemon --conf-file=$C\$" | head -1; }
+ufspid() {
+	local p
+	[ -s "$P/ufs.pid" ] && p=$(cat "$P/ufs.pid") && kill -0 "$p" 2>/dev/null && { echo "$p"; return; }
+	# one started by hand (pxe.sh's exec): the same root
+	pgrep -f -- "ufs -root=$P/ufsroot( |\$)" | head -1
+}
+hostip() {
+	local ifc
+	ifc=$(sed -n 's/^interface=//p' "$C")
+	[ -n "$ifc" ] || die "no interface= in $C"
+	ip -4 -br addr show "$ifc" | awk '{sub(/\/.*/, "", $3); print $3}'
+}
+
+start() {
+	[ -f "$C" ] || die "no $C: run tree/scripts/hw/pxe.sh MAC [machine] once (it writes the conf, the TFTP dir and the root)"
+	[ -d "$P/ufsroot/amd64" ] || die "no root $P/ufsroot (tree/scripts/hw/pxe.sh)"
+	if [ -n "$(dnspid)" ]; then
+		echo "pxe: dnsmasq runs already (pid $(dnspid))"
+	else
+		echo "pxe: dnsmasq ($DNSMASQ, as root: sudo)"
+		sudo -v
+		# its log-facility=- goes to the log; setsid: not ended with this terminal
+		sudo setsid "$DNSMASQ" --no-daemon --conf-file="$C" < /dev/null >> "$P/dnsmasq.log" 2>&1 &
+		sleep 1
+		[ -n "$(dnspid)" ] || { tail -5 "$P/dnsmasq.log" >&2; die "dnsmasq did not start ($P/dnsmasq.log)"; }
+	fi
+	if [ -n "$(ufspid)" ]; then
+		echo "pxe: ufs runs already (pid $(ufspid))"
+	else
+		local ip ufs
+		ip=${HOSTIP:-$(hostip)}
+		[ -n "$ip" ] || die "no address on the conf's interface"
+		ufs=$("$TREE/scripts/hw/ufs/build.sh" "$CLI_DIR/ufs")
+		echo "pxe: ufs serves $P/ufsroot on $ip:$UFS_PORT"
+		setsid "$ufs" -root="$P/ufsroot" -user=glenda -addr="$ip:$UFS_PORT" < /dev/null >> "$P/ufs.log" 2>&1 &
+		echo $! > "$P/ufs.pid"
+		sleep 1
+		kill -0 "$(cat "$P/ufs.pid")" 2>/dev/null || { tail -5 "$P/ufs.log" >&2; die "ufs did not start ($P/ufs.log)"; }
+	fi
+	status
+}
+
+stop() {
+	local p
+	p=$(ufspid)
+	if [ -n "$p" ]; then kill "$p" && echo "pxe: ufs ($p) ended"; else echo "pxe: no ufs"; fi
+	rm -f "$P/ufs.pid"
+	p=$(dnspid)
+	if [ -n "$p" ]; then sudo kill "$p" && echo "pxe: dnsmasq ($p) ended"; else echo "pxe: no dnsmasq"; fi
+}
+
+status() {
+	local p ok=0
+	p=$(dnspid)
+	if [ -n "$p" ]; then echo "dnsmasq  runs  pid $p  (log $P/dnsmasq.log)"; else echo "dnsmasq  DOWN"; ok=1; fi
+	p=$(ufspid)
+	if [ -n "$p" ]; then
+		echo "ufs      runs  pid $p  (log $P/ufs.log)"
+		ss -lnt | awk -v port=":$UFS_PORT" '$4 ~ port"$" {print "         listens on " $4}'
+	else echo "ufs      DOWN"; ok=1; fi
+	return $ok
+}
+
+case ${1:-start} in
+start) start ;;
+stop) stop ;;
+restart) stop; sleep 1; start ;;
+status) status ;;
+*) echo "usage: pxe [start|stop|restart|status]" >&2; exit 2 ;;
+esac
