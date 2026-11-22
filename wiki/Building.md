@@ -2,8 +2,8 @@
 
 Everything is built on a Linux host (x86-64) from the repositories of
 [9space-os](https://github.com/9space-os) and the release archives they name.
-The result is the 9front tree for amd64, 386 and arm64 with gcc, Rust and Go
-for 9front, and an install CD.
+The result is 9space for amd64, 386 and arm64 (the 9front tree built with gcc),
+with gcc, Rust and Go for 9space, and an install CD.
 
 From scratch it is a handful of commands (sections 2–4) and about three hours,
 mostly gcc and Rust. Later builds are incremental and take minutes.
@@ -11,10 +11,10 @@ mostly gcc and Rust. Later builds are incremental and take minutes.
 | Part | Where | What it is |
 |---|---|---|
 | plan9port | `tools/plan9port` | rc, yacc and the generators the tree's build runs on Linux |
-| tree | `tree` | the 9front tree; `sys/src/cmd/build` (build.exe) builds it |
-| gcc | `toolchain/gcc` | gcc 16 and binutils for 9front: the cross compiler (Linux → 9front) and gcc on 9front |
-| Rust | `toolchain/rust` | rustc, cargo and std for 9front (from Rust's nightly source archive) |
-| Go | `toolchain/go` | Go for 9front (from Go's release archive) |
+| tree | `tree` | 9space's tree (9front's, with the GPU stack and the desktop); `sys/src/cmd/build` (build.exe) builds it |
+| gcc | `toolchain/gcc` | gcc 16 and binutils for 9space: the cross compiler (Linux → 9space) and gcc on 9space |
+| Rust | `toolchain/rust` | rustc, cargo and std for 9space (from Rust's nightly source archive) |
+| Go | `toolchain/go` | Go for 9space (from Go's release archive) |
 
 All paths come from `dist/paths.env`. Every command below starts in
 `~/Devel/9space` unless it says otherwise.
@@ -71,11 +71,11 @@ and stops at the first failure, showing the end of its log:
 | `tree-first` | `dist/bin/build-all`: the tree without the toolchains (gcc's cross compiler is built against its libraries) | 10 min |
 | `gcc-A` | `toolchain/gcc`: `objtype=A ./build.sh cross hostlibs native plan9` | 10 min per arch |
 | `rust-stage1` | `toolchain/rust/rust`: `./x build --stage 1 library --target <Linux and the arches>` (downloads Rust's stage-0 compiler and its LLVM) | 10 min |
-| `llvm-A` | `objtype=A scripts/build-llvm.sh`: LLVM for 9front | 15 min per arch |
+| `llvm-A` | `objtype=A scripts/build-llvm.sh`: LLVM for 9space | 15 min per arch |
 | `rustc-A` | `./x build --stage 2 --host T --target T compiler/rustc src/tools/rustdoc src/tools/rustfmt src/tools/clippy` | 10–25 min per arch |
 | `stage1-again-A` | `./x build --stage 1 library …` (stage 2 removed the other targets' std) | 1 min |
-| `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9front | 5 min |
-| `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9front | 1 min |
+| `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space | 5 min |
+| `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9space | 1 min |
 | `go-A` | `toolchain/go`: `objtype=A scripts/build.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
 | `tree` | `dist/bin/build-all` again, now with the APE parts (Mesa, Wayland, SDL3, …) and the Rust programs (wsys, term, ui) | 10 min |
 
@@ -95,8 +95,8 @@ The tree's build ends with `NNN files expected, ok` for each architecture
 
 ## 4. Boot loaders and the CD
 
-9front's boot loaders are built with 9front's own compilers inside the built
-system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
+The boot loaders are built with the Plan 9 C compilers (from 9front) inside the
+built system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
 
 ```sh
 cd tree && scripts/guest/build-boot.sh && cd ..
@@ -111,14 +111,14 @@ the CD, and so onto the system installed from it.
 
 | Profile | On the CD | Size (amd64) |
 |---|---|---|
-| `minimal` | 9front built with gcc: rio, VESA | 330 MB |
+| `minimal` | the base system: rio, VESA | 330 MB |
 | `gpu` | + the GPU stack: gpu(4)'s drivers (i915, amdgpu, virtiogpu), Mesa's Vulkan, the Vulkan programs | 1.3 GB |
 | `ui` | + the desktop: wsys, the ui framework, term, foot, Wayland, the TrueType fonts and themes; wsys composes on the processor and is the desktop (`desktop=rio` in plan9.ini: rio) | 670 MB |
 | `full` | `gpu` and `ui`, with gcc, Rust and Go | past 2 GB |
-| `nix` | the branch `nix`: 9front built with gcc, NIX's kernel; no GPU stack, no desktop | 340 MB |
+| `nix` | the branch `nix`: the base system with NIX's kernel; no GPU stack, no desktop | 340 MB |
 
 `nix` is the one profile not made from `main`: its CD comes from the tree's
-branch `nix` (9front built with gcc and NIX's kernel, its application and
+branch `nix` (the base system with NIX's kernel, its application and
 kernel cores: `*nixac`, `*nixkc` in plan9.ini(8)), without the GPU stack, the
 desktop and `pull(1)`, for amd64 only. It needs that branch's build in its
 worktree first:
@@ -285,6 +285,6 @@ that the patches lack.
   (cd tree-riscv && CC=gcc ARCH=riscv64 sys/src/cmd/build/build.exe)
   (cd toolchain/gcc && objtype=riscv64 ./build.sh cross hostlibs native plan9)   # ~30 min
   ```
-- **Self-hosting**: the tree built inside 9front with the native gcc,
+- **Self-hosting**: the tree built inside 9space with the native gcc,
   `tree/scripts/guest/build-self.sh`.
 - **Real hardware** (VFIO GPU tests): `tree/tests/README.md`.
