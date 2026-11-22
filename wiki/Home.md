@@ -5,7 +5,7 @@
 - 9front built with **gcc** on Linux (amd64, 386, arm64; riscv64 as a port)
 - a **GPU stack**: gpu(4), Linux's DRM drivers on a LinuxKPI, Mesa (Vulkan, OpenGL)
 - **wsys**, a GPU-composing window system, and **ui**, a declarative UI framework served as files
-- toolchains for 9front: **gcc**, **Rust**, **Go**
+- toolchains for 9space: **gcc**, **Rust**, **Go**
 
 All of it lives in one directory, `~/Devel/9space`; each part is a git repository.
 
@@ -16,10 +16,10 @@ All of it lives in one directory, `~/Devel/9space`; each part is a git repositor
 | [[Host-requirements]] | what the Linux host needs |
 | [[Building]] | from a Linux host to an install CD, step by step; the installation profiles |
 | [[Releasing]] | from a working checkout to a release: 9front's newest, the CA roots, tests, pin, CDs, the replica |
-| [Using gcc, Rust and Go](Toolchains) | the toolchains on 9front and from Linux; rebuilding the system with gcc |
+| [Using gcc, Rust and Go](Toolchains) | the toolchains on 9space and from Linux; rebuilding the system with gcc |
 | [[Features]] | what works today, and where |
 
-Licences: the 9front tree holds only permissive code (MIT, BSD, ISC, zlib,
+Licences: 9space's tree holds only permissive code (MIT, BSD, ISC, zlib,
 public domain); firmware is kept as separate files. A check
 (`scripts/linux/provenance.py`, part of `tests/static`) keeps GPL text of
 Linux out of the LinuxKPI.

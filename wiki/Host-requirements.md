@@ -40,11 +40,11 @@ fontconfig freetype2` on Arch); the build of 9space uses none of those.
 
 | Tool | For | Tested |
 |---|---|---|
-| (as "Always") | gcc and binutils for 9front (`toolchain/gcc`); GMP, MPFR, MPC come with `fetch.sh` | |
-| cargo (rustup or the distribution's) | the tree's Rust programs with the stage-1 rustc (`scripts/build/cargo.sh`), cargo for 9front | 1.99 |
-| cmake, ninja | LLVM for 9front (`toolchain/rust/scripts/build-llvm.sh`) | |
+| (as "Always") | gcc and binutils for 9space (`toolchain/gcc`); GMP, MPFR, MPC come with `fetch.sh` | |
+| cargo (rustup or the distribution's) | the tree's Rust programs with the stage-1 rustc (`scripts/build/cargo.sh`), cargo for 9space | 1.99 |
+| cmake, ninja | LLVM for 9space (`toolchain/rust/scripts/build-llvm.sh`) | |
 | network | Rust's bootstrap downloads its stage-0 compiler and LLVM; cargo the crates | |
-| a Go ≥ 1.24.6 | bootstrapping Go for 9front (`GOROOT_BOOTSTRAP` or `go` on `PATH`) | go1.27 |
+| a Go ≥ 1.24.6 | bootstrapping Go for 9space (`GOROOT_BOOTSTRAP` or `go` on `PATH`) | go1.27 |
 
 Arch Linux:
 

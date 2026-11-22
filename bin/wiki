@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""wiki [-n]: publish dist/wiki to the GitHub wiki (9space-os/9space.wiki).
+
+It publishes what dist has committed (HEAD:wiki), not the working tree: pages
+with uncommitted changes are named and go out as committed. Commit them first.
+
+The wiki's clone lives in $CACHE/wiki and is made on first use. Each run fetches
+it and resets it to the remote's branch. The clone holds nothing of its own:
+every one of its commits comes from this script. It writes the pages there,
+removes pages that dist no longer has, and commits
+"Sync with dist/wiki (<dist commit>)". The body lists the subjects of dist's
+commits to wiki/ since the last sync. Then it pushes. Pages equal to the
+wiki's: nothing to do.
+
+  -n          only say what would change; commit and push nothing
+
+The remote is dist's origin with .git -> .wiki.git; WIKI_REMOTE overrides it
+(e.g. the https URL for -n without an SSH key). The pages name dist commits,
+so push dist as well (bin/push dist); the script reminds you when it is ahead."""
+import os, re, shutil, subprocess, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import parts
+
+def run(d, *args, out=False):
+	r = subprocess.run(['git', '-C', d] + list(args), text=True,
+		stdout=subprocess.PIPE if out else None)
+	if r.returncode != 0:
+		sys.exit('wiki: git %s failed in %s' % (' '.join(args), d))
+	return r.stdout.strip() if out else None
+
+def remote(dist):
+	if os.environ.get('WIKI_REMOTE'):
+		return os.environ['WIKI_REMOTE']
+	url = parts.git(dist, 'remote', 'get-url', '--push', 'origin') or ''
+	if '9space-os/' not in url:
+		sys.exit('wiki: dist\'s origin is %s, not 9space-os' % (url or 'missing'))
+	return re.sub(r'(\.git)?$', '.wiki.git', url, count=1)
+
+def clone(url, d):
+	"""the wiki's clone at d, reset to the remote; its branch"""
+	if not os.path.isdir(os.path.join(d, '.git')):
+		os.makedirs(os.path.dirname(d), exist_ok=True)
+		run(os.path.dirname(d), 'clone', '-q', url, os.path.basename(d))
+	run(d, 'remote', 'set-url', 'origin', url)
+	run(d, 'fetch', '-q', 'origin')
+	head = parts.git(d, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD') or 'origin/master'
+	branch = head.split('/', 1)[1]
+	run(d, 'checkout', '-q', '-B', branch, head)
+	run(d, 'reset', '-q', '--hard', head)
+	run(d, 'clean', '-q', '-fdx')
+	return branch
+
+def lastsync(d):
+	"""the dist commit of the wiki's newest sync, or None"""
+	for s in (parts.git(d, 'log', '-50', '--format=%s') or '').splitlines():
+		m = re.search(r'dist/wiki \(([0-9a-f]{7,})\)|\(dist ([0-9a-f]{7,})\)', s)
+		if m:
+			return m.group(1) or m.group(2)
+	return None
+
+def main():
+	args = sys.argv[1:]
+	dry = args == ['-n']
+	if args and not dry:
+		sys.exit('usage: wiki [-n]')
+	vals = parts.env()
+	dist = vals['DIST']
+	w = os.path.join(vals['CACHE'], 'wiki')
+
+	dirty = parts.git(dist, 'status', '--porcelain', '--', 'wiki')
+	if dirty:
+		print('wiki: not committed, published as in HEAD:')
+		for l in dirty.splitlines():
+			print('   ', l)
+
+	branch = clone(remote(dist), w)
+	pages = run(dist, 'ls-tree', '-r', '--name-only', 'HEAD', 'wiki/', out=True).splitlines()
+	keep = set()
+	for p in pages:
+		rel = p[len('wiki/'):]
+		keep.add(rel)
+		os.makedirs(os.path.dirname(os.path.join(w, rel)) or w, exist_ok=True)
+		data = subprocess.run(['git', '-C', dist, 'show', 'HEAD:' + p],
+			stdout=subprocess.PIPE, check=True).stdout
+		with open(os.path.join(w, rel), 'wb') as f:
+			f.write(data)
+	for rel in run(w, 'ls-files', out=True).splitlines():
+		if rel not in keep:
+			os.remove(os.path.join(w, rel))
+	run(w, 'add', '-A')
+	changed = run(w, 'diff', '--cached', '--stat', out=True)
+	if not changed:
+		print('wiki: the GitHub wiki already has dist/wiki of %s' % run(dist, 'rev-parse', '--short', 'HEAD', out=True))
+		return
+
+	head = run(dist, 'rev-parse', '--short', 'HEAD', out=True)
+	last = lastsync(w)
+	subjects = []
+	if last and parts.git(dist, 'cat-file', '-e', last + '^{commit}') is not None:
+		subjects = (parts.git(dist, 'log', '--reverse', '--format=%s', '%s..HEAD' % last, '--', 'wiki') or '').splitlines()
+	msg = 'Sync with dist/wiki (%s)' % head
+	if subjects:
+		msg += '\n\n' + '\n'.join('- ' + s for s in subjects)
+	print(changed)
+	print('\n' + msg + '\n')
+	if dry:
+		run(w, 'reset', '-q', '--hard')
+		print('wiki: -n, nothing committed or pushed')
+		return
+	run(w, 'commit', '-q', '-m', msg)
+	run(w, 'push', '-q', 'origin', 'HEAD:' + branch)
+	print('wiki: pushed to %s' % branch)
+	seen = parts.git(dist, 'rev-parse', '-q', '--verify', 'refs/remotes/origin/main')
+	if seen and parts.git(dist, 'merge-base', '--is-ancestor', 'HEAD', seen) is None:
+		print('wiki: dist is ahead of origin/main: bin/push dist')
+
+main()

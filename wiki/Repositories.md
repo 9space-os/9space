@@ -8,12 +8,12 @@ them (see [[Branches]]):
 ```
 9space/
 ├── dist/              the distribution: paths, manifest, tools, docs
-├── tree/              the 9front tree
+├── tree/              9space's tree (9front's)
 ├── toolchain/
-│   ├── gcc/           gcc and binutils for 9front
-│   ├── rust/          Rust for 9front (+ rust/, libc/)
-│   └── go/            Go for 9front (+ go/)
-├── tools/mcp/         MCP server for 9front
+│   ├── gcc/           gcc and binutils for 9space
+│   ├── rust/          Rust for 9space (+ rust/, libc/)
+│   └── go/            Go for 9space (+ go/)
+├── tools/mcp/         MCP server for 9space
 ├── browser/           Servo for 9space (+ servo/, mozjs/)
 ├── tools/plan9port/   Plan 9 from User Space (9fans', unchanged)
 ├── distfiles/         release archives (not git)
@@ -23,7 +23,7 @@ them (see [[Branches]]):
 
 | Repository | Holds | Upstream it builds on |
 |---|---|---|
-| `dist` | `paths.env` (all paths), `manifest.json` (commits that belong together), `bin/` (`repos`, `status`, `pin`, `fetch`, `build-toolchains`, `build-all`, `mkcd`), `docs/` (roadmap, upstream, patches), this wiki | — |
+| `dist` | `paths.env` (all paths), `manifest.json` (commits that belong together), `bin/` (`repos`, `status`, `pin`, `fetch`, `build-toolchains`, `build-all`, `mkcd`, `wiki`), `docs/` (roadmap, upstream, patches), this wiki | — |
 | `tree` | 9front with the gcc port, the GPU stack, wsys, ui, tests, build tool (`sys/src/cmd/build`) | github.com/9front/9front |
 | `toolchain/gcc` | `build.sh`, `fetch.sh`, `patches/` (gcc.patch, binutils.patch), `plan9/` (gccmk) | gcc 16.2.0, binutils 2.47 |
 | `toolchain/rust` | `patches/` (rust, cargo, backtrace, llvm-project, libc, crates), `crates/`, `scripts/`, `tests/` | rust-lang/rust, rust-lang/libc |
@@ -31,7 +31,7 @@ them (see [[Branches]]):
 | `toolchain/go` | `patches/go`, `scripts/build.sh`, `install.sh`, tests | go1.27.3 |
 | `toolchain/go/go` | Go's release archive (`fetch.sh`) as a repository; the port on branch `plan9` | go1.27.3 |
 | `tools/plan9port` | rc, yacc and the generators of the host build (`PLAN9PORT`); 9fans' repository, unchanged: its `INSTALL` writes the install path into ~75 files, `bin/repos` knows that | github.com/9fans/plan9port |
-| `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9front system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
+| `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9space system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
 | `browser` | `fetch.sh`, `prepare.sh`, `build.sh`, `patches/` (servo, mozjs, crates: stylo's, a git source Servo brings), `webfs-rs/`, `tests/`; the crates.io crates it changes are `toolchain/rust`'s (`patches/crates`, `cargo-plan9.toml`); MPL-2.0 for Servo's and mozjs' parts (`LICENSES.md`) | servo/servo (a nightly's commit), servo/mozjs, servo/stylo |
 | `browser/servo`, `mozjs` | the archives of those commits (`fetch.sh`) as repositories of their own, tag `pristine`; the port on branch `plan9` (from `patches/`) | servo/servo, servo/mozjs |
 

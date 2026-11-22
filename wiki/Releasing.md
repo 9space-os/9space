@@ -71,6 +71,13 @@ dist/bin/push            # the parts; then commit manifest.json and push dist
 git -C dist commit -m 'pin: ...' manifest.json && dist/bin/push dist
 ```
 
+The wiki is published apart from that: `dist/bin/wiki` copies the pages dist
+has committed (`HEAD:wiki`) into its clone in `cache/wiki`, commits them
+there as "Sync with dist/wiki (commit)" and pushes them to GitHub's wiki;
+`dist/bin/wiki -n` only shows what would change. Pages with uncommitted
+changes are named and go out as committed. Run it after each push of dist
+that changes a page.
+
 `pin` refuses while a part has uncommitted changes; changes a build makes
 by itself (plan9port's install paths, cargo's `Cargo.lock`) are listed in
 `dist/expected-changes` and do not count. `push` sends only fast-forwards,

@@ -48,6 +48,8 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `push [-n] [PART...]`: what the parts have and GitHub (9space-os) has not:
   the tree's branches (`upstream` with `--force-with-lease`), each toolchain's,
   mcp's and dist's branch, fast-forward only; `-n` says what it would push.
+- `wiki [-n]`: `dist/wiki` as committed (`HEAD:wiki`) to GitHub's wiki, by its
+  clone in `cache/wiki`; after each change to a page; `-n` says what would change.
 - `fetch [-n]`: the archives of `distfiles.list` into `distfiles/`, checked by sha256.
 - `cacert [-n]`: the CA roots to curl's newest `cacert-DATE.pem` (DISTFILES and
   `distfiles.list`), before each release.

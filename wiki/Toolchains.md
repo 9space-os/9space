@@ -1,14 +1,14 @@
 # Using gcc, Rust and Go
 
-9space's toolchains run on 9front itself (native) and on Linux (cross). This
+9space's toolchains run on 9space itself (native) and on Linux (cross). This
 page shows how to use them and how to rebuild the system with gcc.
 [[Building]] describes how they are built.
 
-## Getting them onto 9front
+## Getting them onto 9space
 
 The CD of the profile `full` (`dist/bin/mkcd full`, see [[Building]]) carries all three, as does any profile with `-dev all`:
 
-| Toolchain | On 9front | Built in |
+| Toolchain | On 9space | Built in |
 |---|---|---|
 | gcc 16, binutils 2.47 | `/amd64/gnu` | `toolchain/gcc/out/amd64` |
 | Rust (rustc, cargo, rustdoc, rustfmt, clippy) | `/amd64/rust` | `toolchain/rust/out/amd64` |
@@ -24,7 +24,7 @@ ls toolchain/rust/out/amd64/*.tgz toolchain/go/out/amd64/*.tgz
 ```
 
 ```rc
-# on 9front, with the archives in the current directory
+# on 9space, with the archives in the current directory
 cd / && tar xzf $home/gnu-amd64.tgz
 cd / && tar xzf $home/rust-x86_64-unknown-plan9.tgz && tar xzf $home/rust-tools-x86_64-unknown-plan9.tgz
 cd / && tar xzf $home/go-plan9-amd64.tgz
@@ -59,7 +59,7 @@ Things to know:
 
 More detail: `toolchain/gcc/README.md`.
 
-### 9front's mkfiles with gcc: gccmk
+### Plan 9 mkfiles with gcc: gccmk
 
 ```rc
 bind -b /$objtype/gnu/bin /bin
@@ -83,7 +83,7 @@ cargo new hello && cd hello && cargo run
   `/sys/lib/tls/ca.pem`. A CD with Rust or Go has them: Mozilla's list as curl
   extracts it (`cacert-DATE.pem` in `distfiles.list`; MPL-2.0, so kept out of the
   tree like firmware). 9front itself ships none.
-- Crates with C code build through gcc (APE). Crates that 9front needs
+- Crates with C code build through gcc (APE). Crates that Plan 9 needs
   changes for come from 9space's patches (`toolchain/rust/crates`); in your own
   project, use them through `[patch.crates-io]` like `toolchain/rust/cargo-plan9.toml`.
 - The other tools: `rustdoc`, `rustfmt`, `cargo fmt`, `cargo clippy`.
@@ -151,7 +151,7 @@ the kernel built there boots. The steps `main` has added since (Mesa through
 the cross compiler, the Rust programs, the LinuxKPI) have not been run in the
 guest yet.
 
-### The whole tree, by hand on 9front
+### The whole tree, by hand on 9space
 
 This is what `build-self.sh` types in the guest (`tree/scripts/guest/boot/mkself.rc`).
 You need:
@@ -163,13 +163,13 @@ You need:
   cd tree/sys/src/cmd/build && GOOS=plan9 GOARCH=amd64 GO111MODULE=off go build -o build.exe .
   ```
 
-  On 9front, Go can build it too:
+  On 9space, Go can build it too:
 
   ```rc
   cd sys/src/cmd/build; GO111MODULE=off go build -o build.exe .
   ```
 
-  The Go-on-9front route is untested.
+  The Go-on-9space route is untested.
 
 Then:
 
