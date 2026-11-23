@@ -37,7 +37,7 @@ if [ $update = 1 ]; then
 	list=$TREE/scripts/guest/firmware.list
 	old=$(sed -n '1s/.*: //p' "$list")
 	python3 "$TREE/scripts/guest/stage-firmware.py" -u
-	echo "mkfirmware: firmware.list: $old -> $(sed -n '1s/.*: //p' "$list"), $(git -C "$TREE" diff --numstat -- scripts/guest/firmware.list | awk '{print $1 " lines changed"}')"
+	echo "mkfirmware: firmware.list: $old -> $(sed -n '1s/.*: //p' "$list"), $(git -C "$TREE" diff --numstat -- scripts/guest/firmware.list | awk '{print "+" $1 " -" $2 " lines"}')"
 	echo "mkfirmware: commit it: git -C tree commit -m 'firmware.list: linux-firmware ...' scripts/guest/firmware.list"
 fi
 rm -rf "$stage" "$stage.list"

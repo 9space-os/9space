@@ -223,8 +223,11 @@ dist/bin/mkcd -o /tmp/x.iso full 386          # 386 (no GPU stack there)
 FIRMWARE=0 dist/bin/mkcd minimal              # without the WLAN and GPU firmware
 ```
 
-Every CD carries the WLAN and GPU firmware from linux-firmware
-(`tree/scripts/guest/firmware.spec`, each file checked against `firmware.list`);
+Every CD carries the WLAN and GPU firmware from linux-firmware that 9space's
+drivers load: `tree/scripts/guest/firmware.spec` names it, of its globs
+(amdgpu, i915, rtw89) only what the drivers declare (`firmware.used`, made by
+`scripts/guest/firmware-used.py` from the drivers' sources), each file checked
+against `firmware.list`;
 `FIRMWARE=0` leaves it out. After a package update of linux-firmware the check
 stops `mkcd`: `dist/bin/mkfirmware -u` makes the list anew (commit it).
 The CDs go to `~/Devel/9space/cache/cli` (`-o` for another place). `-ini` takes
