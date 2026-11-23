@@ -429,9 +429,10 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   no process could be started ("kernel allocate failed"), MCP stopped
   answering. **Found and fixed (tree ef7c1756c):** devmnt.c's mntwalk lost
   its clone chan on every failed walk (a local set after waserror, read in
-  its handler, not volatile: gcc's register copy after the longjmp). Open:
-  the 80 candidates of `tree/scripts/check/find-clobbered.py` over the
-  kernel (sys/src/9/{port,pc,pc64,ip}) to review the same way. gccmk again
+  its handler, not volatile: gcc's register copy after the longjmp). The
+  candidates of `tree/scripts/check/find-clobbered.py` reviewed: six more
+  made volatile (patch-upstream 0066); open: devvmx eventparse frees `q`
+  after `q++` (a bug of its own, kencc too). gccmk again
   on the test host with the fix: all of 9front's mkfiles build (mp3enc
   fixed after it), the kernel heap 5.7 -> 7.1 MB through the run.
 - Sporadic, cause not found: tests/boot with an empty console (L1583;
