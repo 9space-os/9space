@@ -76,8 +76,8 @@ the attic into git: a copy of 9space must carry no GPL material.
   the machine's own files; `apply.rc` in it, dist/lib/updatepack.py); wiki Building,
   "Updating installed machines".
 - `mkfirmware [-n] [-u] [-o FILE]`: the firmware archive (linux-firmware by firmware.list;
-  `-u` makes the list anew from the host's linux-firmware first);
-  the CDs and update archives carry no firmware (stage-dist.sh: only with FIRMWARE=1).
+  `-u` makes the list anew from the host's linux-firmware first); the CDs and
+  update archives carry the firmware too, unless FIRMWARE=0 (stage-dist.sh).
 - `check [-n] [-native] [-gpu] [-iso ISO] [STAGE...]`: tests the built system
   (static, build, guest, boot; -native: kencc and gccmk over 9front's mkfiles in a
   guest; -gpu; -iso: the CD), a log per stage in `dist/logs/check-*.log`; the

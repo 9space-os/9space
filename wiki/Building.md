@@ -85,7 +85,7 @@ the first failure, showing the end of its log:
 | `llvm-A` | `objtype=A scripts/build-llvm.sh`: LLVM for 9space | 15 min per arch |
 | `rustc-A` | `./x build --stage 2 --host T --target T compiler/rustc src/tools/rustdoc src/tools/rustfmt src/tools/clippy` | 10–25 min per arch |
 | `stage1-again-A` | `./x build --stage 1 library …` (stage 2 removed the other targets' std) | 1 min |
-| `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space | 5 min |
+| `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space (its output starts anew when the stage-1 std changed: `tests/out/cargo-port.std`) | 5 min |
 | `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9space | 1 min |
 | `go-A` | `toolchain/go`: `objtype=A scripts/build.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
 
@@ -220,8 +220,13 @@ dist/bin/mkcd -ini 'desktop=rio' ui           # rio instead of wsys, the ui CD's
 dist/bin/mkcd -mcp minimal                    # with the MCP server: 9space-minimal-mcp.amd64.iso
 dist/bin/mkcd -mcp -browser full              # 9space-full-mcp-browser.amd64.iso
 dist/bin/mkcd -o /tmp/x.iso full 386          # 386 (no GPU stack there)
+FIRMWARE=0 dist/bin/mkcd minimal              # without the WLAN and GPU firmware
 ```
 
+Every CD carries the WLAN and GPU firmware from linux-firmware
+(`tree/scripts/guest/firmware.spec`, each file checked against `firmware.list`);
+`FIRMWARE=0` leaves it out. After a package update of linux-firmware the check
+stops `mkcd`: `dist/bin/mkfirmware -u` makes the list anew (commit it).
 The CDs go to `~/Devel/9space/cache/cli` (`-o` for another place). `-ini` takes
 lines `name=value` for the CD's `plan9.ini`. The groups and their files are
 listed in `tree/scripts/guest/profiles`. `mkcd` needs the tree's build for the
@@ -331,11 +336,14 @@ that the patches lack.
 
 A machine installed from a CD is brought up to the tree's build with an
 update archive of the same profile and options as its CD (`mkupdate`
-takes mkcd's `-dev`, `-mcp`, `-browser`). The firmware is an archive of
-its own: the CDs and update archives carry none.
+takes mkcd's `-dev`, `-mcp`, `-browser`). The CDs and update archives
+carry the WLAN and GPU firmware; `FIRMWARE=0` in front of `mkcd` or
+`mkupdate` leaves it out. `mkfirmware` packs the firmware alone, for a
+machine installed without it or after a new linux-firmware.
 
 ```sh
 dist/bin/mkupdate full amd64        # cache/cli/9space-update-full.amd64.tgz (mkupdate -mcp -browser full ...: as the CD)
+FIRMWARE=0 dist/bin/mkupdate full   # the same without /lib/firmware
 dist/bin/mkfirmware [-u]            # cache/cli/9space-firmware.tgz: WLAN and GPU firmware (linux-firmware, checked by firmware.list)
 ```
 

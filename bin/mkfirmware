@@ -3,8 +3,8 @@
 # firmware under the names the drivers read (tree/scripts/guest/firmware.spec),
 # each file checked against firmware.list's sha256, with its licences
 # (scripts/guest/stage-firmware.py: FWDIR, the host's /usr/lib/firmware by default).
-# The CDs and update archives (mkcd, mkupdate) carry no firmware; a machine gets it
-# from this archive, as from an update:
+# The firmware alone (the CDs and update archives carry it too, unless FIRMWARE=0):
+# to bring a machine's firmware up to date, or one installed without it, as an update:
 #
 #	mkdir /tmp/fw && cd /tmp/fw && tar xzf /path/to/9space-firmware.tgz && rc apply.rc
 #

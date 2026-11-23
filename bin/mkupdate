@@ -10,7 +10,7 @@
 #   -o FILE    default $CLI_DIR/9space-update-PROFILE[-dev-LIST][-mcp][-browser].ARCH.tgz
 #   -n         stage and list what would go in, write no archive
 #
-# No firmware (as on the CDs): dist/bin/mkfirmware makes its archive.
+# With the firmware, as the CD (FIRMWARE=0: without; dist/bin/mkfirmware: the firmware alone).
 # Left out (the machine's own after the installation): /adm (users, timezone
 # setting), /cfg, /usr, /mail, /lib/ndb/local, /lib/ndb/auth, plan9.ini (in 9fat).
 # The archive holds root/ (the files, with the CD's modes and owners), apply.rc and
