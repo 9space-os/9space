@@ -336,7 +336,7 @@ its own: the CDs and update archives carry none.
 
 ```sh
 dist/bin/mkupdate full amd64        # cache/cli/9space-update-full.amd64.tgz (mkupdate -mcp -browser full ...: as the CD)
-dist/bin/mkfirmware                 # cache/cli/9space-firmware.tgz: WLAN and GPU firmware (linux-firmware, checked by firmware.list)
+dist/bin/mkfirmware [-u]            # cache/cli/9space-firmware.tgz: WLAN and GPU firmware (linux-firmware, checked by firmware.list)
 ```
 
 On the machine (both archives the same way):
@@ -352,8 +352,9 @@ one as `9pc64.orig`. The machine's own files are left alone (`/adm`,
 `/cfg`, `/usr`, `/mail`, `/lib/ndb/local`, `plan9.ini`); files the new
 system no longer has stay. pull(1) (mkcd's replica) is the update over
 HTTP. `mkfirmware` stops when the host's linux-firmware is not the one
-`tree/scripts/guest/firmware.list` was made from:
-`tree/scripts/guest/stage-firmware.py -u` makes the list anew.
+`tree/scripts/guest/firmware.list` was made from (e.g. after a package
+update): `dist/bin/mkfirmware -u` makes the list anew from it and then the
+archive; commit the list.
 
 ## From scratch again
 
