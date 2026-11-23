@@ -427,10 +427,12 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   (runs 3 and 4 piped `gcc -E` of every file through grep, megabytes each)
   the screen filled with "no memory for allocb" and "no memory for smalloc";
   no process could be started ("kernel allocate failed"), MCP stopped
-  answering. Not the pipes, by the code: devpipe.c, qio.c and allocb.c differ
-  from 9front only in member paths (2026-11-23). Next, at run time: a monitor
-  of /dev/swap ("kernel malloc") and `ps | wc -l` every 30 s in a file during
-  a gccmk run on the reinstalled guest; what grows names the leak.
+  answering. **Found and fixed (tree ef7c1756c):** devmnt.c's mntwalk lost
+  its clone chan on every failed walk (a local set after waserror, read in
+  its handler, not volatile: gcc's register copy after the longjmp). Open:
+  the 80 candidates of `tree/scripts/check/find-clobbered.py` over the
+  kernel (sys/src/9/{port,pc,pc64,ip}) to review the same way; then gccmk
+  again on the test host.
 - Sporadic, cause not found: tests/boot with an empty console (L1583;
   boot-cli now keeps `$CLI_DIR/serial.log`, written by QEMU, to tell a
   silent guest from a lost pty), wayland "wlvk subsurface" (L1623), wlan
