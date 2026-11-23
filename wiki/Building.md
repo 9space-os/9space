@@ -327,6 +327,34 @@ patches are the record (each toolchain's README says how to write them back).
 `rust-patches.sh apply` stops by itself if `plan9` has commits of its own
 that the patches lack.
 
+## Updating installed machines
+
+A machine installed from a CD is brought up to the tree's build with an
+update archive of the same profile and options as its CD (`mkupdate`
+takes mkcd's `-dev`, `-mcp`, `-browser`). The firmware is an archive of
+its own: the CDs and update archives carry none.
+
+```sh
+dist/bin/mkupdate full amd64        # cache/cli/9space-update-full.amd64.tgz (mkupdate -mcp -browser full ...: as the CD)
+dist/bin/mkfirmware                 # cache/cli/9space-firmware.tgz: WLAN and GPU firmware (linux-firmware, checked by firmware.list)
+```
+
+On the machine (both archives the same way):
+
+```rc
+mkdir /tmp/up && cd /tmp/up && tar xzf /path/to/9space-update-full.amd64.tgz && rc apply.rc
+fshalt -r
+```
+
+`apply.rc` copies the archive's `root/` over the system (the file server's
+permission checks off meanwhile) and puts the new kernel into 9fat, the old
+one as `9pc64.orig`. The machine's own files are left alone (`/adm`,
+`/cfg`, `/usr`, `/mail`, `/lib/ndb/local`, `plan9.ini`); files the new
+system no longer has stay. pull(1) (mkcd's replica) is the update over
+HTTP. `mkfirmware` stops when the host's linux-firmware is not the one
+`tree/scripts/guest/firmware.list` was made from:
+`tree/scripts/guest/stage-firmware.py -u` makes the list anew.
+
 ## From scratch again
 
 ```sh

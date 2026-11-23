@@ -71,6 +71,12 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `build-all [-check] [-iso] [ARCH...]`: checks the toolchains, builds the whole tree
   (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go; `-check`
   runs `check -native` before the CD and `check -iso` on it.
+- `mkupdate [-n] [-dev LIST] [-mcp] [-browser] [-o FILE] PROFILE [ARCH]`: an update
+  archive for machines installed from that profile's CD (stage-dist.sh's tree, without
+  the machine's own files; `apply.rc` in it, dist/lib/updatepack.py); wiki Building,
+  "Updating installed machines".
+- `mkfirmware [-n] [-o FILE]`: the firmware archive (linux-firmware by firmware.list);
+  the CDs and update archives carry no firmware (stage-dist.sh: only with FIRMWARE=1).
 - `check [-n] [-native] [-gpu] [-iso ISO] [STAGE...]`: tests the built system
   (static, build, guest, boot; -native: kencc and gccmk over 9front's mkfiles in a
   guest; -gpu; -iso: the CD), a log per stage in `dist/logs/check-*.log`; the

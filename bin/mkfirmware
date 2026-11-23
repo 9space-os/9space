@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# mkfirmware [-n] [-o FILE]: the firmware archive: linux-firmware's WLAN and GPU
+# firmware under the names the drivers read (tree/scripts/guest/firmware.spec),
+# each file checked against firmware.list's sha256, with its licences
+# (scripts/guest/stage-firmware.py: FWDIR, the host's /usr/lib/firmware by default).
+# The CDs and update archives (mkcd, mkupdate) carry no firmware; a machine gets it
+# from this archive, as from an update:
+#
+#	mkdir /tmp/fw && cd /tmp/fw && tar xzf /path/to/9space-firmware.tgz && rc apply.rc
+#
+# (apply.rc copies root/, i.e. /lib/firmware, over the system: dist/lib/updatepack.py).
+#   -o FILE   default $CLI_DIR/9space-firmware.tgz
+#   -n        stage and count, write no archive
+# A firmware file that is not as firmware.list has it (another linux-firmware) stops
+# it: stage-firmware.py -u makes the list anew from the firmware there now.
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+usage(){ echo "usage: mkfirmware [-n] [-o file]" >&2; exit 2; }
+dry=0 out=
+while [ $# -gt 0 ]; do
+	case $1 in
+	-n)	dry=1; shift ;;
+	-o)	[ $# -ge 2 ] || usage; out=$2; shift 2 ;;
+	*)	usage ;;
+	esac
+done
+TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
+ROOT=$TREE
+. "$TREE/scripts/lib/paths.sh"	# CLI_DIR (paths.env)
+out=${out:-$CLI_DIR/9space-firmware.tgz}
+stage=$CLI_DIR/firmware.stage
+
+rm -rf "$stage" "$stage.list"
+mkdir -p "$stage/lib"
+python3 "$TREE/scripts/guest/stage-firmware.py" "$stage/lib/firmware"
+# its list as stage-dist.sh writes it: path, mode (DMDIR for directories), owner, group
+(cd "$stage" && find lib/firmware -type d -printf '%p\t20000000775\tsys\tsys\n' \
+	-o -type f -printf '%p\t664\tsys\tsys\n') | LC_ALL=C sort > "$stage.list"
+
+manifest=$(mktemp)
+trap 'rm -f "$manifest"' EXIT
+{
+	echo "9space firmware: $(sed -n "1s/.*: //p" "$TREE/scripts/guest/firmware.list")"
+	echo "made $(date -u +%Y-%m-%dT%H:%MZ)"
+	echo "tree $(git -C "$TREE" log -1 --format=%h) (firmware.spec, firmware.list)"
+} > "$manifest"
+# no kernel in it: apply.rc copies /lib/firmware only
+python3 "$HERE/lib/updatepack.py" "$stage" "$stage.list" "$out" amd64 "$manifest" "$dry"
