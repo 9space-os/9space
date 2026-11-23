@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# check [-n] [-native] [-gpu] [-iso ISO] [STAGE...]: tests the built system, so
+# that a CD is made (or handed on) only from a tree that works. Each stage runs
+# on its own, its output in dist/logs/check-STAGE.log; at the end one line per
+# stage (ok, FAIL, its minutes) and the exit status 1 if one failed.
+#
+#   static   tree/tests/static/run.sh: manifests, licences, layouts (seconds)
+#   build    tests/run.sh build: what the build tool made (libraries, programs,
+#            kernel); needs the tree's build (build-all, build-profile)
+#   guest    tests/run.sh guest: the unit tests in a 9front guest (QEMU)
+#   boot     tests/run.sh boot: the built kernel boots to rc
+#   kencc    (-native) scripts/guest/build-kencc.sh: 9front's own compilers
+#            (6c, 6a, 6l, mk) build the tree, kernel included, in a guest
+#   gccmk    (-native) build-kencc.sh gcc: 9front's mkfiles with gccmk, the
+#            native gcc (GCC_DIR/out/amd64, build.sh plan9), userland
+#   gpu      (-gpu) tests/gpu/run.sh: the GPU stack on virtio-gpu (~1 h, a host GPU)
+#   iso      (-iso ISO) tests/run.sh iso rio usb gcc go rust mcp with ISO=ISO:
+#            that CD boots (CD and disk, BIOS and UEFI) to its desktop, mouse
+#            and keyboard, USB, and the toolchains and the MCP server it has
+#            (each skipped when the CD lacks it)
+#
+# Without STAGE: static build guest boot, with -native kencc gccmk, -gpu gpu,
+# -iso iso. -n prints the stages only. build-all -check and build-profile
+# -check run it before they make a CD (and build-profile -check -cd with
+# -iso after, on the CD it made).
+#
+# Guests one at a time (they share CLI_DIR): none may run, and the build lock
+# (build-all's) is taken, unless the caller holds it (CHECK_LOCKED=1).
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+usage(){ echo "usage: check [-n] [-native] [-gpu] [-iso ISO] [static|build|guest|boot|kencc|gccmk|gpu|iso...]" >&2; exit 2; }
+dry=0 native=0 gpu=0 iso=
+while [ $# -gt 0 ]; do
+	case $1 in
+	-n)	dry=1; shift ;;
+	-native)	native=1; shift ;;
+	-gpu)	gpu=1; shift ;;
+	-iso)	[ $# -ge 2 ] || usage; iso=$2; shift 2 ;;
+	-*)	usage ;;
+	*)	break ;;
+	esac
+done
+stages=("$@")
+if [ ${#stages[@]} = 0 ]; then
+	stages=(static build guest boot)
+	[ $native = 1 ] && stages+=(kencc gccmk)
+	[ $gpu = 1 ] && stages+=(gpu)
+	[ -n "$iso" ] && stages+=(iso)
+fi
+for s in "${stages[@]}"; do
+	case $s in
+	static|build|guest|boot|kencc|gccmk|gpu) ;;
+	iso)	[ -n "$iso" ] || { echo "check: the stage iso needs -iso ISO" >&2; exit 2; } ;;
+	*)	usage ;;
+	esac
+done
+if [ -n "$iso" ]; then
+	[ -r "$iso" ] || { echo "check: no CD $iso" >&2; exit 2; }
+	iso=$(cd "$(dirname "$iso")" && pwd -P)/$(basename "$iso")
+fi
+
+TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
+ROOT=$TREE
+. "$TREE/scripts/lib/paths.sh"	# CLI_DIR, GCC_DIR (paths.env)
+
+cmd(){
+	case $1 in
+	static)	echo "bash tests/static/run.sh" ;;
+	build|guest|boot)	echo "bash tests/run.sh $1" ;;
+	kencc)	echo "bash scripts/guest/build-kencc.sh" ;;
+	gccmk)	echo "bash scripts/guest/build-kencc.sh gcc" ;;
+	gpu)	echo "bash tests/gpu/run.sh" ;;
+	iso)	echo "env ISO=$iso bash tests/run.sh iso rio usb gcc go rust mcp" ;;
+	esac
+}
+if [ $dry = 1 ]; then
+	for s in "${stages[@]}"; do echo "stage $s: (cd tree && $(cmd $s))"; done
+	exit 0
+fi
+
+if [ "$CHECK_LOCKED" != 1 ]; then
+	exec 9>"$HERE/.build-all.lock"
+	flock -n 9 || { echo "check: build-all, build-profile, mkcd or build-toolchains runs" >&2; exit 1; }
+fi
+# one guest at a time: none of this distribution's may run (its QEMU names CLI_DIR's files)
+if pgrep -af qemu-system | grep -qF "$CLI_DIR"; then
+	echo "check: a guest of $CLI_DIR runs (one at a time)" >&2
+	exit 1
+fi
+
+mkdir -p "$HERE/logs"
+res=() bad=0
+for s in "${stages[@]}"; do
+	log=$HERE/logs/check-$s.log
+	echo "$(date +%H:%M) check: $s ($(cmd $s); log: dist/logs/check-$s.log)"
+	t0=$(date +%s)
+	if (cd "$TREE" && $(cmd $s)) > "$log" 2>&1; then r=ok; else r=FAIL; bad=1; fi
+	m=$(( ($(date +%s) - t0 + 59) / 60 ))
+	res+=("$(printf '%-7s %-4s %3d min  dist/logs/check-%s.log' $s $r $m $s)")
+	[ $r = ok ] || tail -15 "$log" | sed 's/^/	/'
+done
+echo
+printf '%s\n' "${res[@]}"
+if [ $bad = 1 ]; then
+	echo "check: failed"
+	exit 1
+fi
+echo "check: ok (${stages[*]})"

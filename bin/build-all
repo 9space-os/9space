@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-all [-iso] [ARCH...]: 9space from the parts paths.env names, with
+# build-all [-check] [-iso] [ARCH...]: 9space from the parts paths.env names, with
 # what is there of the toolchains: the whole tree, every profile's parts. For
 # one installation profile only: dist/bin/build-profile PROFILE.
 #
@@ -13,13 +13,24 @@
 #   3. -iso: the install CD of amd64 with Rust and Go on it
 #      (scripts/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
 #      installation profiles (minimal, gpu, ui, full; -dev): dist/bin/mkcd
+#   -check: after 2, dist/bin/check -native (tests/static, the build's tests,
+#      the guest's, kencc and gccmk over 9front's mkfiles); a failure stops
+#      before the CD. With -iso, check -iso on the CD afterwards (it boots,
+#      its desktop, USB, its toolchains)
 #
 # One run at a time (a lock in the distribution's directory): two builds in
 # the tree share its objects.
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-iso=0
-[ "$1" = -iso ] && { iso=1; shift; }
+iso=0 check=0
+while [ $# -gt 0 ]; do
+	case $1 in
+	-iso)	iso=1; shift ;;
+	-check)	check=1; shift ;;
+	-*)	echo "usage: build-all [-check] [-iso] [ARCH...]" >&2; exit 2 ;;
+	*)	break ;;
+	esac
+done
 arches=("$@")
 [ ${#arches[@]} -gt 0 ] || arches=(amd64)
 # the main branch's architectures; riscv64 is the tree's branch riscv (tree-riscv),
@@ -56,7 +67,17 @@ for a in "${arches[@]}"; do
 done
 cd "$TREE"
 
+# check holds build-all's lock through ours (CHECK_LOCKED)
+if [ $check = 1 ]; then
+	echo "build-all: dist/bin/check -native"
+	CHECK_LOCKED=1 "$HERE/bin/check" -native || { echo "build-all: check failed: no CD" >&2; exit 1; }
+fi
+
 if [ $iso = 1 ]; then
 	echo "build-all: the amd64 CD"
 	RUST_OUT=$RUST_DIR/out/amd64 GO_OUT=$GO_DIR/out/amd64 objtype=amd64 scripts/guest/mkiso.sh
+	if [ $check = 1 ]; then
+		echo "build-all: dist/bin/check -iso on the CD"
+		CHECK_LOCKED=1 "$HERE/bin/check" -iso "$CLI_DIR/9front.amd64.iso" iso || { echo "build-all: the CD failed its tests" >&2; exit 1; }
+	fi
 fi

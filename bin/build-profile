@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-profile [-n] [-cd [MKCD-OPTION...]] PROFILE [ARCH...]: the tree for one installation
+# build-profile [-n] [-check] [-cd [MKCD-OPTION...]] PROFILE [ARCH...]: the tree for one installation
 # profile, only what its CD has (tree/scripts/guest/profiles), with the toolchains
 # build-toolchains made. ARCH: amd64 (default), 386, arm64.
 #
@@ -24,14 +24,20 @@
 # 386) with dist/bin/mkcd, the options before PROFILE handed on (-dev, -mcp,
 # -browser, -ini, -o, -noreplica).
 #
+# -check: then dist/bin/check static guest boot kencc gccmk (the static tests, the
+# guest's, 9front's mkfiles with kencc and gccmk; check-install above stands for
+# its stage build, which wants the whole tree); a failure stops before the CD.
+# With -cd, check -iso on each CD it made.
+#
 # One run at a time, and not with build-all or mkcd (build-all's lock).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: build-profile [-n] [-cd [-dev LIST] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica]] minimal|gpu|ui|full [amd64|386|arm64...]" >&2; exit 2; }
-dry=0 cd=0 mkcd=()
+usage(){ echo "usage: build-profile [-n] [-check] [-cd [-dev LIST] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica]] minimal|gpu|ui|full [amd64|386|arm64...]" >&2; exit 2; }
+dry=0 cd=0 check=0 mkcd=()
 while [ $# -gt 0 ]; do
 	case $1 in
 	-n)	dry=1; shift ;;
+	-check)	check=1; shift ;;
 	-cd)	cd=1; shift ;;
 	-dev|-ini|-o)	[ $# -ge 2 ] || usage; mkcd+=("$1" "$2"); shift 2 ;;
 	-mcp|-browser|-noreplica)	mkcd+=("$1"); shift ;;
@@ -116,6 +122,16 @@ for b in json.load(open(sys.argv[1])):
 	fi
 	run bash -c "cd '$TREE' && objtype=$a python3 scripts/build/check-install.py -r -x '$om' | grep -v '^broken'; exit \${PIPESTATUS[0]}"
 done
+# the stages check has for a profile's tree (amd64: the guests are amd64's)
+checkargs=(static guest boot kencc gccmk)
+if [ $check = 1 ]; then
+	if [ $dry = 1 ]; then
+		echo "step  dist/bin/check ${checkargs[*]}"
+	else
+		echo "$(date +%H:%M) build-profile: dist/bin/check ${checkargs[*]}"
+		CHECK_LOCKED=1 "$HERE/bin/check" "${checkargs[@]}" || { echo "build-profile: check failed: no CD" >&2; exit 1; }
+	fi
+fi
 if [ $dry = 0 ]; then
 	exec 9>&-	# mkcd takes the lock itself
 	echo "$(date +%H:%M) build-profile: $profile done (${arches[*]})"
@@ -124,7 +140,19 @@ fi
 if [ $cd = 1 ]; then
 	for a in "${arches[@]}"; do
 		case $a in
-		amd64|386) run "$HERE/bin/mkcd" "${mkcd[@]}" $profile $a ;;
+		amd64|386)
+			if [ $check = 1 ] && [ $dry = 0 ]; then
+				# the CD mkcd made: its last line is ls -l of it
+				log=$CACHE/build/mkcd-$profile.$a.log
+				run "$HERE/bin/mkcd" "${mkcd[@]}" $profile $a | tee "$log"
+				[ ${PIPESTATUS[0]} = 0 ] || exit 1
+				img=$(tail -1 "$log" | awk '{print $NF}')
+				echo "$(date +%H:%M) build-profile: dist/bin/check -iso $img"
+				objtype=$a "$HERE/bin/check" -iso "$img" iso || { echo "build-profile: the CD $img failed its tests" >&2; exit 1; }
+			else
+				run "$HERE/bin/mkcd" "${mkcd[@]}" $profile $a
+				[ $check = 0 ] || echo "step  dist/bin/check -iso (that CD) iso"
+			fi ;;
 		*) echo "build-profile: no CD for $a (mkcd: amd64, 386)" >&2 ;;
 		esac
 	done

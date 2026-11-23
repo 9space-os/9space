@@ -300,6 +300,8 @@ profile's CD instead: `ISO=~/Devel/9space/cache/cli/9space-ui.amd64.iso bash tes
 
 Only one guest at a time: they share `~/Devel/9space/cache/cli` (`CLI_DIR`).
 
+All of it in one go, and the build with 9front's own compilers (kencc, gccmk) too: `dist/bin/check`, see [[Testing]].
+
 ## Later: updating
 
 ```sh

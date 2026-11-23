@@ -16,6 +16,7 @@ All of it lives in one directory, `~/Devel/9space`; each part is a git repositor
 | [[Host-requirements]] | what the Linux host needs |
 | [[Building]] | from a Linux host to an install CD, step by step; the installation profiles |
 | [[Building by hand\|Building-by-hand]] | for experts: the single steps of the build scripts, as commands to type |
+| [[Testing]] | `dist/bin/check`: the built system and its CD tested, with gcc, kencc and gccmk |
 | [[Releasing]] | from a working checkout to a release: 9front's newest, the CA roots, tests, pin, CDs, the replica |
 | [Using gcc, Rust and Go](Toolchains) | the toolchains on 9space and from Linux; rebuilding the system with gcc |
 | [[Features]] | what works today, and where |

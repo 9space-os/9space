@@ -409,6 +409,28 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Tests and the build
 
+- The kencc and gccmk builds (2026-11-22/23, `tree/scripts/guest/build-kencc.sh`,
+  `dist/bin/check -native`): kencc builds the whole tree again (run 7: 681
+  programs, the kernel pc64; pstate.c fixed after it, compiled with 6c alone).
+  gccmk: run 1 (4 CPUs) ran out of its 3 h at cmd's last programs; `pcc -TVwc`
+  (ape/lib/auth) fixed in gccmk's pcc; libc/9syscall's generated `.s` stubs
+  have no GAS port (`gcc-as` fails there; the build's own stubs are used).
+  **Open:** run 2 with `SMP=8 MEM=4096` lost the guest's TCP connection to
+  the root's ufs (guestfwd 10.0.2.100:564) after ~25 min: the whole guest
+  stopped, no echo on the console, no ^T^T; host side no connection on 5640,
+  no ufs or QEMU log. Not seen with 4 CPUs. To find: the guest's TCP
+  (retransmits, a reset) under 8 CPUs, or slirp's guestfwd. Run 3 (4 CPUs)
+  stopped on the user's word (2026-11-23): gccmk and the lost connection are
+  to be tested on hardware later.
+- **Kernel heap exhausted** (2026-11-23, installed 9space in `~/9space`, KVM,
+  4 CPUs, 4 GB): during the 4th gccmk run over all of `/sys/src` in one boot
+  (runs 3 and 4 piped `gcc -E` of every file through grep, megabytes each)
+  the screen filled with "no memory for allocb" and "no memory for smalloc";
+  no process could be started ("kernel allocate failed"), MCP stopped
+  answering. Not the pipes, by the code: devpipe.c, qio.c and allocb.c differ
+  from 9front only in member paths (2026-11-23). Next, at run time: a monitor
+  of /dev/swap ("kernel malloc") and `ps | wc -l` every 30 s in a file during
+  a gccmk run on the reinstalled guest; what grows names the leak.
 - Sporadic, cause not found: tests/boot with an empty console (L1583;
   boot-cli now keeps `$CLI_DIR/serial.log`, written by QEMU, to tell a
   silent guest from a lost pty), wayland "wlvk subsurface" (L1623), wlan

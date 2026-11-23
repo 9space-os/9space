@@ -6,6 +6,7 @@
 - [[Host-requirements]]
 - [[Building]]
 - [[Building by hand|Building-by-hand]]
+- [[Testing]]
 - [[Releasing]]
 - [[Using gcc, Rust and Go|Toolchains]]
 - [[Features]]

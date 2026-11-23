@@ -57,9 +57,10 @@ the attic into git: a copy of 9space must carry no GPL material.
   (the tree's base for them, gcc, Rust, Go), one log per step in `dist/logs/`; the
   build the wiki's Building page describes. Keep the two in step, and
   wiki/Building-by-hand.md (the single steps) too.
-- `build-profile [-n] [-cd [mkcd options]] PROFILE [ARCH...]`: the tree for one
+- `build-profile [-n] [-check] [-cd [mkcd options]] PROFILE [ARCH...]`: the tree for one
   installation profile (only its groups of build.$ARCH.json, dist/lib/tree-build.sh),
-  checked with check-install.py -x; `-cd` then runs mkcd.
+  checked with check-install.py -x; `-cd` then runs mkcd; `-check` runs `check`
+  before the CD and `check -iso` on it.
 - `clean-build [-n] [-y] [-downloads] [-cli] [PART...]`: removes what the build
   made (the tree: git clean -fdx; the toolchains' build/out), for a fresh build.
   Destructive: only when asked, `-n` first.
@@ -67,8 +68,14 @@ the attic into git: a copy of 9space must carry no GPL material.
   in the background (dnsmasq by sudo, ufs serving `CLI_DIR/pxe/ufsroot` on
   5650), e.g. after a host reboot; the root and conf stay
   `tree/scripts/hw/pxe.sh`'s.
-- `build-all [-iso] [ARCH...]`: checks the toolchains, builds the whole tree
-  (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go.
+- `build-all [-check] [-iso] [ARCH...]`: checks the toolchains, builds the whole tree
+  (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go; `-check`
+  runs `check -native` before the CD and `check -iso` on it.
+- `check [-n] [-native] [-gpu] [-iso ISO] [STAGE...]`: tests the built system
+  (static, build, guest, boot; -native: kencc and gccmk over 9front's mkfiles in a
+  guest; -gpu; -iso: the CD), a log per stage in `dist/logs/check-*.log`; the
+  wiki's Testing page. Run it before a CD is made or handed on, and after changes
+  to libc, APE or the kernel (gcc-only code needs a kencc branch).
 
 Docs: `dist/docs/roadmap.md` (phases, 1.0 criteria), `upstream.md` (bringing
 in 9front: front → gcc → main), `patches.md`; the plans (German) are kept
