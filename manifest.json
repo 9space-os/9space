@@ -18,7 +18,7 @@
 		},
 		"gcc": {
 			"branch": "main",
-			"commit": "fabf42ef2a88fde206a3203e758352192ffe859e",
+			"commit": "045474d13a2c24ca3d345a9a923ce66fc2e5fa8d",
 			"path": "GCC_DIR"
 		},
 		"go": {
@@ -58,7 +58,7 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "656607f9bf0f58a6ef44e08302a1fd24123a306d",
+			"commit": "a28145a4e4888b5cabbf6e9ea3f83b29fb2865d1",
 			"path": "TREE"
 		},
 		"tree-gcc": {
