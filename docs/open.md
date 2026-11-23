@@ -431,8 +431,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   its clone chan on every failed walk (a local set after waserror, read in
   its handler, not volatile: gcc's register copy after the longjmp). Open:
   the 80 candidates of `tree/scripts/check/find-clobbered.py` over the
-  kernel (sys/src/9/{port,pc,pc64,ip}) to review the same way; then gccmk
-  again on the test host.
+  kernel (sys/src/9/{port,pc,pc64,ip}) to review the same way. gccmk again
+  on the test host with the fix: all of 9front's mkfiles build (mp3enc
+  fixed after it), the kernel heap 5.7 -> 7.1 MB through the run.
 - Sporadic, cause not found: tests/boot with an empty console (L1583;
   boot-cli now keeps `$CLI_DIR/serial.log`, written by QEMU, to tell a
   silent guest from a lost pty), wayland "wlvk subsurface" (L1623), wlan
