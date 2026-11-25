@@ -1,0 +1,260 @@
+#!/usr/bin/env bash
+# instance [status|start|stop|check|update|up|fresh|reset|install [ISO]]: a 9space system
+# installed on a disk image in QEMU, kept up to date with this checkout's build,
+# for the tests (dist/bin/check -instance, tests/vm.py) and for working on it.
+#
+# Where it is: INSTANCE_DIR (the environment, else dist/local.env, which is not
+# in git: each checkout says where its own instance is). The directory holds the
+# data, not the scripts:
+#   instance.env     its settings (shell assignments, all optional):
+#                      PROFILE (full), MKUPDATE (mkupdate's options: -mcp, -dev ...;
+#                      default -mcp), ARCH (amd64), DISK (9space.raw), BACKUP
+#                      (9space.golden.raw), SMP (4), MEM (4096), MCP_PORT (18090),
+#                      CPU_PORT (17019), SERVE_PORT (18099)
+#   DISK             the disk (install makes it), BACKUP a copy reset puts back
+#   mcptoken         the MCP server's token (the installed system's $home/lib/mcptoken)
+#   qmp.sock, serial.sock, qemu.pid, qemu.log   while it runs
+#   hold             while someone works on it (its first line: who, what for):
+#                    update and reset do not put the backup back (FRESH=0 puts
+#                    an update onto the disk as it is); remove it when done
+#
+#   status    where it is, whether it runs, the MCP server answers, it is current
+#   start     boots it (no window; DISPLAY_OPT: QEMU's -display, e.g. gtk), until
+#             its MCP server answers; it keeps running (stop)
+#   stop      shuts it down (fshalt, else QEMU quits)
+#   check     exit 0 if it has this checkout's build, 1 if not (it must run)
+#   update    puts this checkout's build on it if it does not have it: BACKUP over
+#             DISK first (an update removes nothing: no file of an earlier build
+#             stays; FRESH=0: onto the disk as it is), then mkupdate's archive
+#             (PROFILE, MKUPDATE), apply.rc, a reboot
+#   up        start (if it does not run), then update: what the tests call
+#   fresh     up, then a throwaway boot: QEMU's -snapshot, nothing done in it
+#             stays; stop ends it, the disk as up left it (for trying something
+#             by hand; the tests use up and tidy up after themselves); refused
+#             while the instance is held
+#   reset     stops it and puts BACKUP back over DISK
+#   install   a new DISK from a CD (ISO, default $CLI_DIR's 9space-PROFILE-mcp CD)
+#
+# Current means: the system's /sys/lib/dist/update names the fingerprint mkupdate
+# gives this build (dist/lib/updatepack.py). The archive of the last update is kept
+# ($CLI_DIR/instance.ARCH.tgz with .fingerprint); only when a part of the build is
+# newer than it is the build staged anew (minutes), and put on only if its
+# fingerprint differs.
+#
+# STAGE=0: take the kept archive as the build, without staging (while changing
+# the tests themselves: a tree file newer than the archive stages anew).
+#
+# One guest at a time: start refuses while another QEMU runs.
+set -e
+HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
+. "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; paths.env and local.env (INSTANCE_DIR)
+usage(){ echo "usage: instance [status|start|stop|check|update|up|fresh|reset|install [iso]]" >&2; exit 2; }
+cmd=${1:-status}; shift || true
+
+[ -n "$INSTANCE_DIR" ] || { echo "instance: no INSTANCE_DIR (dist/local.env: INSTANCE_DIR=~/9space, or the environment)" >&2; exit 1; }
+D=$INSTANCE_DIR
+[ -f "$D/instance.env" ] && . "$D/instance.env"
+PROFILE=${PROFILE:-full} MKUPDATE=${MKUPDATE--mcp} ARCH=${ARCH:-amd64}
+DISK=$D/${DISK:-9space.raw} BACKUP=$D/${BACKUP:-9space.golden.raw}
+SMP=${SMP:-4} MEM=${MEM:-4096}
+MCP_PORT=${MCP_PORT:-18090} CPU_PORT=${CPU_PORT:-17019} SERVE_PORT=${SERVE_PORT:-18099}
+ARCHIVE=$CLI_DIR/instance.$ARCH.tgz
+MCPPY=$TREE_SCRIPTS/guest/mcp.py
+export MCPURL=http://127.0.0.1:$MCP_PORT/mcp
+[ -r "$D/mcptoken" ] && export MCPTOKEN=$(cat "$D/mcptoken")
+
+mcp(){ python3 "$MCPPY" "$@"; }
+pid(){ [ -s "$D/qemu.pid" ] && kill -0 "$(cat "$D/qemu.pid")" 2>/dev/null && cat "$D/qemu.pid"; }
+running(){ pid >/dev/null; }
+answers(){ mcp rc 'echo up' 20 >/dev/null 2>&1; }
+
+start(){
+	if running; then answers && return 0; echo "instance: QEMU runs (pid $(pid)), waiting for its MCP server" >&2
+	else
+		[ -f "$DISK" ] || { echo "instance: no $DISK (instance install)" >&2; exit 1; }
+		[ -n "$MCPTOKEN" ] || { echo "instance: no $D/mcptoken (the system's \$home/lib/mcptoken)" >&2; exit 1; }
+		if pgrep qemu-system >/dev/null; then	# not -x: the kernel cuts the name to 15 characters
+			echo "instance: another QEMU runs (one guest at a time)" >&2; exit 1
+		fi
+		local disp=(-display none -daemonize)
+		[ -n "$DISPLAY_OPT" ] && disp=(-display "$DISPLAY_OPT")
+		rm -f "$D/qmp.sock" "$D/serial.sock" "$D/qemu.pid" "$D/qemu.snapshot"
+		local snap=()
+		[ "${SNAPSHOT:-0}" = 1 ] && { snap=(-snapshot); touch "$D/qemu.snapshot"; }
+		local accel=(-cpu host -enable-kvm)
+		[ "${KVM:-1}" = 1 ] || accel=(-cpu max -accel tcg,thread=multi)
+		local q=(qemu-system-x86_64 "${accel[@]}" -smp "$SMP" -m "$MEM"
+			-netdev user,id=n0,hostfwd=tcp:127.0.0.1:$MCP_PORT-:8090,hostfwd=tcp:127.0.0.1:$CPU_PORT-:17019
+			-device virtio-net-pci,netdev=n0,mac=52:54:00:00:EE:03
+			-device virtio-scsi-pci,id=scsi
+			-drive if=none,id=vd0,format=raw,file="$DISK" -device scsi-hd,drive=vd0
+			-vga std
+			-qmp "unix:$D/qmp.sock,server=on,wait=off"
+			-serial "unix:$D/serial.sock,server=on,wait=off"
+			-pidfile "$D/qemu.pid" "${snap[@]}" "${disp[@]}")
+		if [ -n "$DISPLAY_OPT" ]; then
+			setsid "${q[@]}" >"$D/qemu.log" 2>&1 < /dev/null &
+		else
+			"${q[@]}" >"$D/qemu.log" 2>&1
+		fi
+		echo "instance: booting $DISK" >&2
+	fi
+	mcp wait 300 >/dev/null || { echo "instance: its MCP server does not answer ($MCPURL; $D/qemu.log)" >&2; exit 1; }
+	echo "instance: up ($MCPURL, QMP $D/qmp.sock)" >&2
+}
+
+snapshot(){ [ -f "$D/qemu.snapshot" ]; }
+
+stop(){
+	running || { echo "instance: not running" >&2; return 0; }
+	local p; p=$(pid)
+	# a test's boot (-snapshot) keeps nothing: no fshalt needed
+	snapshot || mcp rc 'fshalt' 20 >/dev/null 2>&1 || true
+	for _ in $(seq 60); do kill -0 "$p" 2>/dev/null || break; sleep 1; done
+	if kill -0 "$p" 2>/dev/null; then
+		python3 "$TREE_SCRIPTS/debug/qemu-ctl.py" "$D" hmp quit >/dev/null 2>&1 || kill "$p"
+	fi
+	rm -f "$D/qemu.pid" "$D/qemu.snapshot"
+	echo "instance: stopped" >&2
+}
+
+# the fingerprint the system names (empty: none, a system from a CD)
+theirs(){ mcp read /sys/lib/dist/update 2>/dev/null | sed -n 's/^ *[0-9]*\t//; s/^fingerprint //p' || true; }
+
+# the build's fingerprint: the kept archive's, unless a part of the build is newer
+# than it; then mkupdate stages anew (and makes the archive)
+newer(){
+	# and dist's own lib/ and bin/ (mkupdate, updatepack.py: how the update is made)
+	local dirs=("$TREE" "$MCP_DIR" "$GCC_DIR/out" "$RUST_DIR/out/$ARCH" "$GO_DIR/out/$ARCH" "$DISTFILES" "$HERE/lib" "$HERE/bin")
+	local d
+	for d in "${dirs[@]}"; do
+		[ -e "$d" ] || continue
+		[ -n "$(find "$d" -name .git -prune -o -newer "$ARCHIVE" -type f -print -quit 2>/dev/null)" ] && return 0
+	done
+	return 1
+}
+ours(){
+	# STAGE=0: the kept archive's, the build not looked at (while working on the tests)
+	if [ "${STAGE:-1}" = 0 ] && [ -s "$ARCHIVE.fingerprint" ]; then
+		cat "$ARCHIVE.fingerprint"; return
+	fi
+	if [ ! -s "$ARCHIVE.fingerprint" ] || [ ! -f "$ARCHIVE" ] || newer; then
+		echo "instance: staging the build (mkupdate $MKUPDATE $PROFILE $ARCH, minutes)" >&2
+		"$HERE/bin/mkupdate" $MKUPDATE -o "$ARCHIVE" "$PROFILE" "$ARCH" > "$CLI_DIR/instance.mkupdate.log" 2>&1 ||
+			{ echo "instance: mkupdate failed ($CLI_DIR/instance.mkupdate.log)" >&2; exit 1; }
+		sed -n 's/^fingerprint //p' "$CLI_DIR/instance.mkupdate.log" > "$ARCHIVE.fingerprint"
+	fi
+	cat "$ARCHIVE.fingerprint"
+}
+
+current(){
+	local t o
+	t=$(theirs) o=$(ours)
+	[ -n "$o" ] || { echo "instance: no fingerprint of the build" >&2; exit 1; }
+	[ "$t" = "$o" ]
+}
+
+# a job longer than one MCP call may last (the server ends a call after 10 minutes):
+# in the background, polled until its file says done
+job(){
+	local name=$1 script=$2 i
+	# the call ends when no process holds its descriptors: rfork F in the
+	# background process itself (not in an @{} under it: that one's parent
+	# would keep them), the job's own files inside
+	mcp rc "rm -f /tmp/$name.done /tmp/$name.log; {rfork sF; {{ $script } </dev/null >/tmp/$name.log >[2=1]; echo \$status >/tmp/$name.done}} &" 30 >/dev/null
+	# a poll may time out while the job loads the machine: the next one asks again
+	for i in $(seq 360); do
+		sleep 10
+		if mcp rc "test -e /tmp/$name.done" 60 >/dev/null 2>&1; then
+			local st; st=$(mcp read /tmp/$name.done 2>/dev/null | sed 's/^ *[0-9]*\t//') || continue
+			mcp read "/tmp/$name.log" 2>/dev/null | sed 's/^ *[0-9]*\t//' | tail -5 >&2 || true
+			[ -z "$st" ] && return 0
+			echo "instance: $name failed: $st" >&2; return 1
+		fi
+	done
+	echo "instance: $name did not finish in an hour" >&2; return 1
+}
+
+# hold: someone works on the instance (its first line: who, what for); nothing
+# puts the backup back over the disk meanwhile
+held(){ [ -f "$D/hold" ]; }
+holder(){ head -1 "$D/hold"; }
+
+resetdisk(){
+	held && { echo "instance: held by $(holder) ($D/hold): not reset" >&2; exit 1; }
+	[ -f "$BACKUP" ] || { echo "instance: no backup $BACKUP" >&2; exit 1; }
+	stop
+	echo "instance: $BACKUP over $DISK" >&2
+	cp --sparse=always "$BACKUP" "$DISK.new" && mv "$DISK.new" "$DISK"
+}
+
+update(){
+	snapshot && { echo "instance: a test boot (-snapshot) runs: an update would not stay (instance up)" >&2; exit 1; }
+	current && { echo "instance: current ($(cut -c1-12 "$ARCHIVE.fingerprint"))" >&2; return 0; }
+	# the update copies over and removes nothing: from the backup, so that no file an
+	# earlier build had and this one has not stays behind (FRESH=0: onto the disk as it is)
+	if [ "${FRESH:-1}" = 1 ] && [ -f "$BACKUP" ]; then
+		held && { echo "instance: held by $(holder) ($D/hold): not reset; FRESH=0 puts the build onto the disk as it is" >&2; exit 1; }
+		resetdisk
+		start
+	fi
+	echo "instance: putting the build on ($(basename "$ARCHIVE"))" >&2
+	python3 -m http.server -b 127.0.0.1 -d "$CLI_DIR" "$SERVE_PORT" >/dev/null 2>&1 &
+	SRV=$!	# not local: the EXIT trap runs after the function is gone
+	trap 'kill $SRV 2>/dev/null' EXIT
+	sleep 1
+	job update "rm -rf /tmp/up && mkdir /tmp/up && cd /tmp/up && hget http://10.0.2.2:$SERVE_PORT/$(basename "$ARCHIVE") | gunzip | tar x && rc apply.rc && cd / && rm -rf /tmp/up"
+	kill $SRV 2>/dev/null; trap - EXIT
+	echo "instance: rebooting into the update" >&2
+	mcp rc 'fshalt -r' 20 >/dev/null 2>&1 || true
+	sleep 20
+	mcp wait 300 >/dev/null || { echo "instance: no MCP server after the reboot" >&2; exit 1; }
+	current || { echo "instance: still not current after the update" >&2; exit 1; }
+	echo "instance: updated ($(cut -c1-12 "$ARCHIVE.fingerprint"))" >&2
+}
+
+case $cmd in
+status)
+	echo "INSTANCE_DIR $D"
+	echo "disk         $DISK$([ -f "$DISK" ] || echo ' (none)')"
+	echo "profile      $PROFILE $ARCH (mkupdate $MKUPDATE)"
+	if held; then echo "held         $(holder)"; fi
+	if running; then
+		echo "running      pid $(pid)$(snapshot && echo ', a test boot (-snapshot)'), MCP $MCPURL$(answers && echo ' (answers)' || echo ' (no answer)')"
+		t=$(theirs); echo "system       ${t:-no fingerprint (not updated yet)}"
+		if [ -s "$ARCHIVE.fingerprint" ]; then
+			echo "last update  $(cat "$ARCHIVE.fingerprint")$(newer && echo ' (the build is newer)')"
+		fi
+	else
+		echo "running      no"
+	fi ;;
+start)	start ;;
+stop)	stop ;;
+check)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
+	current && { echo "instance: current" >&2; exit 0; }
+	echo "instance: not current" >&2; exit 1 ;;
+update)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
+	update ;;
+up)	if running && snapshot; then stop; fi	# a test's boot: the disk's own instead
+	start; update ;;
+fresh)	held && { echo "instance: held by $(holder) ($D/hold): no test boot" >&2; exit 1; }
+	if running && snapshot; then stop; fi
+	start; update; stop
+	SNAPSHOT=1 start ;;
+reset)	resetdisk ;;
+install)
+	iso=${1:-$CLI_DIR/9space-$PROFILE-mcp.$ARCH.iso}
+	[ -f "$iso" ] || { echo "instance: no $iso (dist/bin/mkcd -mcp $PROFILE)" >&2; exit 1; }
+	[ -f "$DISK" ] && { echo "instance: $DISK exists (reset, or remove it first)" >&2; exit 1; }
+	if pgrep qemu-system >/dev/null; then echo "instance: another QEMU runs (one guest at a time)" >&2; exit 1; fi
+	truncate -s "${SIZE:-20G}" "$DISK"
+	[ -s "$D/mcptoken" ] || { head -c 24 /dev/urandom | base64 | tr -d '/+=' > "$D/mcptoken"; chmod 600 "$D/mcptoken"; }
+	echo "instance: installing from $iso; in the installer, afterwards put $D/mcptoken into \$home/lib/mcptoken" >&2
+	qemu-system-x86_64 -cpu host -enable-kvm -smp "$SMP" -m "$MEM" \
+		-netdev user,id=n0 -device virtio-net-pci,netdev=n0,mac=52:54:00:00:EE:03 \
+		-device virtio-scsi-pci,id=scsi \
+		-drive if=none,id=vd0,format=raw,file="$DISK" -device scsi-hd,drive=vd0 \
+		-drive if=none,id=vd1,format=raw,readonly=on,file="$iso" -device scsi-cd,drive=vd1,bootindex=0 \
+		-vga std ${DISPLAY_OPT:+-display "$DISPLAY_OPT"} ;;
+*)	usage ;;
+esac

@@ -25,17 +25,28 @@ PARTS = [
 ]
 
 def env():
-	"""paths.env's variables as absolute paths (the environment first)"""
+	"""paths.env's variables as absolute paths: the environment first, then
+	local.env (one checkout's own settings, not in git), then paths.env"""
 	vals = {'DIST': HERE}
-	for line in open(os.path.join(HERE, 'paths.env')):
-		line = line.strip()
-		if line and not line.startswith('#') and '=' in line:
-			k, v = line.split('=', 1)
-			vals[k] = v if v.startswith('/') else os.path.join(TOP, v)
+	for name in ('paths.env', 'local.env'):	# local.env's override paths.env's
+		p = os.path.join(HERE, name)
+		if not os.path.isfile(p):
+			continue
+		for line in open(p):
+			line = line.strip()
+			if line and not line.startswith('#') and '=' in line:
+				k, v = line.split('=', 1)
+				vals[k] = absolute(v)
 	for k in list(vals):
 		if os.environ.get(k):
 			vals[k] = os.environ[k]
 	return vals
+
+def absolute(v):
+	"""a value of paths.env or local.env: absolute, ~/... or relative to the umbrella"""
+	if v.startswith('~/'):
+		return os.path.join(os.path.expanduser('~'), v[2:])
+	return v if v.startswith('/') else os.path.join(TOP, v)
 
 def where(spec, vals=None):
 	vals = vals or env()

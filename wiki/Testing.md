@@ -10,6 +10,7 @@ cd ~/Devel/9space
 dist/bin/check                    # static build guest boot
 dist/bin/check -native            # and kencc gccmk: 9front's mkfiles with kencc and with gccmk
 dist/bin/check -iso cache/cli/9space-ui.amd64.iso iso   # a CD: boots, desktop, USB, its toolchains
+dist/bin/check -instance instance   # the installed system on your instance (below), brought up to date first
 dist/bin/check -n -native         # prints the stages only
 dist/bin/check kencc              # one stage by name
 ```
@@ -30,10 +31,68 @@ and the exit status is 1 when one failed. The output of each stage is in
 | `gccmk` (`-native`) | 9front's mkfiles with `gccmk`, the native gcc (userland) | `bash scripts/guest/build-kencc.sh gcc` |
 | `gpu` (`-gpu`) | the GPU stack on virtio-gpu (~1 h, needs a host GPU) | `bash tests/gpu/run.sh` |
 | `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash tests/run.sh iso rio usb gcc go rust mcp` |
+| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow | `INSTANCE=1 bash tests/run.sh gcc go rust mcp rio workflow` |
 
 `check` needs the tree's build first (`build-all`, `build-profile`). The
 `gccmk` stage also needs the native gcc's `plan9` step
 (`toolchain/gcc/out/amd64`, made by `build-toolchains`).
+
+## Your own instance
+
+An instance is a 9space system installed on a disk image that QEMU boots,
+the way a user's machine has it, instead of a CD booted afresh for each
+test. Where it is is each checkout's own: `dist/local.env` (not in git;
+the format of `dist/paths.env`, whose paths it may set otherwise too)
+names it, the environment's `INSTANCE_DIR` wins over it:
+
+```sh
+cd ~/Devel/9space
+echo 'INSTANCE_DIR=~/9space' >> dist/local.env
+dist/bin/mkcd -mcp full                  # a CD with the MCP server, if there is none
+dist/bin/instance install                # a 20 GB disk from it: the installer, in a window
+cp --sparse=always ~/9space/9space.raw ~/9space/9space.golden.raw   # the backup
+dist/bin/instance status
+```
+
+After the installation the system needs the instance's token as
+`$home/lib/mcptoken` (`dist/bin/instance install` makes `mcptoken` in the
+instance's directory); the profile starts the MCP server with it. The
+directory holds only data: the disk, its backup, `mcptoken`, and
+`instance.env` with its settings (`PROFILE`, `MKUPDATE`: the profile and
+`mkupdate`'s options of its CD, default `full` and `-mcp`; `SMP`, `MEM`,
+the ports; `dist/bin/instance`'s header lists them).
+
+`dist/bin/instance up` (what the tests call) boots it if it does not run
+and checks that it has this checkout's build: the system's
+`/sys/lib/dist/update` names the fingerprint of the update archive it was
+last given, `dist/bin/mkupdate` computes the build's. When they differ, it
+puts the backup back over the disk (an update copies over and removes
+nothing: no file of an earlier build stays; `FRESH=0`: onto the disk as it
+is), puts the build on with an update archive and reboots. The archive is
+kept (`cache/cli/instance.amd64.tgz`); the build is staged again (minutes)
+only when a part of it is newer. `instance stop`, `reset` (the backup back),
+`start` and `check` do one step each.
+
+Work on the instance that must stay (a setup for a test of one's own)
+needs a `hold` file in its directory: its first line says who holds it and
+what for (`echo 'me: self-build test' > ~/9space/hold`). While it is there,
+`update` and `reset` do not put the backup back (`FRESH=0 dist/bin/instance
+up` puts a new build onto the disk as it is), and `status` names the
+holder. Remove it when done.
+
+The tests of the installed system (`gcc`, `go`, `rust`, `mcp`, `rio`,
+`workflow`) run on it with `INSTANCE=1`; the others boot guests of their
+own as before (their devices and kernels are the test's). The instance is
+booted only when it does not run and rebooted only for a new build; it
+keeps running after the tests. So that the tests can be run again and
+again on a system that stays, each one tidies up its own traces: it works
+in a directory of its own (`/tmp/test.NAME`, the workflow's `/tmp/wf`),
+emptied before it starts, removed afterwards when every check passed
+(kept to look at when one failed); a serial rc of its own in a note group
+of its own, which the next test stops with whatever it left running; the
+workflow deletes the windows it made. `dist/bin/instance fresh` boots a
+throwaway copy instead (QEMU's `-snapshot`: nothing stays), for trying
+something by hand. The instance is a guest too: one at a time.
 
 ## Why kencc and gccmk
 

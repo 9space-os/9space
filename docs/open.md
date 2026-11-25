@@ -409,6 +409,29 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Tests and the build
 
+- The instance (2026-11-25, `dist/bin/instance`, `check -instance`, wiki
+  Testing): gcc, go, rust, rio pass on it, again and again on the running
+  system; open: **workflow's foot** (its window under wlsys stays black, no
+  prompt, a line typed in writes nothing: 35/36; not known whether the CD has
+  it too, `check -iso` does not run workflow); **mcp** fails there as on the
+  CD (3/5: initialize, tools/call, deny; suspected its long JSON lines on the
+  serial line); the tests with a wsys of their own on the bare console (draw,
+  sdl, glfw, winit, uiserver, wayland) do not run on the instance yet (its
+  desktop holds the screen).
+- The X1, updated on 2026-11-24 with an update archive whose apply.rc copied
+  over `/amd64/rust`: two `libstd-*.rmeta` side by side would make rustc
+  refuse ("multiple candidates"), as on the instance. Not looked at yet (the
+  X1 did not answer); the next update replaces the toolchains' trees whole.
+- Later (the user's plan, 2026-11-25): a test framework after NetBSD's ATF
+  (atf(7); `NETBSD_SRC`: `external/bsd/atf`, its test cases in `tests/`), in
+  Plan 9's manner rather than a port of ATF and Kyua (C++, Lua, SQLite):
+  test programs and rc scripts beside what they test, each listing its cases
+  and printing one `ok|fail|skip name` line per case (the form tests/run.sh
+  and tests/vm.py use now), a runner in rc that runs them on the system
+  itself (an installed machine, the instance, the X1) without the host;
+  NetBSD's cases (libc, the kernel's interfaces, the programs; BSD licence)
+  as the source of what to test, rewritten for Plan 9 where its interfaces
+  differ. To be planned; nothing started.
 - The kencc and gccmk builds (2026-11-22/23, `tree/scripts/guest/build-kencc.sh`,
   `dist/bin/check -native`): kencc builds the whole tree again (run 7: 681
   programs, the kernel pc64; pstate.c fixed after it, compiled with 6c alone).

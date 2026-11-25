@@ -14,17 +14,22 @@
 # Left out (the machine's own after the installation): /adm (users, timezone
 # setting), /cfg, /usr, /mail, /lib/ndb/local, /lib/ndb/auth, plan9.ini (in 9fat).
 # The archive holds root/ (the files, with the CD's modes and owners), apply.rc and
-# MANIFEST (the profile, the options and the parts' commits). On the machine:
+# MANIFEST (the profile, the options and the parts' commits); root/sys/lib/dist/update
+# is MANIFEST with the update's fingerprint (printed at the end, -n too: the same
+# build, the same fingerprint; dist/bin/instance tells by it whether a machine has
+# this build). On the machine:
 #
 #	mkdir /tmp/up && cd /tmp/up && tar xzf /path/to/the.tgz && rc apply.rc
 #
 # apply.rc copies root/ over / (the file server's permission checks off meanwhile:
 # hjfs or cwfs "allow"), puts the kernel into 9fat (the old one as 9pc64.orig, 386:
-# 9pc.orig) and says what to reboot into. It removes nothing: a file the new
-# system no longer has stays. pull(1) (mkcd's replica) is the update over HTTP that
+# 9pc.orig) and says what to reboot into. It removes nothing, except that the
+# toolchains' trees (/$objtype/rust, go, gnu) are replaced whole: elsewhere a file
+# the new system no longer has stays. pull(1) (mkcd's replica) is the update over HTTP that
 # does remove; this is the one without a network.
 #
-# With build-all's lock: the archive is made from the tree's build.
+# With build-all's lock (unless the caller holds it: CHECK_LOCKED=1): the archive
+# is made from the tree's build.
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 usage(){ echo "usage: mkupdate [-n] [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-o file] minimal|gpu|ui|full [amd64|386]" >&2; exit 2; }
@@ -57,9 +62,7 @@ for l in ${dev//,/ }; do
 	case $l in gcc|rust|go) ;; *) echo "mkupdate: -dev: no language $l (gcc, rust, go)" >&2; exit 2 ;; esac
 done
 
-TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
-ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"	# CLI_DIR, RUST_DIR, GO_DIR (paths.env)
+. "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; CLI_DIR, RUST_DIR, GO_DIR (paths.env)
 name=9space-update-$profile
 [ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
 [ -n "$mcp" ] && name=$name-mcp
@@ -67,15 +70,17 @@ name=9space-update-$profile
 out=${out:-$CLI_DIR/$name.$arch.tgz}
 stage=$CLI_DIR/update.$profile.$arch
 
-exec 9>"$HERE/.build-all.lock"
-flock -n 9 || { echo "mkupdate: build-all, build-profile, mkcd or build-toolchains runs" >&2; exit 1; }
+if [ "$CHECK_LOCKED" != 1 ]; then	# check -instance holds it already
+	exec 9>"$HERE/.build-all.lock"
+	flock -n 9 || { echo "mkupdate: build-all, build-profile, mkcd or build-toolchains runs" >&2; exit 1; }
+fi
 
 # the CD's tree of these options (stage-dist.sh: DEV's languages from their out/$arch)
 rm -rf "$stage" "$stage.list"
 case ",$dev," in *,rust,*) export RUST_OUT=$RUST_DIR/out/$arch ;; esac
 case ",$dev," in *,go,*) export GO_OUT=$GO_DIR/out/$arch ;; esac
 PROFILE=$profile DEV=$dev MCP=$mcp BROWSER=$browser objtype=$arch \
-	bash "$TREE/scripts/guest/stage-dist.sh" "$stage" >&2
+	bash "$TREE_SCRIPTS/guest/stage-dist.sh" "$stage" >&2
 
 manifest=$(mktemp)
 trap 'rm -f "$manifest"' EXIT
@@ -88,4 +93,4 @@ for k, v in sorted(json.load(open(sys.argv[1]))["parts"].items()):
 } > "$manifest"
 
 # root/ from the stage's list, apply.rc, MANIFEST (dist/lib/updatepack.py)
-python3 "$HERE/lib/updatepack.py" "$stage" "$stage.list" "$out" "$arch" "$manifest" "$dry"
+python3 "$HERE/lib/updatepack.py" "$stage" "$stage.list" "$out" "$arch" "$manifest" "$dry" 1

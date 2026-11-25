@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check [-n] [-native] [-gpu] [-iso ISO] [STAGE...]: tests the built system, so
+# check [-n] [-native] [-gpu] [-iso ISO] [-instance] [STAGE...]: tests the built system, so
 # that a CD is made (or handed on) only from a tree that works. Each stage runs
 # on its own, its output in dist/logs/check-STAGE.log; at the end one line per
 # stage (ok, FAIL, its minutes) and the exit status 1 if one failed.
@@ -18,9 +18,14 @@
 #            that CD boots (CD and disk, BIOS and UEFI) to its desktop, mouse
 #            and keyboard, USB, and the toolchains and the MCP server it has
 #            (each skipped when the CD lacks it)
+#   instance (-instance) tests/run.sh gcc go rust mcp rio workflow with INSTANCE=1:
+#            the same on the instance (dist/bin/instance; INSTANCE_DIR of
+#            dist/local.env), the installed system, which tests/vm.py first
+#            brings up to date with this build (instance up: from its backup
+#            and an update archive when it has another build)
 #
 # Without STAGE: static build guest boot, with -native kencc gccmk, -gpu gpu,
-# -iso iso. -n prints the stages only. build-all -check and build-profile
+# -iso iso, -instance instance. -n prints the stages only. build-all -check and build-profile
 # -check run it before they make a CD (and build-profile -check -cd with
 # -iso after, on the CD it made).
 #
@@ -28,14 +33,15 @@
 # (build-all's) is taken, unless the caller holds it (CHECK_LOCKED=1).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: check [-n] [-native] [-gpu] [-iso ISO] [static|build|guest|boot|kencc|gccmk|gpu|iso...]" >&2; exit 2; }
-dry=0 native=0 gpu=0 iso=
+usage(){ echo "usage: check [-n] [-native] [-gpu] [-iso ISO] [-instance] [static|build|guest|boot|kencc|gccmk|gpu|iso|instance...]" >&2; exit 2; }
+dry=0 native=0 gpu=0 iso= instance=0
 while [ $# -gt 0 ]; do
 	case $1 in
 	-n)	dry=1; shift ;;
 	-native)	native=1; shift ;;
 	-gpu)	gpu=1; shift ;;
 	-iso)	[ $# -ge 2 ] || usage; iso=$2; shift 2 ;;
+	-instance)	instance=1; shift ;;
 	-*)	usage ;;
 	*)	break ;;
 	esac
@@ -46,22 +52,25 @@ if [ ${#stages[@]} = 0 ]; then
 	[ $native = 1 ] && stages+=(kencc gccmk)
 	[ $gpu = 1 ] && stages+=(gpu)
 	[ -n "$iso" ] && stages+=(iso)
+	[ $instance = 1 ] && stages+=(instance)
 fi
 for s in "${stages[@]}"; do
 	case $s in
-	static|build|guest|boot|kencc|gccmk|gpu) ;;
+	static|build|guest|boot|kencc|gccmk|gpu|instance) ;;
 	iso)	[ -n "$iso" ] || { echo "check: the stage iso needs -iso ISO" >&2; exit 2; } ;;
 	*)	usage ;;
 	esac
+done
+for s in "${stages[@]}"; do
+	[ $s = instance ] && [ -z "$(. "$HERE/lib/tree.sh"; echo "$INSTANCE_DIR")" ] &&
+		{ echo "check: the stage instance needs INSTANCE_DIR (dist/local.env)" >&2; exit 2; }
 done
 if [ -n "$iso" ]; then
 	[ -r "$iso" ] || { echo "check: no CD $iso" >&2; exit 2; }
 	iso=$(cd "$(dirname "$iso")" && pwd -P)/$(basename "$iso")
 fi
 
-TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
-ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"	# CLI_DIR, GCC_DIR (paths.env)
+. "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; CLI_DIR, GCC_DIR, INSTANCE_DIR (paths.env, local.env)
 
 cmd(){
 	case $1 in
@@ -71,6 +80,7 @@ cmd(){
 	gccmk)	echo "bash scripts/guest/build-kencc.sh gcc" ;;
 	gpu)	echo "bash tests/gpu/run.sh" ;;
 	iso)	echo "env ISO=$iso bash tests/run.sh iso rio usb gcc go rust mcp" ;;
+	instance)	echo "env INSTANCE=1 bash tests/run.sh gcc go rust mcp rio workflow" ;;
 	esac
 }
 if [ $dry = 1 ]; then
@@ -82,6 +92,7 @@ if [ "$CHECK_LOCKED" != 1 ]; then
 	exec 9>"$HERE/.build-all.lock"
 	flock -n 9 || { echo "check: build-all, build-profile, mkcd or build-toolchains runs" >&2; exit 1; }
 fi
+export CHECK_LOCKED=1	# the stages' mkupdate (instance up) under this lock
 # one guest at a time: none of this distribution's may run (its QEMU names CLI_DIR's files)
 if pgrep -af qemu-system | grep -qF "$CLI_DIR"; then
 	echo "check: a guest of $CLI_DIR runs (one at a time)" >&2

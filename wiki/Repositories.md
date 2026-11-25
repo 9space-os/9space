@@ -42,6 +42,7 @@ Outside 9space, referenced by `dist/paths.env`:
 |---|---|---|
 | `LINUX`, `LINUX_OLD` | `../linux-7.3.1`, `../linux-6.6` | the LinuxKPI's tools and its GPL check |
 | `OPENBSD_SRC`, `FREEBSD_SRC`, `DRMKMOD_SRC` | `../openbsd`, `../freebsd-src`, `../drm-kmod` | importing the LinuxKPI's BSD templates |
+| `NETBSD_SRC` | `../netbsd` | NetBSD's tree: its ATF and `tests/`, the model of a later test framework (`docs/open.md`) |
 
 Show every part against the manifest:
 

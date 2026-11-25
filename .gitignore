@@ -3,3 +3,4 @@ __pycache__/
 .build-all.lock
 logs/
 .build-toolchains.lock
+local.env
