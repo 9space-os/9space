@@ -419,18 +419,19 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   by hand (2026-11-25): 180 leftovers of the layout of 2026-11-24 removed.
   Instance and CD-installed machines get theirs with their next update.
 - The instance (2026-11-25, `dist/bin/instance`, `check -instance`, wiki
-  Testing): gcc, go, rust, rio pass on it, again and again on the running
-  system, and workflow 36/36 since APE's timerfd honours TFD_NONBLOCK (tree,
-  2026-11-25: foot took a few keys, then hung reading its timerfd); open:
-  **mcp** fails there as on the
-  CD (3/5: initialize, tools/call, deny; suspected its long JSON lines on the
-  serial line); the tests with a wsys of their own on the bare console (draw,
-  sdl, glfw, winit, uiserver, wayland) do not run on the instance yet (its
-  desktop holds the screen).
-- The X1, updated on 2026-11-24 with an update archive whose apply.rc copied
-  over `/amd64/rust`: two `libstd-*.rmeta` side by side would make rustc
-  refuse ("multiple candidates"), as on the instance. Not looked at yet (the
-  X1 did not answer); the next update replaces the toolchains' trees whole.
+  Testing): **done**. gcc, go, rust, mcp, rio, workflow pass on it, again and
+  again on the running system (workflow since APE's timerfd honours
+  TFD_NONBLOCK; mcp since its deny check no longer sends fshalt, which
+  deny.example allows: tree b5de45cf5). The desktop categories (draw, sdl,
+  glfw, winit, uiserver, wayland) pass on a throwaway boot of it (tree
+  49c62065f, dist b4ef6e1: lib.sh deskguest, deskoff.rc, instance put,
+  fresh's QEMU_EXTRA); winit's iced typing check had failed since tree
+  fe201a126 (2026-11-19: a program sizes its first window, iced's 1024x768
+  filled the screen), fixed in icedtest (toolchain/rust b868393). Possible
+  later: one throwaway boot for all six instead of one each.
+- The X1: updated 2026-11-25 with the new apply.rc (toolchains replaced
+  whole, one libstd), rebooted, Rust runs; `/tmp/up` removed,
+  `/tmp/up.20261125` (3.2 GB) still there (the user's word).
 - Later (the user's plan, 2026-11-25): a test framework after NetBSD's ATF
   (atf(7); `NETBSD_SRC`: `external/bsd/atf`, its test cases in `tests/`), in
   Plan 9's manner rather than a port of ATF and Kyua (C++, Lua, SQLite):
