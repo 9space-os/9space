@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# instance [status|start|stop|check|update|up|fresh|put [-m] DIR [TO]|reset|install [ISO]]: a 9space system
+# instance [status|start|stop|check|stage|update|up|fresh|put [-m] DIR [TO]|reset|install [ISO]]: a 9space system
 # installed on a disk image in QEMU, kept up to date with this checkout's build,
 # for the tests (dist/bin/check -instance, sys/src/build/host/tests/vm.py) and for working on it.
 #
@@ -13,7 +13,9 @@
 #                      CPU_PORT (17019), SERVE_PORT (18099)
 #   DISK             the disk (install makes it), BACKUP a copy reset puts back
 #   mcptoken         the MCP server's token (the installed system's $home/lib/mcptoken)
-#   qmp.sock, serial.sock, qemu.pid, qemu.log   while it runs
+#   qmp.sock, serial.sock, qemu.pid, qemu.log   while it runs (a throwaway
+#                    boot: qemu.snapshot, qemu.extra its QEMU_EXTRA)
+#   disk.fingerprint the build the disk has, noted by stop
 #   hold             while someone works on it (its first line: who, what for):
 #                    update and reset do not put the backup back (FRESH=0 puts
 #                    an update onto the disk as it is); remove it when done
@@ -23,6 +25,9 @@
 #             its MCP server answers; it keeps running (stop)
 #   stop      shuts it down (fshalt, else QEMU quits)
 #   check     exit 0 if it has this checkout's build, 1 if not (it must run)
+#   stage     the build's update archive, staged anew if a part of it is newer
+#             (it need not run): its fingerprint; then STAGE=0 keeps it
+#             (tests/run.sh: one build for a whole run)
 #   update    puts this checkout's build on it if it does not have it: BACKUP over
 #             DISK first (a system without earlier tests' traces; FRESH=0: onto
 #             the disk as it is, where apply.rc removes only what the last update
@@ -35,7 +40,8 @@
 #             sys/src/build/host/tests/lib.sh deskguest; the others use up and
 #             tidy up after themselves); refused while the instance is held.
 #             QEMU_EXTRA: more QEMU options for the throwaway boot (a test's
-#             devices: a sound card)
+#             devices: a sound card). Not booted first when the disk is known
+#             to have this build (disk.fingerprint: stop notes the system's)
 #   put       DIR's files into the running system as TO (default /tests; what
 #             was there goes first; -m: over it, merged), by HTTP from the host
 #             (SERVE_PORT)
@@ -55,7 +61,7 @@
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 . "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; paths.env and local.env (INSTANCE_DIR)
-usage(){ echo "usage: instance [status|start|stop|check|update|up|fresh|put [-m] dir [to]|reset|install [iso]]" >&2; exit 2; }
+usage(){ echo "usage: instance [status|start|stop|check|stage|update|up|fresh|put [-m] dir [to]|reset|install [iso]]" >&2; exit 2; }
 cmd=${1:-status}; shift || true
 
 [ -n "$INSTANCE_DIR" ] || { echo "instance: no INSTANCE_DIR (dist/local.env: INSTANCE_DIR=~/9space, or the environment)" >&2; exit 1; }
@@ -85,9 +91,11 @@ start(){
 		fi
 		local disp=(-display none -daemonize)
 		[ -n "$DISPLAY_OPT" ] && disp=(-display "$DISPLAY_OPT")
-		rm -f "$D/qmp.sock" "$D/serial.sock" "$D/qemu.pid" "$D/qemu.snapshot"
+		rm -f "$D/qmp.sock" "$D/serial.sock" "$D/qemu.pid" "$D/qemu.snapshot" "$D/qemu.extra" "$D/qemu.desk"
 		local snap=()
-		[ "${SNAPSHOT:-0}" = 1 ] && { snap=(-snapshot); touch "$D/qemu.snapshot"; }
+		# a throwaway boot: its QEMU_EXTRA kept (tests/lib.sh deskguest takes a
+		# running one over when it asks for the same devices)
+		[ "${SNAPSHOT:-0}" = 1 ] && { snap=(-snapshot); touch "$D/qemu.snapshot"; printf '%s\n' "$QEMU_EXTRA" > "$D/qemu.extra"; }
 		local accel=(-cpu host -enable-kvm)
 		[ "${KVM:-1}" = 1 ] || accel=(-cpu max -accel tcg,thread=multi)
 		local q=(qemu-system-x86_64 "${accel[@]}" -smp "$SMP" -m "$MEM"
@@ -117,15 +125,29 @@ snapshot(){ [ -f "$D/qemu.snapshot" ]; }
 
 stop(){
 	running || { echo "instance: not running" >&2; return 0; }
-	local p; p=$(pid)
-	# a test's boot (-snapshot) keeps nothing: no fshalt needed
-	snapshot || mcp rc 'fshalt' 20 >/dev/null 2>&1 || true
+	local p t=; p=$(pid)
+	# a test's boot (-snapshot) keeps nothing: no fshalt needed; else the
+	# system's fingerprint, noted once the disk is quiet (disk.fingerprint,
+	# newer than DISK: fresh need not boot it to know)
+	if ! snapshot; then
+		t=$(theirs)
+		rm -f "$D/disk.fingerprint"
+		mcp rc 'fshalt' 20 >/dev/null 2>&1 || true
+	fi
 	for _ in $(seq 60); do kill -0 "$p" 2>/dev/null || break; sleep 1; done
 	if kill -0 "$p" 2>/dev/null; then
 		python3 "$TREE_SCRIPTS/debug/qemu-ctl.py" "$D" hmp quit >/dev/null 2>&1 || kill "$p"
 	fi
-	rm -f "$D/qemu.pid" "$D/qemu.snapshot"
+	[ -n "$t" ] && echo "$t" > "$D/disk.fingerprint"
+	rm -f "$D/qemu.pid" "$D/qemu.snapshot" "$D/qemu.extra" "$D/qemu.desk"	# qemu.desk: tests/lib.sh deskguest's
 	echo "instance: stopped" >&2
+}
+
+# the disk has this build, known without booting it: the fingerprint stop
+# noted, the disk not written since (a throwaway boot writes nothing)
+diskcurrent(){
+	! running && [ -s "$D/disk.fingerprint" ] && [ "$D/disk.fingerprint" -nt "$DISK" ] &&
+		[ "$(cat "$D/disk.fingerprint")" = "$(ours)" ]
 }
 
 # the fingerprint the system names (empty: none, a system from a CD)
@@ -195,6 +217,7 @@ resetdisk(){
 	[ -f "$BACKUP" ] || { echo "instance: no backup $BACKUP" >&2; exit 1; }
 	stop
 	echo "instance: $BACKUP over $DISK" >&2
+	rm -f "$D/disk.fingerprint"
 	cp --sparse=always "$BACKUP" "$DISK.new" && mv "$DISK.new" "$DISK"
 }
 
@@ -274,6 +297,7 @@ stop)	stop ;;
 check)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
 	current && { echo "instance: current" >&2; exit 0; }
 	echo "instance: not current" >&2; exit 1 ;;
+stage)	o=$(ours); echo "instance: the build $(echo "$o" | cut -c1-12)" >&2 ;;
 update)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
 	update ;;
 up)	if running && snapshot; then stop; fi	# a test's boot: the disk's own instead
@@ -281,7 +305,11 @@ up)	if running && snapshot; then stop; fi	# a test's boot: the disk's own instea
 fresh)	held && { echo "instance: held by $(holder) ($D/hold): no test boot" >&2; exit 1; }
 	if running && snapshot; then stop; fi
 	extra=$QEMU_EXTRA; QEMU_EXTRA=
-	start; update; stop
+	if diskcurrent; then
+		echo "instance: the disk has this build ($(cut -c1-12 "$D/disk.fingerprint"))" >&2
+	else
+		start; update; stop
+	fi
 	SNAPSHOT=1 QEMU_EXTRA=$extra start ;;
 put)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
 	[ $# -ge 1 ] || usage
