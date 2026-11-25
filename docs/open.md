@@ -409,6 +409,15 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Tests and the build
 
+- build.exe never built `audio/flacdec`, `flacenc`, `oggdec`, `oggenc`
+  (2026-11-25, found on the X1): their mkfiles name `TARGET` with rules of
+  their own (pcc, the libraries by name), and gencmds.py sees no target in
+  them, so no manifest, no broken-list entry, nothing on the CD. kencc and
+  gccmk build them. gencmds should read these mkfiles, or say it skipped one.
+- Updates (dist acbf579): apply.rc removes what the last update put on and
+  the new one lacks (`/sys/lib/dist/update.files`). The X1 got its first list
+  by hand (2026-11-25): 180 leftovers of the layout of 2026-11-24 removed.
+  Instance and CD-installed machines get theirs with their next update.
 - The instance (2026-11-25, `dist/bin/instance`, `check -instance`, wiki
   Testing): gcc, go, rust, rio pass on it, again and again on the running
   system, and workflow 36/36 since APE's timerfd honours TFD_NONBLOCK (tree,
