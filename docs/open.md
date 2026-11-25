@@ -411,9 +411,10 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 - The instance (2026-11-25, `dist/bin/instance`, `check -instance`, wiki
   Testing): gcc, go, rust, rio pass on it, again and again on the running
-  system; open: **workflow's foot** (its window under wlsys stays black, no
-  prompt, a line typed in writes nothing: 35/36; not known whether the CD has
-  it too, `check -iso` does not run workflow); **mcp** fails there as on the
+  system; open: **workflow's foot** (35/36): foot starts under wlsys, but keys
+  typed into its window do not reach it (its window stays black, no prompt,
+  the line writes nothing); the user has seen the same by hand before: a fault
+  of foot or wlsys' keyboard path, not of the instance; **mcp** fails there as on the
   CD (3/5: initialize, tools/call, deny; suspected its long JSON lines on the
   serial line); the tests with a wsys of their own on the bare console (draw,
   sdl, glfw, winit, uiserver, wayland) do not run on the instance yet (its
