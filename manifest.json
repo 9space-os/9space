@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "6f41cc506639ae39a04a7c9f473e4f4cdf8d54b9",
+			"commit": "2645d6f0797a9f044e622e2149257f82a058988c",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
@@ -18,12 +18,12 @@
 		},
 		"gcc": {
 			"branch": "main",
-			"commit": "045474d13a2c24ca3d345a9a923ce66fc2e5fa8d",
+			"commit": "92dc14f9b691ac5f1fe44dd0c9ed9e3c6c8c60c8",
 			"path": "GCC_DIR"
 		},
 		"go": {
 			"branch": "main",
-			"commit": "372106cd6077ab2a45641efff185d35668aa2c04",
+			"commit": "f7e248f333614b4f462beb7456e63514fa6cd46d",
 			"path": "GO_DIR"
 		},
 		"go/go": {
@@ -33,7 +33,7 @@
 		},
 		"mcp": {
 			"branch": "main",
-			"commit": "a98394eae0cdc207efe536f2da5cf73212cfb2c8",
+			"commit": "9a69c37fae2addb7869f4aed55a14f76f3aa6c08",
 			"path": "MCP_DIR"
 		},
 		"plan9port": {
@@ -43,7 +43,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "933c6e842cf516058394e90989ea8dc6f09fe559",
+			"commit": "25bd0b8fd04d100ef7f99194a90e640f2420634a",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -58,27 +58,27 @@
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "0aebb1b04605481093f41f05c2af6413c74e18f0",
+			"commit": "a075f67fe73e5f354535aae0341231ed09c5e856",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "d94e366f237b8dfb361c7fb33ae25af80a857947",
+			"commit": "b1f02489bbd74c0a75711b67ec8f59d0dc9f48ca",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
 			"branch": "nix",
-			"commit": "b23df7096562d412ff924f8399e8b1188e098109",
+			"commit": "2a8afd1a613cbcb54fc9621e495d1be6969732d7",
 			"path": "TREE_NIX"
 		},
 		"tree-riscv": {
 			"branch": "riscv",
-			"commit": "bd4e921739b45c4590e6e523f2be698e754d0b51",
+			"commit": "1b278f086871ec245577537b0270ff6c98356894",
 			"path": "TREE_RISCV"
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "59ce1116368a2bc75f8486f696a46733d07cbb35",
+			"commit": "196ed8ba173455609cbfb8f1943c44e76030de2a",
 			"path": "TREE_UPSTREAM"
 		}
 	}
