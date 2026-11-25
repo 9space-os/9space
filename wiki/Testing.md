@@ -31,7 +31,7 @@ and the exit status is 1 when one failed. The output of each stage is in
 | `gccmk` (`-native`) | 9front's mkfiles with `gccmk`, the native gcc (userland) | `bash sys/src/build/host/guest/build-kencc.sh gcc` |
 | `gpu` (`-gpu`) | the GPU stack on virtio-gpu (~1 h, needs a host GPU) | `bash sys/src/build/host/tests/gpu/run.sh` |
 | `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp` |
-| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow | `INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow` |
+| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow; and the tests that bring their own desktop (draw, SDL, GLFW, winit, ui, Wayland) | `INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow draw sdl glfw winit uiserver wayland` |
 
 `check` needs the tree's build first (`build-all`, `build-profile`). The
 `gccmk` stage also needs the native gcc's `plan9` step
@@ -81,8 +81,17 @@ up` puts a new build onto the disk as it is), and `status` names the
 holder. Remove it when done.
 
 The tests of the installed system (`gcc`, `go`, `rust`, `mcp`, `rio`,
-`workflow`) run on it with `INSTANCE=1`; the others boot guests of their
-own as before (their devices and kernels are the test's). The instance is
+`workflow`) run on it with `INSTANCE=1`, and so do the tests that bring a
+desktop of their own (`draw`, `sdl`, `glfw`, `winit`, `uiserver`,
+`wayland`: their wsys on the screen, keys through QMP), on a throwaway boot
+of it (`dist/bin/instance fresh`, below): `dist/bin/instance put` puts their
+programs on as `/tests`, the system's desktop ends (`deskoff.rc`) and an MCP
+server of the test's starts in its place (`sys/src/build/host/tests/lib.sh`
+`deskguest`); `instance stop` at the end throws it all away, so the next
+test boots the instance as it was. Their parts with a GPU of the host's
+(venus) still boot a guest of their own, after the instance stopped; the
+other categories boot guests of their own as before (their devices and
+kernels are the test's). The instance is
 booted only when it does not run and rebooted only for a new build; it
 keeps running after the tests. So that the tests can be run again and
 again on a system that stays, each one tidies up its own traces: it works
@@ -91,8 +100,11 @@ emptied before it starts, removed afterwards when every check passed
 (kept to look at when one failed); a serial rc of its own in a note group
 of its own, which the next test stops with whatever it left running; the
 workflow deletes the windows it made. `dist/bin/instance fresh` boots a
-throwaway copy instead (QEMU's `-snapshot`: nothing stays), for trying
-something by hand. The instance is a guest too: one at a time.
+throwaway copy instead (QEMU's `-snapshot`: nothing stays; `QEMU_EXTRA`
+adds devices to it, e.g. sdl's sound card), for trying something by hand
+and for the desktop tests; `dist/bin/instance put [-m] DIR [TO]` puts a
+directory of the host's into the running system (`-m`: merged into what is
+there). The instance is a guest too: one at a time.
 
 ## Why kencc and gccmk
 

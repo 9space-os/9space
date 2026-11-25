@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# instance [status|start|stop|check|update|up|fresh|reset|install [ISO]]: a 9space system
+# instance [status|start|stop|check|update|up|fresh|put [-m] DIR [TO]|reset|install [ISO]]: a 9space system
 # installed on a disk image in QEMU, kept up to date with this checkout's build,
 # for the tests (dist/bin/check -instance, sys/src/build/host/tests/vm.py) and for working on it.
 #
@@ -31,8 +31,14 @@
 #   up        start (if it does not run), then update: what the tests call
 #   fresh     up, then a throwaway boot: QEMU's -snapshot, nothing done in it
 #             stays; stop ends it, the disk as up left it (for trying something
-#             by hand; the tests use up and tidy up after themselves); refused
-#             while the instance is held
+#             by hand, and for the tests that replace its desktop with their own:
+#             sys/src/build/host/tests/lib.sh deskguest; the others use up and
+#             tidy up after themselves); refused while the instance is held.
+#             QEMU_EXTRA: more QEMU options for the throwaway boot (a test's
+#             devices: a sound card)
+#   put       DIR's files into the running system as TO (default /tests; what
+#             was there goes first; -m: over it, merged), by HTTP from the host
+#             (SERVE_PORT)
 #   reset     stops it and puts BACKUP back over DISK
 #   install   a new DISK from a CD (ISO, default $CLI_DIR's 9space-PROFILE-mcp CD)
 #
@@ -49,7 +55,7 @@
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 . "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; paths.env and local.env (INSTANCE_DIR)
-usage(){ echo "usage: instance [status|start|stop|check|update|up|fresh|reset|install [iso]]" >&2; exit 2; }
+usage(){ echo "usage: instance [status|start|stop|check|update|up|fresh|put [-m] dir [to]|reset|install [iso]]" >&2; exit 2; }
 cmd=${1:-status}; shift || true
 
 [ -n "$INSTANCE_DIR" ] || { echo "instance: no INSTANCE_DIR (dist/local.env: INSTANCE_DIR=~/9space, or the environment)" >&2; exit 1; }
@@ -93,6 +99,9 @@ start(){
 			-qmp "unix:$D/qmp.sock,server=on,wait=off"
 			-serial "unix:$D/serial.sock,server=on,wait=off"
 			-pidfile "$D/qemu.pid" "${snap[@]}" "${disp[@]}")
+		# a boot's own devices (fresh's QEMU_EXTRA), words split as options
+		# shellcheck disable=SC2206
+		[ -n "$QEMU_EXTRA" ] && q+=($QEMU_EXTRA)
 		if [ -n "$DISPLAY_OPT" ]; then
 			setsid "${q[@]}" >"$D/qemu.log" 2>&1 < /dev/null &
 		else
@@ -168,7 +177,7 @@ job(){
 		sleep 10
 		if mcp rc "test -e /tmp/$name.done" 60 >/dev/null 2>&1; then
 			local st; st=$(mcp read /tmp/$name.done 2>/dev/null | sed 's/^ *[0-9]*\t//') || continue
-			mcp read "/tmp/$name.log" 2>/dev/null | sed 's/^ *[0-9]*\t//' | tail -5 >&2 || true
+			mcp read "/tmp/$name.log" 2>/dev/null | sed 's/^ *[0-9]*\t//' | grep -v ': empty file$' | tail -5 >&2 || true
 			[ -z "$st" ] && return 0
 			echo "instance: $name failed: $st" >&2; return 1
 		fi
@@ -200,18 +209,49 @@ update(){
 		start
 	fi
 	echo "instance: putting the build on ($(basename "$ARCHIVE"))" >&2
-	python3 -m http.server -b 127.0.0.1 -d "$CLI_DIR" "$SERVE_PORT" >/dev/null 2>&1 &
-	SRV=$!	# not local: the EXIT trap runs after the function is gone
-	trap 'kill $SRV 2>/dev/null' EXIT
-	sleep 1
+	serve "$CLI_DIR"
 	job update "rm -rf /tmp/up && mkdir /tmp/up && cd /tmp/up && hget http://10.0.2.2:$SERVE_PORT/$(basename "$ARCHIVE") | gunzip | tar x && rc apply.rc && cd / && rm -rf /tmp/up"
-	kill $SRV 2>/dev/null; trap - EXIT
+	unserve
 	echo "instance: rebooting into the update" >&2
 	mcp rc 'fshalt -r' 20 >/dev/null 2>&1 || true
 	sleep 20
 	mcp wait 300 >/dev/null || { echo "instance: no MCP server after the reboot" >&2; exit 1; }
 	current || { echo "instance: still not current after the update" >&2; exit 1; }
 	echo "instance: updated ($(cut -c1-12 "$ARCHIVE.fingerprint"))" >&2
+}
+
+# serve: a directory of the host's to the system (10.0.2.2:SERVE_PORT, QEMU's
+# user network) until unserve
+serve(){
+	python3 -m http.server -b 127.0.0.1 -d "$1" "$SERVE_PORT" >/dev/null 2>&1 &
+	SRV=$!	# not local: the EXIT trap runs after the function is gone
+	trap 'kill $SRV 2>/dev/null' EXIT
+	sleep 1
+}
+unserve(){ kill $SRV 2>/dev/null; trap - EXIT; }
+
+# put [-m] DIR TO: DIR's files as TO in the system (-m: merged into what TO
+# has), a tar of them over HTTP
+put(){
+	local merge=0
+	[ "$1" = -m ] && { merge=1; shift; }
+	local dir=$1 to=${2:-/tests} t
+	[ -d "$dir" ] || { echo "instance: put: no directory $dir" >&2; exit 1; }
+	case $to in /*) ;; *) echo "instance: put: $to is not absolute" >&2; exit 1 ;; esac
+	[ "$to" != / ] || { echo "instance: put: not over /" >&2; exit 1; }
+	t=$(mktemp -d)
+	# ustar: what Plan 9's tar reads; hard links as files (cp -al trees)
+	tar -C "$dir" --format=ustar --hard-dereference -cf "$t/put.tar" . || { rm -rf "$t"; exit 1; }
+	serve "$t"
+	# a name in / itself: made on the file server (/srv/boot) mounted with
+	# create (the root's union and /root forbid it), seen as /NAME at once
+	local at=$to
+	case ${to#/} in */*) ;; *) at=/n/putroot$to ;; esac
+	local clear="rm -rf $at && "
+	[ $merge = 1 ] && clear=
+	job put "rfork n; { ~ $at $to || mount -c /srv/boot /n/putroot } && ${clear}mkdir -p $at && cd $at && hget http://10.0.2.2:$SERVE_PORT/put.tar | tar x" || { unserve; rm -rf "$t"; exit 1; }
+	unserve; rm -rf "$t"
+	echo "instance: $dir as $to" >&2
 }
 
 case $cmd in
@@ -240,8 +280,12 @@ up)	if running && snapshot; then stop; fi	# a test's boot: the disk's own instea
 	start; update ;;
 fresh)	held && { echo "instance: held by $(holder) ($D/hold): no test boot" >&2; exit 1; }
 	if running && snapshot; then stop; fi
+	extra=$QEMU_EXTRA; QEMU_EXTRA=
 	start; update; stop
-	SNAPSHOT=1 start ;;
+	SNAPSHOT=1 QEMU_EXTRA=$extra start ;;
+put)	running || { echo "instance: not running (instance start)" >&2; exit 1; }
+	[ $# -ge 1 ] || usage
+	put "$@" ;;
 reset)	resetdisk ;;
 install)
 	iso=${1:-$CLI_DIR/9space-$PROFILE-mcp.$ARCH.iso}

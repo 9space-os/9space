@@ -18,11 +18,13 @@
 #            that CD boots (CD and disk, BIOS and UEFI) to its desktop, mouse
 #            and keyboard, USB, and the toolchains and the MCP server it has
 #            (each skipped when the CD lacks it)
-#   instance (-instance) sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow with INSTANCE=1:
+#   instance (-instance) sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow draw sdl glfw winit uiserver wayland
+#            with INSTANCE=1:
 #            the same on the instance (dist/bin/instance; INSTANCE_DIR of
 #            dist/local.env), the installed system, which sys/src/build/host/tests/vm.py first
 #            brings up to date with this build (instance up: from its backup
-#            and an update archive when it has another build)
+#            and an update archive when it has another build); the desktop ones
+#            (draw ... wayland) on a throwaway boot of it (instance fresh)
 #
 # Without STAGE: static build guest boot, with -native kencc gccmk, -gpu gpu,
 # -iso iso, -instance instance. -n prints the stages only. build-all -check and build-profile
@@ -80,7 +82,7 @@ cmd(){
 	gccmk)	echo "bash sys/src/build/host/guest/build-kencc.sh gcc" ;;
 	gpu)	echo "bash sys/src/build/host/tests/gpu/run.sh" ;;
 	iso)	echo "env ISO=$iso bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp" ;;
-	instance)	echo "env INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow" ;;
+	instance)	echo "env INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow draw sdl glfw winit uiserver wayland" ;;
 	esac
 }
 if [ $dry = 1 ]; then
