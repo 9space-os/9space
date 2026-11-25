@@ -16,7 +16,7 @@ origin/front ── upstream                      fixes for 9front itself
 | `main` | `tree` | the distribution | 9front code may change where 9space needs it |
 | `nix` | (`tree-nix`) | NIX (AC/TC cores) on `gcc` | |
 | `riscv` | (`tree-riscv`) | riscv64 kernel and userland on `gcc` | |
-| `upstream` | (`tree-upstream`) | one commit per fix, on `origin/front`; as files in `patch-upstream/` (numbers kept, taken ones in `archive/`) | must apply to 9front as is |
+| `upstream` | (`tree-upstream`) | one commit per fix, on `origin/front`; as files in `sys/src/build/host/patch-upstream/` (numbers kept, taken ones in `archive/`) | must apply to 9front as is |
 
 Bringing in 9front (details: `dist/docs/upstream.md`):
 
@@ -24,9 +24,9 @@ Bringing in 9front (details: `dist/docs/upstream.md`):
 cd tree
 git fetch origin front:front                  # fast-forward only
 git worktree add ../tree-gcc gcc              # gcc has no worktree: one for the while
-(cd ../tree-gcc && git merge front)           # tests/static, build, tests/run.sh boot
+(cd ../tree-gcc && git merge front)           # sys/src/build/host/tests/static, build, sys/src/build/host/tests/run.sh boot
 git worktree remove ../tree-gcc
-git merge gcc                                 # main, here: build, tests/static, tests/gpu
+git merge gcc                                 # main, here: build, sys/src/build/host/tests/static, sys/src/build/host/tests/gpu
 ```
 
 9front comes in by merge: the public branches are never rewritten, so every

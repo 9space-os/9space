@@ -4,23 +4,23 @@
 # on its own, its output in dist/logs/check-STAGE.log; at the end one line per
 # stage (ok, FAIL, its minutes) and the exit status 1 if one failed.
 #
-#   static   tree/tests/static/run.sh: manifests, licences, layouts (seconds)
-#   build    tests/run.sh build: what the build tool made (libraries, programs,
+#   static   tree/sys/src/build/host/tests/static/run.sh: manifests, licences, layouts (seconds)
+#   build    sys/src/build/host/tests/run.sh build: what the build tool made (libraries, programs,
 #            kernel); needs the tree's build (build-all, build-profile)
-#   guest    tests/run.sh guest: the unit tests in a 9front guest (QEMU)
-#   boot     tests/run.sh boot: the built kernel boots to rc
-#   kencc    (-native) scripts/guest/build-kencc.sh: 9front's own compilers
+#   guest    sys/src/build/host/tests/run.sh guest: the unit tests in a 9front guest (QEMU)
+#   boot     sys/src/build/host/tests/run.sh boot: the built kernel boots to rc
+#   kencc    (-native) sys/src/build/host/guest/build-kencc.sh: 9front's own compilers
 #            (6c, 6a, 6l, mk) build the tree, kernel included, in a guest
 #   gccmk    (-native) build-kencc.sh gcc: 9front's mkfiles with gccmk, the
 #            native gcc (GCC_DIR/out/amd64, build.sh plan9), userland
-#   gpu      (-gpu) tests/gpu/run.sh: the GPU stack on virtio-gpu (~1 h, a host GPU)
-#   iso      (-iso ISO) tests/run.sh iso rio usb gcc go rust mcp with ISO=ISO:
+#   gpu      (-gpu) sys/src/build/host/tests/gpu/run.sh: the GPU stack on virtio-gpu (~1 h, a host GPU)
+#   iso      (-iso ISO) sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp with ISO=ISO:
 #            that CD boots (CD and disk, BIOS and UEFI) to its desktop, mouse
 #            and keyboard, USB, and the toolchains and the MCP server it has
 #            (each skipped when the CD lacks it)
-#   instance (-instance) tests/run.sh gcc go rust mcp rio workflow with INSTANCE=1:
+#   instance (-instance) sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow with INSTANCE=1:
 #            the same on the instance (dist/bin/instance; INSTANCE_DIR of
-#            dist/local.env), the installed system, which tests/vm.py first
+#            dist/local.env), the installed system, which sys/src/build/host/tests/vm.py first
 #            brings up to date with this build (instance up: from its backup
 #            and an update archive when it has another build)
 #
@@ -74,13 +74,13 @@ fi
 
 cmd(){
 	case $1 in
-	static)	echo "bash tests/static/run.sh" ;;
-	build|guest|boot)	echo "bash tests/run.sh $1" ;;
-	kencc)	echo "bash scripts/guest/build-kencc.sh" ;;
-	gccmk)	echo "bash scripts/guest/build-kencc.sh gcc" ;;
-	gpu)	echo "bash tests/gpu/run.sh" ;;
-	iso)	echo "env ISO=$iso bash tests/run.sh iso rio usb gcc go rust mcp" ;;
-	instance)	echo "env INSTANCE=1 bash tests/run.sh gcc go rust mcp rio workflow" ;;
+	static)	echo "bash sys/src/build/host/tests/static/run.sh" ;;
+	build|guest|boot)	echo "bash sys/src/build/host/tests/run.sh $1" ;;
+	kencc)	echo "bash sys/src/build/host/guest/build-kencc.sh" ;;
+	gccmk)	echo "bash sys/src/build/host/guest/build-kencc.sh gcc" ;;
+	gpu)	echo "bash sys/src/build/host/tests/gpu/run.sh" ;;
+	iso)	echo "env ISO=$iso bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp" ;;
+	instance)	echo "env INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow" ;;
 	esac
 }
 if [ $dry = 1 ]; then

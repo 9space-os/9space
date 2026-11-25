@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # mkupdate [-n] [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-o FILE] PROFILE [ARCH]:
 # an update archive for machines installed from a CD of that profile: the files the
-# CD of the same options carries (scripts/guest/stage-dist.sh, as mkcd stages them),
+# CD of the same options carries (sys/src/build/host/guest/stage-dist.sh, as mkcd stages them),
 # from the main branch's build, without what an installed machine makes its own.
 #
 #   PROFILE, -dev, -mcp, -browser   as for dist/bin/mkcd (default -dev: all for full,

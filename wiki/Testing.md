@@ -23,15 +23,15 @@ and the exit status is 1 when one failed. The output of each stage is in
 
 | Stage | What | Command (in `tree/`) |
 |---|---|---|
-| `static` | source checks: manifests, licences, layouts (seconds) | `bash tests/static/run.sh` |
-| `build` | what the build tool made: libraries, programs, kernel | `bash tests/run.sh build` |
-| `guest` | the unit tests in a 9front guest | `bash tests/run.sh guest` |
-| `boot` | the built kernel boots to rc | `bash tests/run.sh boot` |
-| `kencc` (`-native`) | 9front's own compilers (6c, 6a, 6l, mk) build the tree, kernel included | `bash scripts/guest/build-kencc.sh` |
-| `gccmk` (`-native`) | 9front's mkfiles with `gccmk`, the native gcc (userland) | `bash scripts/guest/build-kencc.sh gcc` |
-| `gpu` (`-gpu`) | the GPU stack on virtio-gpu (~1 h, needs a host GPU) | `bash tests/gpu/run.sh` |
-| `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash tests/run.sh iso rio usb gcc go rust mcp` |
-| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow | `INSTANCE=1 bash tests/run.sh gcc go rust mcp rio workflow` |
+| `static` | source checks: manifests, licences, layouts (seconds) | `bash sys/src/build/host/tests/static/run.sh` |
+| `build` | what the build tool made: libraries, programs, kernel | `bash sys/src/build/host/tests/run.sh build` |
+| `guest` | the unit tests in a 9front guest | `bash sys/src/build/host/tests/run.sh guest` |
+| `boot` | the built kernel boots to rc | `bash sys/src/build/host/tests/run.sh boot` |
+| `kencc` (`-native`) | 9front's own compilers (6c, 6a, 6l, mk) build the tree, kernel included | `bash sys/src/build/host/guest/build-kencc.sh` |
+| `gccmk` (`-native`) | 9front's mkfiles with `gccmk`, the native gcc (userland) | `bash sys/src/build/host/guest/build-kencc.sh gcc` |
+| `gpu` (`-gpu`) | the GPU stack on virtio-gpu (~1 h, needs a host GPU) | `bash sys/src/build/host/tests/gpu/run.sh` |
+| `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp` |
+| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow | `INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow` |
 
 `check` needs the tree's build first (`build-all`, `build-profile`). The
 `gccmk` stage also needs the native gcc's `plan9` step

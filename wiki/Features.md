@@ -1,6 +1,6 @@
 # Features
 
-State of `main`, November 2026. "QEMU" means tested in `tests/` under QEMU,
+State of `main`, November 2026. "QEMU" means tested in `sys/src/build/host/tests/` under QEMU,
 "hardware" on a real machine.
 
 ## System
@@ -10,12 +10,12 @@ State of `main`, November 2026. "QEMU" means tested in `tests/` under QEMU,
 | 9front built with gcc: amd64, 386, arm64 | QEMU, hardware (amd64) |
 | riscv64 (branch `riscv`) | QEMU |
 | NIX application cores (branch `nix`) | QEMU |
-| Self-hosting: the tree builds itself on 9space with the native gcc | QEMU (`scripts/guest/build-self.sh`) |
+| Self-hosting: the tree builds itself on 9space with the native gcc | QEMU (`sys/src/build/host/guest/build-self.sh`) |
 | APE with C99/C11, POSIX.1-2008, pthreads, ptys, eventfd, memfd | QEMU |
 | Install/live CD, hybrid BIOS/UEFI/USB | QEMU, hardware |
 | Installation profiles: `minimal`, `gpu`, `ui`, `full`, gcc/Rust/Go and the MCP server as options of each (`dist/bin/mkcd`) | QEMU: all four boot; `full` CD and USB, BIOS and UEFI, rio, USB, gcc, Go, Rust tests |
-| Updates over HTTP: `pull(1)` (replica/pull through `replica/httpfs`: a signed index, each file checked by SHA-256; a gefs snapshot first, the way back), published by every `mkcd` | QEMU (`tests/replica`); no server yet, the CDs ask a placeholder URL (GitHub) |
-| gefs, the installer's default file system, built with gcc | QEMU (`tests/replica`: ream, snapshots) |
+| Updates over HTTP: `pull(1)` (replica/pull through `replica/httpfs`: a signed index, each file checked by SHA-256; a gefs snapshot first, the way back), published by every `mkcd` | QEMU (`sys/src/build/host/tests/replica`); no server yet, the CDs ask a placeholder URL (GitHub) |
+| gefs, the installer's default file system, built with gcc | QEMU (`sys/src/build/host/tests/replica`: ream, snapshots) |
 
 ## Toolchains on 9space
 
@@ -53,5 +53,5 @@ State of `main`, November 2026. "QEMU" means tested in `tests/` under QEMU,
 | Feature | Example |
 |---|---|
 | MCP server: an agent on Linux works on 9space | on the CD: `dist/bin/mkcd -mcp PROFILE`; by hand: `GOOS=plan9 GOARCH=amd64 go build -o 9front-mcp .` in `tools/mcp` |
-| Guest control for debugging | `scripts/debug/qemu-ctl.py DIR shot` |
-| Test suites | `tests/static`, `tests/gpu`, `tests/guest`, … (`tests/README.md`) |
+| Guest control for debugging | `sys/src/build/host/debug/qemu-ctl.py DIR shot` |
+| Test suites | `sys/src/build/host/tests/static`, `sys/src/build/host/tests/gpu`, `sys/src/build/host/tests/guest`, … (`sys/src/build/host/tests/README.md`) |

@@ -10,7 +10,7 @@ work on several branches at once: `dist/bin/repos --worktrees=gcc,...`):
 | `gcc` | `tree-gcc` | 9front built with gcc; minimal changes against `front` |
 | `main` | `tree` | 9space: gcc + the GPU stack + wsys/ui (`ui` until 2026-11-12) |
 | `nix`, `riscv` | `tree-nix`, `tree-riscv` | ports on `gcc` |
-| `upstream` | `tree-upstream` | fixes for 9front itself, one commit each on `origin/front` (`patch-upstream/`) |
+| `upstream` | `tree-upstream` | fixes for 9front itself, one commit each on `origin/front` (`sys/src/build/host/patch-upstream/`) |
 
 Since 2026-11-13 9front comes in by **merge**, not rebase: `gcc`, `main`, `nix`
 and `riscv` are public and cloned (`dist/bin/repos` only fast-forwards), so their
@@ -21,16 +21,16 @@ Only `upstream` is rebased: its commits go to 9front as patches.
 Steps:
 
 1. Fast-forward `front` to 9front's: `git -C tree fetch origin front:front`.
-2. Merge `front` into `gcc` (`git merge front`); `tests/static` (it fails if a
-   manifest differs from its generator in `scripts/gen`: regenerate it), build
-   amd64, 386, arm64, `tests/run.sh boot`.
-3. Merge `gcc` into `main`, `nix`, `riscv`; build and test each (`tests/static`,
-   `tests/gpu/run.sh` for `main`). A change both sides made (paths, scripts) is
+2. Merge `front` into `gcc` (`git merge front`); `sys/src/build/host/tests/static` (it fails if a
+   manifest differs from its generator in `sys/src/build/gen`: regenerate it), build
+   amd64, 386, arm64, `sys/src/build/host/tests/run.sh boot`.
+3. Merge `gcc` into `main`, `nix`, `riscv`; build and test each (`sys/src/build/host/tests/static`,
+   `sys/src/build/host/tests/gpu/run.sh` for `main`). A change both sides made (paths, scripts) is
    resolved for the branch's own version.
 4. `upstream`: rebased onto the new `front` (all its commits must apply; one
-   9front has taken drops out); it alone is force-pushed. `patch-upstream/` is
+   9front has taken drops out); it alone is force-pushed. `sys/src/build/host/patch-upstream/` is
    not exported again: the files keep their numbers, a taken one moves to
-   `patch-upstream/archive/` (its README: "Archive"), a new one gets the next
+   `sys/src/build/host/patch-upstream/archive/` (its README: "Archive"), a new one gets the next
    free number.
 5. Push `front`, `gcc`, `main`, `nix`, `riscv`, `upstream` (`bin/push tree`:
    `upstream` with `--force-with-lease`); `bin/pin` in the distribution's

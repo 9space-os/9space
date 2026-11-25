@@ -14,7 +14,7 @@
 #   stage1-again-A ./x build --stage 1 library (stage 2 removed the other targets' std)
 #   cargo-A        scripts/build-cargo.sh: cargo for 9front
 #   install-A      scripts/install.sh: out/A (/A/rust on 9front)
-#   go-A           toolchain/go: scripts/build.sh, scripts/install.sh (the host Go once)
+#   go-A           toolchain/go: sys/src/build/step.sh, scripts/install.sh (the host Go once)
 #
 # Then: dist/bin/build-profile PROFILE (the tree for one profile), dist/bin/mkcd.
 #
@@ -124,7 +124,7 @@ for a in "${arches[@]}"; do
 done
 host=1
 for a in "${arches[@]}"; do
-	step go-$a env objtype=$a HOST=$host bash -c "cd '$GO_DIR' && scripts/build.sh && scripts/install.sh"
+	step go-$a env objtype=$a HOST=$host bash -c "cd '$GO_DIR' && sys/src/build/step.sh && scripts/install.sh"
 	host=0
 done
 if [ $dry = 0 ]; then

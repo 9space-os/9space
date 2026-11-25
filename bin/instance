@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # instance [status|start|stop|check|update|up|fresh|reset|install [ISO]]: a 9space system
 # installed on a disk image in QEMU, kept up to date with this checkout's build,
-# for the tests (dist/bin/check -instance, tests/vm.py) and for working on it.
+# for the tests (dist/bin/check -instance, sys/src/build/host/tests/vm.py) and for working on it.
 #
 # Where it is: INSTANCE_DIR (the environment, else dist/local.env, which is not
 # in git: each checkout says where its own instance is). The directory holds the

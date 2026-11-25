@@ -23,5 +23,5 @@ All of it lives in one directory, `~/Devel/9space`; each part is a git repositor
 
 Licences: 9space's tree holds only permissive code (MIT, BSD, ISC, zlib,
 public domain); firmware is kept as separate files. A check
-(`scripts/linux/provenance.py`, part of `tests/static`) keeps GPL text of
+(`sys/src/build/linux/provenance.py`, part of `sys/src/build/host/tests/static`) keeps GPL text of
 Linux out of the LinuxKPI.

@@ -15,7 +15,7 @@ builds never in one tree, and no other load while a suite boots guests.
 
 Bring in 9front's `front` and merge it through the tree's branches, as
 `docs/upstream.md` describes (`front` → `gcc` → `main`, `nix`, `riscv`;
-`upstream` rebased; patches 9front has taken to `patch-upstream/archive/`). Each branch is built
+`upstream` rebased; patches 9front has taken to `sys/src/build/host/patch-upstream/archive/`). Each branch is built
 and tested before the next merge.
 
 ## 2. The other parts up to date
@@ -46,21 +46,21 @@ git -C dist commit -m 'distfiles: cacert-DATE.pem' distfiles.list
 ```sh
 dist/bin/build-all amd64 386 arm64
 cd tree
-bash tests/static/run.sh
-bash tests/run.sh                      # every category, amd64
-objtype=386 bash tests/run.sh          # and the other architectures
-objtype=arm64 bash tests/run.sh
-bash tests/gpu/run.sh                  # ~1 h, needs a host GPU
+bash sys/src/build/host/tests/static/run.sh
+bash sys/src/build/host/tests/run.sh                      # every category, amd64
+objtype=386 bash sys/src/build/host/tests/run.sh          # and the other architectures
+objtype=arm64 bash sys/src/build/host/tests/run.sh
+bash sys/src/build/host/tests/gpu/run.sh                  # ~1 h, needs a host GPU
 cd ..
 ```
 
 The branches `nix` and `riscv` are built and tested in their worktrees
 (`dist/bin/repos --worktrees=nix,riscv tree`; riscv64:
 [[Building]], "Not in build-toolchains"). A test that fails once and passes
-again is not done: its cause goes into `tree/MEMORY.md` (`scripts/guest/boot-cli.sh`
+again is not done: its cause goes into `tree/sys/src/build/host/MEMORY.md` (`sys/src/build/host/guest/boot-cli.sh`
 keeps a boot that never reached its prompt in `cache/cli/noprompt.TIME`).
 
-Real hardware: run the CD (or `tree/tests/hw`'s stick) on each machine of
+Real hardware: run the CD (or `tree/sys/src/build/host/tests/hw`'s stick) on each machine of
 `docs/hardware.md` and bring its rows up to date (level, date, what ran).
 
 ## 5. Pin and push
@@ -101,8 +101,8 @@ CD tests of the tree it came from:
 
 ```sh
 cd tree
-for p in minimal gpu ui full; do ISO=../cache/cli/9space-$p.amd64.iso bash tests/run.sh iso; done
-cd ../tree-nix && ISO=../cache/cli/9space-nix.amd64.iso bash tests/run.sh iso
+for p in minimal gpu ui full; do ISO=../cache/cli/9space-$p.amd64.iso bash sys/src/build/host/tests/run.sh iso; done
+cd ../tree-nix && ISO=../cache/cli/9space-nix.amd64.iso bash sys/src/build/host/tests/run.sh iso
 ```
 
 ## 7. The replica

@@ -5,15 +5,15 @@ The starting point was a review of the project. Unlike its recommendation
 **distribution of its own** (decided 2026-11-12): its own name, its own
 replica and ISOs. 9front's `front` stays the source, brought in regularly
 (`upstream.md`); single fixes still go to 9front as patches
-(`patch-upstream/` in the tree).
+(`sys/src/build/host/patch-upstream/` in the tree).
 
 ## State (2026-11-12)
 
 - Parts and paths: `../paths.env`, `../manifest.json`, `../bin/status`;
   `../bin/repos` gets them from GitHub (github.com/9space-os).
 - Licences: no GPL code of Linux in the tree or its git history (the
-  LinuxKPI from OpenBSD/FreeBSD templates, `scripts/linux/provenance.py` in
-  `tests/static`). Exceptions: Bison parsers (GPL with the Bison
+  LinuxKPI from OpenBSD/FreeBSD templates, `sys/src/build/linux/provenance.py` in
+  `sys/src/build/host/tests/static`). Exceptions: Bison parsers (GPL with the Bison
   exception), dual-licensed files (a permissive choice), firmware separate
   under `/lib/firmware`; the CA roots (Mozilla's, MPL-2.0) likewise a separate file,
   from `distfiles.list` onto a CD with Rust or Go as `/sys/lib/tls/ca.pem`. It is a fixed
@@ -21,7 +21,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   `cacert-DATE.pem` (https://curl.se/ca/; `bin/cacert`); installed systems get no update of it
   until there is an update path (replica/pull; there now: `pull(1)`, once
   the update server runs).
-- Tests: `tests/static`, `tests/gpu/run.sh` (QEMU, ~140 checks), the
+- Tests: `sys/src/build/host/tests/static`, `sys/src/build/host/tests/gpu/run.sh` (QEMU, ~140 checks), the
   RX 7600 by VFIO (`amdall.rc`); the laptop (i915) on Linux 7.3 green in its
   runs 9 and 10 (2026-11-11). What ran where: `hardware.md`.
 
@@ -30,23 +30,23 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
 - Phase 0 reached: `build-toolchains` from scratch; the four profiles' CDs
   from one pinned state, each `iso` 7/7; the suites green but for two old
   gaps (386: APE shared memory cannot grow; arm64: no segment(3) in the
-  kernel, since added, 2026-11-16; `tree/MEMORY.md`). The userland builds with `-O2` (Rust thin LTO,
+  kernel, since added, 2026-11-16; `tree/sys/src/build/host/MEMORY.md`). The userland builds with `-O2` (Rust thin LTO,
   Go `-s -w`). The release step (tag 0.1-preview) waits for the user.
 - Phase 1: wsys is the desktop of the profiles `ui` and `full`
   (`desktop=rio` chooses rio); the hardware matrix is `hardware.md`.
   Updates over HTTP (the user's choice): `pull(1)` runs replica/pull through
   `replica/httpfs`, which serves the server's tree from a signed index
   (RSA, SHA-256 per file; webfs checks no TLS certificate, so the signature
-  carries the trust); `tree/scripts/replica/publish.py` publishes a CD's tree
+  carries the trust); `tree/sys/src/build/host/replica/publish.py` publishes a CD's tree
   (every `mkcd`: into `cache/replica/current/NAME.ARCH`, channel `current`,
   signed with `~/.config/9space/replica.pem`), and the CD installs the client
   up to date. On gefs `pull` snapshots `main` first, the way back; on hjfs
-  what it replaces is gone. `tests/replica` covers it. The server does not
+  what it replaces is gone. `sys/src/build/host/tests/replica` covers it. The server does not
   exist yet: the CDs ask a placeholder, `https://9space-os.github.io/replica`
   (GitHub, likely). For GitHub: files over 100 MB are refused there (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB stripped),
   objects would need splitting, or another host. Open as well: a file
-  manager (the reference workflow is a test now: `tests/workflow`); since
+  manager (the reference workflow is a test now: `sys/src/build/host/tests/workflow`); since
   done: `files`, 2026-11-16.
 
 ## Progress (2026-11-18)
@@ -55,8 +55,8 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
   makes a dialog or popup: parent, modal, askclose), through libdraw,
   SDL3, GLFW, winit (p9win) and Wayland (wlsys, `xdg_wm_dialog_v1`);
   ui(4) has window nodes. The same widget demo in rc, Go, Rust and C++
-  (`tests/uiserver`); the theme `9space` (acme's colours) is the default.
-- Real hardware by PXE: `scripts/hw/pxe.sh` boots a machine of the LAN
+  (`sys/src/build/host/tests/uiserver`); the theme `9space` (acme's colours) is the default.
+- Real hardware by PXE: `sys/src/build/host/hw/pxe.sh` boots a machine of the LAN
   with its root from the host (or a USB stick image), with the MCP server
   and drawterm. The ThinkPad X1 Carbon 3rd runs so: ACPI (battery, AC,
   brightness keys), `aux/pstate` (P-states), the WLAN (etheriwl: 802.11n,
@@ -82,7 +82,7 @@ replica and ISOs. 9front's `front` stays the source, brought in regularly
 Goal: a reproducible build, an ISO, a green test suite.
 
 - `bin/build-all`: toolchains (only when their commit changes) → tree
-  (`build.exe -D` per arch) → ISO (`scripts/guest/mkiso.sh` with Rust and Go).
+  (`build.exe -D` per arch) → ISO (`sys/src/build/host/guest/mkiso.sh` with Rust and Go).
 - Done: the move to `~/Devel/9space/` (umbrella; only `paths.env` changed);
   `distfiles/` with checksums and `bin/fetch`; the toolchains from release
   archives (`fetch.sh`).
@@ -99,7 +99,7 @@ Goal: a working day on the desktop.
   server's place and key, 2026-11-14).
 - Reference workflow without a browser: term, an editor (acme/sam), a file
   manager, a ui client, a draw(3) program, a Wayland program, 9P over the
-  network. As one test: `tree/tests/workflow` (2026-11-16; term, sam, paint,
+  network. As one test: `tree/sys/src/build/host/tests/workflow` (2026-11-16; term, sam, paint,
   uitodo, foot, the file manager `files`, 9P from the host, on a `ui`
   CD).
 - The laptop as a daily driver (2026-11-18; the X1 Carbon 3rd, plan in the

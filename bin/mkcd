@@ -3,7 +3,7 @@
 # one installation profile, from the main branch's build (dist/bin/build-profile
 # PROFILE, or build-all: everything); the system installed from the CD has what the CD has.
 #
-#   PROFILE  (tree/scripts/guest/profiles)
+#   PROFILE  (tree/sys/src/build/host/guest/profiles)
 #     minimal  9front built with gcc: rio, VESA
 #     gpu      + the GPU stack: gpu(4)'s drivers (i915, amdgpu, virtiogpu), Mesa's Vulkan
 #     ui       + the desktop: wsys, the ui framework, term, foot, Wayland, the fonts
@@ -35,7 +35,7 @@
 # serves as REPLICA_BASE/current/NAME.ARCH (NAME as the CD's, channel current), and the
 # CD gets the client (/dist/replica) for that URL. REPLICA_KEY, the private key signing
 # the index, is kept outside 9space (default ~/.config/9space/replica.pem; made on the
-# first run, tree/scripts/replica/publish.py -g). There is no server yet: REPLICA_BASE's
+# first run, tree/sys/src/build/host/replica/publish.py -g). There is no server yet: REPLICA_BASE's
 # default is a placeholder (GitHub, likely), pull on such a CD fails to reach it.
 #
 # Takes a QEMU guest (one at a time: it shares CLI_DIR, 9space/cache/cli, with the others),
@@ -83,13 +83,13 @@ done
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
 ROOT=$TREE
 # nix: the branch nix's worktree and build (dist/bin/repos --worktrees=nix tree, then
-# CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe and scripts/guest/build-boot.sh there)
+# CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe and sys/src/build/host/guest/build-boot.sh there)
 if [ $profile = nix ]; then
 	TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE_NIX=//p' "$HERE/paths.env")
 	ROOT=$TREE
-	[ -s "$TREE/amd64/9pc64" ] || { echo "mkcd: no build of the branch nix in $TREE (dist/bin/repos --worktrees=nix tree; there: CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe, scripts/guest/build-boot.sh)" >&2; exit 1; }
+	[ -s "$TREE/amd64/9pc64" ] || { echo "mkcd: no build of the branch nix in $TREE (dist/bin/repos --worktrees=nix tree; there: CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe, sys/src/build/host/guest/build-boot.sh)" >&2; exit 1; }
 fi
-. "$TREE/scripts/lib/paths.sh"	# CLI_DIR (paths.env)
+. "$TREE/sys/src/build/lib/paths.sh"	# CLI_DIR (paths.env)
 name=9space-$profile
 [ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
 [ -n "$mcp" ] && name=$name-mcp
@@ -108,7 +108,7 @@ if [ -n "$replica" ]; then
 	REPLICA_KEY=${REPLICA_KEY:-${XDG_CONFIG_HOME:-$HOME/.config}/9space/replica.pem}
 	if [ ! -f "$REPLICA_KEY" ]; then
 		mkdir -p "$(dirname "$REPLICA_KEY")"
-		python3 "$TREE/scripts/replica/publish.py" -g "$REPLICA_KEY" > /dev/null 2>&1 ||
+		python3 "$TREE/sys/src/build/host/replica/publish.py" -g "$REPLICA_KEY" > /dev/null 2>&1 ||
 			{ echo "mkcd: cannot make the replica's key $REPLICA_KEY (openssl)" >&2; exit 1; }
 		echo "mkcd: made the replica's signing key $REPLICA_KEY (private: keep it, CDs carry its public half)"
 	fi
@@ -116,8 +116,8 @@ if [ -n "$replica" ]; then
 	echo "mkcd: published for pull(1) in $REPLICA_DIR as $REPLICA_URL"
 fi
 if [ $profile = nix ]; then
-	DEV=$dev objtype=$arch scripts/guest/mkiso.sh "$out"
+	DEV=$dev objtype=$arch sys/src/build/host/guest/mkiso.sh "$out"
 else
-	PROFILE=$profile DEV=$dev MCP=$mcp BROWSER=$browser PLAN9INI=$ini objtype=$arch scripts/guest/mkiso.sh "$out"
+	PROFILE=$profile DEV=$dev MCP=$mcp BROWSER=$browser PLAN9INI=$ini objtype=$arch sys/src/build/host/guest/mkiso.sh "$out"
 fi
 ls -l "$out"

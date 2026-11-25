@@ -3,13 +3,13 @@
 # machines (the X1), in the background, after a reboot with one command:
 #
 #   dnsmasq  proxy DHCP and TFTP (as root, by sudo): the conf that
-#            tree/scripts/hw/pxe.sh wrote (CLI_DIR/pxe/dnsmasq.conf); the
+#            tree/sys/src/build/host/hw/pxe.sh wrote (CLI_DIR/pxe/dnsmasq.conf); the
 #            build in CACHE/dnsmasq (DNSMASQ=), which has the fix for 2.93's
 #            TFTP block cache (tree MEMORY.md, "BIOS-PXE bad magic"); else the
 #            system's dnsmasq
 #   ufs      the machines' root (PXE_DIR/ufsroot, files glenda's) on the conf's
 #            interface, port UFS_PORT (5650), as pxe.sh's last line serves it;
-#            our ufs (tree/scripts/hw/ufs, built into CLI_DIR/ufs if missing)
+#            our ufs (tree/sys/src/build/host/hw/ufs, built into CLI_DIR/ufs if missing)
 #
 # The root, the kernels and the plan9.ini files stay pxe.sh's (making and
 # refreshing them); this only starts what serves them. Logs and pid files in
@@ -21,7 +21,7 @@ set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
 ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"
+. "$TREE/sys/src/build/lib/paths.sh"
 die() { echo "pxe: $*" >&2; exit 1; }
 
 P=${PXE_DIR:-$CLI_DIR/pxe}
@@ -46,8 +46,8 @@ hostip() {
 }
 
 start() {
-	[ -f "$C" ] || die "no $C: run tree/scripts/hw/pxe.sh MAC [machine] once (it writes the conf, the TFTP dir and the root)"
-	[ -d "$P/ufsroot/amd64" ] || die "no root $P/ufsroot (tree/scripts/hw/pxe.sh)"
+	[ -f "$C" ] || die "no $C: run tree/sys/src/build/host/hw/pxe.sh MAC [machine] once (it writes the conf, the TFTP dir and the root)"
+	[ -d "$P/ufsroot/amd64" ] || die "no root $P/ufsroot (tree/sys/src/build/host/hw/pxe.sh)"
 	if [ -n "$(dnspid)" ]; then
 		echo "pxe: dnsmasq runs already (pid $(dnspid))"
 	else
@@ -64,7 +64,7 @@ start() {
 		local ip ufs
 		ip=${HOSTIP:-$(hostip)}
 		[ -n "$ip" ] || die "no address on the conf's interface"
-		ufs=$("$TREE/scripts/hw/ufs/build.sh" "$CLI_DIR/ufs")
+		ufs=$("$TREE/sys/src/build/host/hw/ufs/build.sh" "$CLI_DIR/ufs")
 		echo "pxe: ufs serves $P/ufsroot on $ip:$UFS_PORT"
 		setsid "$ufs" -root="$P/ufsroot" -user=glenda -addr="$ip:$UFS_PORT" < /dev/null >> "$P/ufs.log" 2>&1 &
 		echo $! > "$P/ufs.pid"

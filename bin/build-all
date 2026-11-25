@@ -11,9 +11,9 @@
 #   2. the tree for each ARCH (amd64 386 arm64; default amd64): build.exe -D (the build tool,
 #      sys/src/cmd/build/build.exe, built first with the host's go if missing)
 #   3. -iso: the install CD of amd64 with Rust and Go on it
-#      (scripts/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
+#      (sys/src/build/host/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
 #      installation profiles (minimal, gpu, ui, full; -dev): dist/bin/mkcd
-#   -check: after 2, dist/bin/check -native (tests/static, the build's tests,
+#   -check: after 2, dist/bin/check -native (sys/src/build/host/tests/static, the build's tests,
 #      the guest's, kencc and gccmk over 9front's mkfiles); a failure stops
 #      before the CD. With -iso, check -iso on the CD afterwards (it boots,
 #      its desktop, USB, its toolchains)
@@ -46,7 +46,7 @@ done
 exec 9>"$HERE/.build-all.lock"
 flock -n 9 || { echo "build-all: another build-all runs" >&2; exit 1; }
 
-# the parts (scripts/lib/paths.sh of the tree reads paths.env); tb_run: build.exe -D,
+# the parts (sys/src/build/lib/paths.sh of the tree reads paths.env); tb_run: build.exe -D,
 # on arm64 with gcc's ar, nm, ranlib (dist/lib/tree-build.sh)
 . "$HERE/lib/tree-build.sh"
 
@@ -75,7 +75,7 @@ fi
 
 if [ $iso = 1 ]; then
 	echo "build-all: the amd64 CD"
-	RUST_OUT=$RUST_DIR/out/amd64 GO_OUT=$GO_DIR/out/amd64 objtype=amd64 scripts/guest/mkiso.sh
+	RUST_OUT=$RUST_DIR/out/amd64 GO_OUT=$GO_DIR/out/amd64 objtype=amd64 sys/src/build/host/guest/mkiso.sh
 	if [ $check = 1 ]; then
 		echo "build-all: dist/bin/check -iso on the CD"
 		CHECK_LOCKED=1 "$HERE/bin/check" -iso "$CLI_DIR/9front.amd64.iso" iso || { echo "build-all: the CD failed its tests" >&2; exit 1; }

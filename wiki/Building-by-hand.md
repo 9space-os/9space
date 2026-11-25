@@ -18,8 +18,8 @@ The tree is built by `build.exe`, built with the host's Go:
 (cd tree/sys/src/cmd/build && GO111MODULE=off go build -o build.exe .)
 ```
 
-`build.exe` reads JSON manifests. The tree's top manifest `build.$ARCH.json`
-(written by `scripts/gen/genbuild.py`) has these groups, in this order:
+`build.exe` reads JSON manifests. The tree's top manifest `sys/src/build/build.$ARCH.json`
+(written by `sys/src/build/gen/genbuild.py`) has these groups, in this order:
 
 | Group | What it builds | Needs |
 |---|---|---|
@@ -29,8 +29,8 @@ The tree is built by `build.exe`, built with the host's Go:
 | `klibs` | the kernel's `klib*.a` | |
 | `cmds` | the programs of `sys/src/cmd` and APE (`sys/src/ape`, with its libraries `sys/src/ape/lib/*`) | |
 | `linux` (amd64) | the LinuxKPI (`sys/src/linux`), `aux/i915`, `aux/amdgpu`, `aux/rtw89` | |
-| `ape` (amd64) | `scripts/build/ape.sh`: Mesa, libwayland, SDL3, GLFW, foot, …; wlsys, foot, cxxwidgets | gcc's cross compiler |
-| `rust` | `scripts/build/cargo.sh`: files, term, ui, the ui demos, wbar, wdock, wsys | Rust's stage-1 rustc, the cross gcc |
+| `ape` (amd64) | `sys/src/build/step/ape.sh`: Mesa, libwayland, SDL3, GLFW, foot, …; wlsys, foot, cxxwidgets | gcc's cross compiler |
+| `rust` | `sys/src/build/step/cargo.sh`: files, term, ui, the ui demos, wbar, wdock, wsys | Rust's stage-1 rustc, the cross gcc |
 | `kernelgen` | what the kernel embeds (rebootcode, initcode, the boot file system) | |
 | `kernel` | the kernel (`/amd64/bin/9pc64`, `/386/bin/9pc`, `/arm64/bin/9qemu`) | |
 | `install` | the kernel's a.out (`elf2aout.py`), `check-install.py -r` | |
@@ -42,7 +42,7 @@ expressions, builds only the groups whose names match:
 ```sh
 cd tree
 CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D                              # everything
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^(prep|libc|libs)$'
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^(prep|libc|libs)$'
 CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/cmd/rc/cmds.json      # one manifest
 ```
 
@@ -71,10 +71,10 @@ against APE. That is the step `tree-base`, for each architecture:
 
 ```sh
 cd tree
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^(prep|libc|libs)$'
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^(prep|libc|libs)$'
 # APE's libraries, the manifests of the group cmds under sys/src/ape/lib, in order
 for m in $(python3 -c "import json
-print(' '.join(p for b in json.load(open('build.amd64.json')) if b['Name'] == 'cmds'
+print(' '.join(p for b in json.load(open('sys/src/build/build.amd64.json')) if b['Name'] == 'cmds'
 	for p in b['Projects'] if p.startswith('/sys/src/ape/lib/')))"); do
 	CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D .$m || break
 done
@@ -127,8 +127,8 @@ the stage-1 rustc (`rust/build/host/stage1/bin/rustc`) with the cross gcc, not
 
 ```sh
 cd toolchain/go
-objtype=amd64 HOST=1 bash -c 'scripts/build.sh && scripts/install.sh'   # HOST=1: also the host's Go, once
-objtype=386 HOST=0 bash -c 'scripts/build.sh && scripts/install.sh'
+objtype=amd64 HOST=1 bash -c 'sys/src/build/step.sh && scripts/install.sh'   # HOST=1: also the host's Go, once
+objtype=386 HOST=0 bash -c 'sys/src/build/step.sh && scripts/install.sh'
 cd ../..
 ```
 
@@ -138,7 +138,7 @@ cd ../..
 
 ```sh
 cd tree
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^(prep|libc|libs|klibs|cmds)$'
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^(prep|libc|libs|klibs|cmds)$'
 # amd64, without the GPU stack: the LinuxKPI and aux/rtw89 (WLAN), not the DRM drivers
 CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/linux/build.json
 CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/cmd/aux/rtw89/build.json
@@ -147,26 +147,26 @@ CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/cmd/aux/rtw89/build.jso
 Then, by profile:
 
 ```sh
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^linux$'   # gpu, full: + i915, amdgpu
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^ape$'     # gpu, ui, full
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^rust$'    # ui, full
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^linux$'   # gpu, full: + i915, amdgpu
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^ape$'     # gpu, ui, full
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^rust$'    # ui, full
 ```
 
-A single Rust crate: `objtype=amd64 bash scripts/build/cargo.sh sys/src/cmd/wsys wsys`
-(the lines of the group `rust` in `build.amd64.json`; 386 and arm64 with `-n`, no GPU
-features). APE's parts alone: `objtype=amd64 bash scripts/build/ape.sh`; its log is
+A single Rust crate: `objtype=amd64 bash sys/src/build/step/cargo.sh sys/src/cmd/wsys wsys`
+(the lines of the group `rust` in `sys/src/build/build.amd64.json`; 386 and arm64 with `-n`, no GPU
+features). APE's parts alone: `objtype=amd64 bash sys/src/build/step/ape.sh`; its log is
 `cache/mesa/build-amd64/ape.log`.
 
 Last, the kernel, its a.out and the check:
 
 ```sh
-CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D build.amd64.json '^(kernelgen|kernel)$'
-python3 scripts/build/elf2aout.py amd64/bin/9pc64 amd64/9pc64     # 386: 386/bin/9pc 386/9pc; arm64: arm64/bin/9qemu arm64/9qemu
-# what the profile leaves out (scripts/guest/profiles), as stage-dist.sh writes it
-P=minimal; keep=$(awk -v p=$P '$1 == "profile" && $2 == p { for(i = 3; i <= NF; i++) printf " %s", $i }' scripts/guest/profiles)
-awk -v keep=" $keep " '/^[a-z]/ && $1 != "profile" && index(keep, " " $1 " ") == 0 { print "/" $2 }' scripts/guest/profiles |
+CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe -D sys/src/build/build.amd64.json '^(kernelgen|kernel)$'
+python3 sys/src/build/step/elf2aout.py amd64/bin/9pc64 amd64/9pc64     # 386: 386/bin/9pc 386/9pc; arm64: arm64/bin/9qemu arm64/9qemu
+# what the profile leaves out (sys/src/build/host/guest/profiles), as stage-dist.sh writes it
+P=minimal; keep=$(awk -v p=$P '$1 == "profile" && $2 == p { for(i = 3; i <= NF; i++) printf " %s", $i }' sys/src/build/host/guest/profiles)
+awk -v keep=" $keep " '/^[a-z]/ && $1 != "profile" && index(keep, " " $1 " ") == 0 { print "/" $2 }' sys/src/build/host/guest/profiles |
 	sed 's/\$objtype/amd64/' > /tmp/omitted
-objtype=amd64 python3 scripts/build/check-install.py -r -x /tmp/omitted | grep -v '^broken'
+objtype=amd64 python3 sys/src/build/step/check-install.py -r -x /tmp/omitted | grep -v '^broken'
 cd ..
 ```
 
@@ -181,21 +181,21 @@ The boot loaders are built in a QEMU guest running the system just built (it nee
 the base system: section 5's first and last steps):
 
 ```sh
-cd tree && scripts/guest/build-boot.sh && cd ..
+cd tree && sys/src/build/host/guest/build-boot.sh && cd ..
 ```
 
-`dist/bin/mkcd PROFILE` checks its options and then runs `tree/scripts/guest/mkiso.sh`
+`dist/bin/mkcd PROFILE` checks its options and then runs `tree/sys/src/build/host/guest/mkiso.sh`
 with the profile in the environment. Without publishing for `pull(1)`
 (`mkcd -noreplica`) that is:
 
 ```sh
 cd tree
-PROFILE=minimal DEV= MCP= BROWSER= PLAN9INI= objtype=amd64 scripts/guest/mkiso.sh ../cache/cli/9space-minimal.amd64.iso
+PROFILE=minimal DEV= MCP= BROWSER= PLAN9INI= objtype=amd64 sys/src/build/host/guest/mkiso.sh ../cache/cli/9space-minimal.amd64.iso
 cd ..
 ```
 
 `DEV` takes the languages (`gcc,rust,go`); `MCP=1`; `BROWSER=1` (profile `full`,
-amd64); `PLAN9INI` lines `name=value`. `mkiso.sh` runs `scripts/guest/stage-dist.sh`
+amd64); `PLAN9INI` lines `name=value`. `mkiso.sh` runs `sys/src/build/host/guest/stage-dist.sh`
 (the distribution's tree for the profile, checked with `check-install.py -d -x`)
 and makes the ISO in a guest. With pull(1), `mkcd` also sets `REPLICA_KEY`,
 `REPLICA_DIR` and `REPLICA_URL` (see the comment at the top of `dist/bin/mkcd`).

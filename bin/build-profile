@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build-profile [-n] [-check] [-cd [MKCD-OPTION...]] PROFILE [ARCH...]: the tree for one installation
-# profile, only what its CD has (tree/scripts/guest/profiles), with the toolchains
+# profile, only what its CD has (tree/sys/src/build/host/guest/profiles), with the toolchains
 # build-toolchains made. ARCH: amd64 (default), 386, arm64.
 #
 #   PROFILE   minimal  the base system: rio, VESA
@@ -18,7 +18,7 @@
 #   gpu       linux (aux/i915, aux/amdgpu), ape
 #   ui        ape, rust
 #
-# Then scripts/build/check-install.py -r -x: everything the profile has is there, what
+# Then sys/src/build/step/check-install.py -r -x: everything the profile has is there, what
 # it leaves out is not missing (CACHE/build/PROFILE.ARCH.omitted). The output goes to
 # the terminal; -n prints the steps only. -cd then makes the CD of each ARCH (amd64,
 # 386) with dist/bin/mkcd, the options before PROFILE handed on (-dev, -mcp,
@@ -59,9 +59,9 @@ for a in "${arches[@]}"; do
 	case $a in amd64|386|arm64) ;; *) echo "build-profile: no architecture $a (amd64 386 arm64)" >&2; exit 2 ;; esac
 done
 . "$HERE/lib/tree-build.sh"	# TREE, GCC_DIR, RUST_DIR, CACHE; tb_groups, tb_projects
-PROFILES=$TREE/scripts/guest/profiles
+PROFILES=$TREE/sys/src/build/host/guest/profiles
 
-# the profile's groups (scripts/guest/profiles)
+# the profile's groups (sys/src/build/host/guest/profiles)
 keep=$(awk -v p="$profile" '$1 == "profile" && $2 == p { for(i = 3; i <= NF; i++) printf " %s", $i }' "$PROFILES")
 has(){ case " $keep " in *" $1 "*) return 0 ;; esac; return 1; }
 gpu=0 ui=0
@@ -105,11 +105,13 @@ for a in "${arches[@]}"; do
 	[ $((gpu + ui)) -gt 0 ] && late+=(ape)
 	[ $ui = 1 ] && late+=(rust)
 	run tb_groups $a "${late[@]}" kernelgen kernel
-	# the install step (build.$a.json's install) without its check: the kernel's a.out
+	# the install step (build.$a.json's install) without its check: the kernel's a.out;
+	# its absolute words are the tree's, as build.exe roots them at PLAN9
 	post=$(python3 -c "import json, sys
 for b in json.load(open(sys.argv[1])):
 	if b['Name'] == 'install':
-		print('\n'.join(c for c in b.get('Post', []) if 'check-install' not in c))" "$TREE/build.$a.json")
+		print('\n'.join(' '.join(sys.argv[2] + w if w.startswith('/') else w for w in c.split())
+			for c in b.get('Post', []) if 'check-install' not in c))" "$TREE/sys/src/build/build.$a.json" "$TREE")
 	while read -r c; do
 		[ -n "$c" ] && run bash -c "cd '$TREE' && $c"
 	done <<< "$post"
@@ -120,7 +122,7 @@ for b in json.load(open(sys.argv[1])):
 		awk -v keep=" $keep " '/^[a-z]/ && $1 != "profile" && index(keep, " " $1 " ") == 0 { print "/" $2 }' "$PROFILES" |
 			sed "s/\$objtype/$a/" > "$om"
 	fi
-	run bash -c "cd '$TREE' && objtype=$a python3 scripts/build/check-install.py -r -x '$om' | grep -v '^broken'; exit \${PIPESTATUS[0]}"
+	run bash -c "cd '$TREE' && objtype=$a python3 sys/src/build/step/check-install.py -r -x '$om' | grep -v '^broken'; exit \${PIPESTATUS[0]}"
 done
 # the stages check has for a profile's tree (amd64: the guests are amd64's)
 checkargs=(static guest boot kencc gccmk)

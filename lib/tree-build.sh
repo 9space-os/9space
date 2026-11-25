@@ -1,6 +1,6 @@
 # The tree's build in parts, for dist/bin/build-toolchains and dist/bin/build-profile
 # (sourced; HERE is dist/). The tree's top manifest build.$ARCH.json
-# (scripts/gen/genbuild.py) has these groups, in this order:
+# (sys/src/build/gen/genbuild.py) has these groups, in this order:
 #
 #   prep libc libs klibs cmds linux ape rust kernelgen kernel install
 #
@@ -10,7 +10,7 @@
 
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
 ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR, CACHE, CLI_DIR (paths.env)
+. "$TREE/sys/src/build/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR, CACHE, CLI_DIR (paths.env)
 
 # the build tool, with the host's go if it is not there
 tb_buildexe(){
@@ -34,7 +34,7 @@ tb_run(){
 tb_groups(){
 	local a=$1; shift
 	local IFS='|'
-	tb_run $a build.$a.json "^($*)\$"
+	tb_run $a sys/src/build/build.$a.json "^($*)\$"
 }
 
 # tb_projects ARCH NAME GROUP REGEX: the manifests of GROUP in build.ARCH.json whose
@@ -43,7 +43,7 @@ tb_projects(){
 	local a=$1 name=$2 group=$3 re=$4 m
 	m=$CACHE/build/$name.$a.json
 	mkdir -p "$CACHE/build"
-	python3 - "$TREE/build.$a.json" "$group" "$re" "$name" > "$m.new" <<'PY' || return 1
+	python3 - "$TREE/sys/src/build/build.$a.json" "$group" "$re" "$name" > "$m.new" <<'PY' || return 1
 import json, re, sys
 top, group, rx, name = sys.argv[1:]
 projs = [p for b in json.load(open(top)) if b['Name'] == group

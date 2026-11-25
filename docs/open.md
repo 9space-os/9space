@@ -1,7 +1,7 @@
 # Open tasks
 
 All parts' open tasks in one list, collected on 2026-11-19 from
-`tree/MEMORY.md`, the toolchains' `NOTES.md`, these docs, the plans in the
+`tree/sys/src/build/host/MEMORY.md`, the toolchains' `NOTES.md`, these docs, the plans in the
 attic and the BUGS sections of 9space's own man pages, each checked against
 git history. "Maybe done" marks an item a later commit may have closed.
 Update this list when an item is closed or found; the sources keep the
@@ -432,7 +432,7 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   NetBSD's cases (libc, the kernel's interfaces, the programs; BSD licence)
   as the source of what to test, rewritten for Plan 9 where its interfaces
   differ. To be planned; nothing started.
-- The kencc and gccmk builds (2026-11-22/23, `tree/scripts/guest/build-kencc.sh`,
+- The kencc and gccmk builds (2026-11-22/23, `tree/sys/src/build/host/guest/build-kencc.sh`,
   `dist/bin/check -native`): kencc builds the whole tree again (run 7: 681
   programs, the kernel pc64; pstate.c fixed after it, compiled with 6c alone).
   gccmk: run 1 (4 CPUs) ran out of its 3 h at cmd's last programs; `pcc -TVwc`
@@ -453,7 +453,7 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   answering. **Found and fixed (tree ef7c1756c):** devmnt.c's mntwalk lost
   its clone chan on every failed walk (a local set after waserror, read in
   its handler, not volatile: gcc's register copy after the longjmp). The
-  candidates of `tree/scripts/check/find-clobbered.py` reviewed: six more
+  candidates of `tree/sys/src/build/host/check/find-clobbered.py` reviewed: six more
   made volatile (patch-upstream 0066); open: devvmx eventparse frees `q`
   after `q++` (a bug of its own, kencc too). gccmk again
   on the test host with the fix: all of 9front's mkfiles build (mp3enc
@@ -474,11 +474,11 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   stderr, format pieces), so a test's echo can land inside it: tests/gpu's
   `^back: the GPU composes again` missed once (2026-11-21). One write per
   line in wsys, and greps that need no line start (ui session).
-- scripts/mesa/patches.sh rewrites sys/src/mesa/patches from scratch (rm,
+- sys/src/build/mesa/patches.sh rewrites sys/src/mesa/patches from scratch (rm,
   then format-patch overlay..HEAD); the series has gaps (0017, 0040), so a
   rerun renumbers ~30 patches. Renumber once on purpose, or add only new
   commits (and -N as rust-patches.sh does since toolchain/rust 7693b8b).
-  scripts/mesa/vendor.py takes any intended change outside the arch dir
+  sys/src/build/mesa/vendor.py takes any intended change outside the arch dir
   for a conflict; VENDOR_FRESH=1 then overwrites every conflict unseen:
   accept changes from commits after the last vendoring, or list them.
 - Sporadic, 2026-11-21: a whole guest froze once during browser realweb
@@ -498,7 +498,7 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   the killed aux/virtiogpu in Queueing, the new one in Stat, vktri in
   Open, closeprocs in Queueing, wsys in Semacquire. Its kernel stacks are
   read by itself next time (tree ac44f4f5b: tests/gpu/kstacks.rc, acid -k,
-  resolved by scripts/debug/kstack.py).
+  resolved by sys/src/build/host/debug/kstack.py).
 - Sporadic, 2026-11-20: tests/uiserver's uilost boot once printed no
   lines (the venus guest up, the MCP call in run.sh came back empty);
   the debug run and the next full run were green.
@@ -511,7 +511,7 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   root; vfio-test.sh copies tests/gpu's root and `amd*.rc` alone.
   Fix: build both into tests/gpu's root (build-vktest.sh), or let
   vfio-test.sh take tests/draw's root as well.
-- Never run: `scripts/build/rc/ape.rc` (no self-build), eframetest on
+- Never run: `sys/src/build/step/rc/ape.rc` (no self-build), eframetest on
   venus (L1266, L1354); firmware loaded from the CD (only its staging
   checked; L1762).
 - `build.exe -D` rebuilds musl's 12 `x86_64/*.s` each time (L1411); a full
@@ -525,7 +525,7 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - The script review's code findings (2026-11-20; the whole list: attic
   dist-docs/plans/scriptreview/FINDINGS.md; (a) and (b) fixed), the
   tree's part: (c) hardcodings:
-  tests/gcc/gcc.py's `'16.2'`; scripts/linux/kbuild.py guesses Linux (6,6)
+  tests/gcc/gcc.py's `'16.2'`; sys/src/build/linux/kbuild.py guesses Linux (6,6)
   without VERSION; census.py, undef.py and gencmds.py match gcc's
   messages in German and English (LC_ALL=C instead); sdl3/vendor.py's
   version numbers not from VERSION, mesa/vendor.py's KeyError for arm64,

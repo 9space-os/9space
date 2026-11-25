@@ -30,8 +30,8 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `dist/paths.env` is the only place with paths (relative to this
   directory; things outside it as `../linux-7.3.1`, ...).
   After moving anything, change only this file.
-- Scripts read it: in the tree `scripts/lib/paths.sh` (after `ROOT=`) and
-  `scripts/lib/paths.py` (`paths.get('GCC_DIR')`, `paths.archive()` for
+- Scripts read it: in the tree `sys/src/build/lib/paths.sh` (after `ROOT=`) and
+  `sys/src/build/lib/paths.py` (`paths.get('GCC_DIR')`, `paths.archive()` for
   `$DISTFILES/x`); in each toolchain `scripts/9space-paths.sh` (after
   `TOP=`). Never write a sibling path (`../9front-gcc`, `~/Devel/...`) into a
   script.
@@ -67,7 +67,7 @@ the attic into git: a copy of 9space must carry no GPL material.
 - `pxe [start|stop|restart|status]`: the PXE services for the test machines
   in the background (dnsmasq by sudo, ufs serving `CLI_DIR/pxe/ufsroot` on
   5650), e.g. after a host reboot; the root and conf stay
-  `tree/scripts/hw/pxe.sh`'s.
+  `tree/sys/src/build/host/hw/pxe.sh`'s.
 - `build-all [-check] [-iso] [ARCH...]`: checks the toolchains, builds the whole tree
   (`build.exe -D` per arch), optionally the amd64 CD with Rust and Go; `-check`
   runs `check -native` before the CD and `check -iso` on it.
@@ -87,13 +87,13 @@ the attic into git: a copy of 9space must carry no GPL material.
 Docs: `dist/docs/roadmap.md` (phases, 1.0 criteria), `upstream.md` (bringing
 in 9front: front → gcc → main), `patches.md`; the plans (German) are kept
 outside git in `~/Devel/9space-attic/dist-docs`.
-Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a translation would conflict in each merge), `toolchain/*/NOTES.md` (English).
+Logs of the work: `tree/sys/src/build/host/MEMORY.md` (German, stays so: every branch edits it, a translation would conflict in each merge), `toolchain/*/NOTES.md` (English).
 
 ## Rules
 
 - Licences: in the tree only permissive code (MIT, BSD, ISC, zlib, public
   domain); firmware as separate files. The LinuxKPI holds no GPL text of
-  Linux: `tree/scripts/linux/provenance.py --check` (in `tests/static`;
+  Linux: `tree/sys/src/build/linux/provenance.py --check` (in `sys/src/build/host/tests/static`;
   needs `LINUX`, `LINUX_OLD` of paths.env). Own versions of GPL files are
   written by hand from usage, never generated from the original; copied code
   keeps its notices. Exceptions the user accepted: Bison-generated parsers,
@@ -111,11 +111,11 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   outside 9space instead. History rewrites only with the user's word and
   `filter-repo --refs` limited to the range concerned.
 - Builds: never two builds in one tree at once (`build-all` locks). After
-  changes: `tree/tests/static/run.sh`, the build, and for the GPU stack
-  `tree/tests/gpu/run.sh` (QEMU, ~140 checks).
+  changes: `tree/sys/src/build/host/tests/static/run.sh`, the build, and for the GPU stack
+  `tree/sys/src/build/host/tests/gpu/run.sh` (QEMU, ~140 checks).
 - Guests: one at a time (they share `cache/cli`, `CLI_DIR`); no side load
   while a test suite boots guests. The RX 7600 by VFIO only when the user has
-  bound it (`sudo tree/scripts/guest/vfio-gpu.sh bind <pid of the long-lived
+  bound it (`sudo tree/sys/src/build/host/guest/vfio-gpu.sh bind <pid of the long-lived
   parent>`); no guest while binding or releasing.
 - Documentation only in English: `dist/docs`, the wiki, READMEs, NOTES.md, comments. Exception: the tree's `MEMORY.md` stays German.
 - The wiki (`dist/wiki`) is the way in for people who want to work with 9space
@@ -128,13 +128,13 @@ Logs of the work: `tree/MEMORY.md` (German, stays so: every branch edits it, a t
   with 9front (an interface, a type, a syscall's arguments): change every
   part that depends on it (the tree, the toolchains' libc crate and std,
   Go's syscalls, the man pages) instead of routing around the defect, and
-  note the difference to 9front in the man page and `tree/MEMORY.md`.
+  note the difference to 9front in the man page and `tree/sys/src/build/host/MEMORY.md`.
 - Develop modularly where possible and fitting: code used in more than one
   place lives once, as a library or crate of its own with a clear interface
   (e.g. the 9P code in `sys/src/rust/plan9/ninep`, not a copy per program);
   a program is built from such parts instead of growing one large file. No
   copies of code between programs or parts; a fix then lands in one place.
   A generated mirror is not a copy in this sense when one side is the
-  master, a script makes the mirror and `tests/static` checks it (the tree's
+  master, a script makes the mirror and `sys/src/build/host/tests/static` checks it (the tree's
   `sys/src/rust/crates` and `plan9/p9win` from `toolchain/rust`, so that the
   tree builds on its own).

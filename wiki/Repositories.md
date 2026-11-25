@@ -25,11 +25,11 @@ them (see [[Branches]]):
 | Repository | Holds | Upstream it builds on |
 |---|---|---|
 | `dist` | `paths.env` (all paths), `manifest.json` (commits that belong together), `bin/` (`repos`, `status`, `pin`, `fetch`, `build-toolchains`, `build-profile`, `build-all`, `clean-build`, `mkcd`, `wiki`, `pxe`; `lib/tree-build.sh`), `docs/` (roadmap, upstream, patches), this wiki | — |
-| `tree` | 9front with the gcc port, the GPU stack, wsys, ui, tests, build tool (`sys/src/cmd/build`) | github.com/9front/9front |
+| `tree` | 9front with the gcc port, the GPU stack, wsys, ui, build tool (`sys/src/cmd/build`); its root holds only 9front's directories: what a build needs is in `sys/src/build` (the top manifests `build.json`, `build.$ARCH.json`, the steps `step/`, the generators `gen/`), what only the Linux host uses in `sys/src/build/host` (guest and CD scripts, the test suites `tests/`, `patch-upstream/`, the log `MEMORY.md`; not on the CD) | github.com/9front/9front |
 | `toolchain/gcc` | `build.sh`, `fetch.sh`, `patches/` (gcc.patch, binutils.patch), `plan9/` (gccmk) | gcc 16.2.0, binutils 2.47 |
 | `toolchain/rust` | `patches/` (rust, cargo, backtrace, llvm-project, libc, crates), `crates/`, `scripts/`, `tests/` | rust-lang/rust, rust-lang/libc |
 | `toolchain/rust/rust`, `libc` | the release archives (`fetch.sh`: nightly source, libc's crate) as repositories of their own (Rust's git data in `rust.git` beside `rust/`: Rust's bootstrap treats `rust/` as a source archive only without `.git`); the port on branch `plan9` (from `patches/`) | rust-lang/rust, rust-lang/libc |
-| `toolchain/go` | `patches/go`, `scripts/build.sh`, `install.sh`, tests | go1.27.3 |
+| `toolchain/go` | `patches/go`, `sys/src/build/step.sh`, `install.sh`, tests | go1.27.3 |
 | `toolchain/go/go` | Go's release archive (`fetch.sh`) as a repository; the port on branch `plan9` | go1.27.3 |
 | `tools/plan9port` | rc, yacc and the generators of the host build (`PLAN9PORT`); 9fans' repository, unchanged: its `INSTALL` writes the install path into ~75 files, `bin/repos` knows that | github.com/9fans/plan9port |
 | `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9space system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
@@ -65,7 +65,7 @@ changed (for `rust/rust` cargo's `Cargo.lock`, which the build rewrites; for
 heads; a part that is not there keeps its pin.
 
 Paths: never written into scripts. The tree reads them with
-`scripts/lib/paths.sh` / `paths.py`, each toolchain with
+`sys/src/build/lib/paths.sh` / `paths.py`, each toolchain with
 `scripts/9space-paths.sh`. Moving a part means editing `dist/paths.env`:
 
 ```sh

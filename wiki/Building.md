@@ -87,7 +87,7 @@ the first failure, showing the end of its log:
 | `stage1-again-A` | `./x build --stage 1 library …` (stage 2 removed the other targets' std) | 1 min |
 | `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space (its output starts anew when the stage-1 std changed: `tests/out/cargo-port.std`) | 5 min |
 | `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9space | 1 min |
-| `go-A` | `toolchain/go`: `objtype=A scripts/build.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
+| `go-A` | `toolchain/go`: `objtype=A sys/src/build/step.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
 
 The times are those of the development machine; a smaller one (a laptop) takes
 several times as long. A is amd64, 386, arm64; T is the Rust target (`x86_64-unknown-plan9`,
@@ -113,7 +113,7 @@ dist/bin/build-profile full                   # amd64; or: build-profile ui amd6
 `build-profile PROFILE [ARCH...]` builds of the tree only what the profile's CD
 has (the profiles: section 5, "Installation profiles"), with what
 `build-toolchains` made. These are the groups of the tree's top manifest
-`build.$ARCH.json` it builds:
+`sys/src/build/build.$ARCH.json` it builds:
 
 | Profile | Groups | Needs |
 |---|---|---|
@@ -122,7 +122,7 @@ has (the profiles: section 5, "Installation profiles"), with what
 | `ui` | + `ape` (Wayland, foot, the fonts' libraries, Mesa for wsys), `rust` (wsys, ui, term, …) | gcc's cross compiler, Rust |
 | `full` | all of them: the whole tree | both |
 
-It ends with `scripts/build/check-install.py -x`: everything the profile has is
+It ends with `sys/src/build/step/check-install.py -x`: everything the profile has is
 there, and what it leaves out is not missing (`NNN files expected, ok`). What a
 profile leaves out is listed in `cache/build/PROFILE.ARCH.omitted`. `-n` prints
 the steps only. `-cd` makes the CD right after (amd64, 386); `mkcd`'s options
@@ -144,7 +144,7 @@ The boot loaders are built with the Plan 9 C compilers (from 9front) inside the
 built system, in a QEMU guest (needs "Guests" of [[Host-requirements]]):
 
 ```sh
-cd tree && scripts/guest/build-boot.sh && cd ..
+cd tree && sys/src/build/host/guest/build-boot.sh && cd ..
 dist/bin/mkcd full                    # ~/Devel/9space/cache/cli/9space-full.amd64.iso
 
 The CD of a profile needs the tree built for it (section 4): `mkcd minimal`
@@ -178,7 +178,7 @@ dist/bin/repos --worktrees=nix tree
 cd tree-nix
 (cd sys/src/cmd/build && GO111MODULE=off go build -o build.exe .)
 CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe
-scripts/guest/build-boot.sh
+sys/src/build/host/guest/build-boot.sh
 cd ..
 dist/bin/mkcd nix                             # 9space-nix.amd64.iso
 dist/bin/mkcd -dev all nix                    # with gcc, Rust and Go (1.5 GB)
@@ -224,15 +224,15 @@ FIRMWARE=0 dist/bin/mkcd minimal              # without the WLAN and GPU firmwar
 ```
 
 Every CD carries the WLAN and GPU firmware from linux-firmware that 9space's
-drivers load: `tree/scripts/guest/firmware.spec` names it, of its globs
+drivers load: `tree/sys/src/build/host/guest/firmware.spec` names it, of its globs
 (amdgpu, i915, rtw89) only what the drivers declare (`firmware.used`, made by
-`scripts/guest/firmware-used.py` from the drivers' sources), each file checked
+`sys/src/build/host/guest/firmware-used.py` from the drivers' sources), each file checked
 against `firmware.list`;
 `FIRMWARE=0` leaves it out. After a package update of linux-firmware the check
 stops `mkcd`: `dist/bin/mkfirmware -u` makes the list anew (commit it).
 The CDs go to `~/Devel/9space/cache/cli` (`-o` for another place). `-ini` takes
 lines `name=value` for the CD's `plan9.ini`. The groups and their files are
-listed in `tree/scripts/guest/profiles`. `mkcd` needs the tree's build for the
+listed in `tree/sys/src/build/host/guest/profiles`. `mkcd` needs the tree's build for the
 profile (`dist/bin/build-profile PROFILE`) and takes a QEMU guest (one at a time); it does not start while `build-all` or
 `build-profile` runs.
 
@@ -270,7 +270,7 @@ qemu-system-x86_64 -enable-kvm -m 4096 -cdrom ~/Devel/9space/cache/cli/9space-fu
 ```
 
 3D needs a GPU on the host with Vulkan, KVM, and QEMU with virglrenderer.
-These are the options `tree/tests/gpu/run.sh` boots with:
+These are the options `tree/sys/src/build/host/tests/gpu/run.sh` boots with:
 
 ```sh
 -enable-kvm -cpu host -m 1024 -vga none \
@@ -292,19 +292,19 @@ A CD without the GPU stack (`minimal`, `ui`) asks only for VESA's kinds of
 screen. If `monitor` names a GPU driver anyway, it says so and takes VESA.
 
 The guest that makes the CD holds the whole image in memory: it gets 6 GB
-(`MEM=` to change; `mkcd` runs `tree/scripts/guest/mkiso.sh`).
+(`MEM=` to change; `mkcd` runs `tree/sys/src/build/host/guest/mkiso.sh`).
 
 ## 6. Tests
 
 ```sh
 cd tree
-bash tests/static/run.sh       # seconds: manifests, licences, layouts (needs the Linux sources, see Host-requirements)
-bash tests/run.sh guest boot   # the system boots and works in QEMU
-bash tests/gpu/run.sh          # ~1 h: LinuxKPI selftests, virtio-gpu, Vulkan, GL, wsys (needs a host GPU)
+bash sys/src/build/host/tests/static/run.sh       # seconds: manifests, licences, layouts (needs the Linux sources, see Host-requirements)
+bash sys/src/build/host/tests/run.sh guest boot   # the system boots and works in QEMU
+bash sys/src/build/host/tests/gpu/run.sh          # ~1 h: LinuxKPI selftests, virtio-gpu, Vulkan, GL, wsys (needs a host GPU)
 ```
 
-The CD tests (`bash tests/run.sh iso`) make a CD of their own; to test a
-profile's CD instead: `ISO=~/Devel/9space/cache/cli/9space-ui.amd64.iso bash tests/run.sh iso`.
+The CD tests (`bash sys/src/build/host/tests/run.sh iso`) make a CD of their own; to test a
+profile's CD instead: `ISO=~/Devel/9space/cache/cli/9space-ui.amd64.iso bash sys/src/build/host/tests/run.sh iso`.
 
 Only one guest at a time: they share `~/Devel/9space/cache/cli` (`CLI_DIR`).
 
@@ -363,7 +363,7 @@ one as `9pc64.orig`. The machine's own files are left alone (`/adm`,
 `/cfg`, `/usr`, `/mail`, `/lib/ndb/local`, `plan9.ini`); files the new
 system no longer has stay. pull(1) (mkcd's replica) is the update over
 HTTP. `mkfirmware` stops when the host's linux-firmware is not the one
-`tree/scripts/guest/firmware.list` was made from (e.g. after a package
+`tree/sys/src/build/host/guest/firmware.list` was made from (e.g. after a package
 update): `dist/bin/mkfirmware -u` makes the list anew from it and then the
 archive; commit the list.
 
@@ -376,7 +376,7 @@ dist/bin/build-toolchains && dist/bin/build-profile full
 ```
 
 `clean-build` removes everything the build made: in the tree every file git
-does not track (`git clean -fdx`, but `tests/hw/results/`), the toolchains'
+does not track (`git clean -fdx`, but `sys/src/build/host/tests/hw/results/`), the toolchains'
 `build/` and `out/` directories, Go's `go/bin` and `go/pkg`, `cache/build`,
 `cache/mesa` and `dist/logs`. `build.exe -clean` is not enough for that: it knows
 only the manifests' objects, not what their steps and the installs make. The
@@ -398,5 +398,5 @@ file not yet in git would be lost too. It does not start while a build runs.
   (cd toolchain/gcc && objtype=riscv64 ./build.sh cross hostlibs native plan9)   # ~30 min
   ```
 - **Self-hosting**: the tree built inside 9space with the native gcc,
-  `tree/scripts/guest/build-self.sh`.
-- **Real hardware** (VFIO GPU tests): `tree/tests/README.md`.
+  `tree/sys/src/build/host/guest/build-self.sh`.
+- **Real hardware** (VFIO GPU tests): `tree/sys/src/build/host/tests/README.md`.

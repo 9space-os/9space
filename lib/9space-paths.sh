@@ -1,5 +1,5 @@
 # dist/lib/9space-paths.sh: where 9space's parts are, the one reader of
-# paths.env for every part's shell scripts (the tree's scripts/lib/paths.sh,
+# paths.env for every part's shell scripts (the tree's sys/src/build/lib/paths.sh,
 # the toolchains' and tools' scripts/9space-paths.sh source it).
 # Exports each variable of paths.env that the environment does not set
 # already, as an absolute path.  paths.env: $NINESPACE_PATHS, else the one

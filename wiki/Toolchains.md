@@ -98,7 +98,7 @@ rust/build/host/stage1/bin/rustc --edition 2024 --target x86_64-unknown-plan9 -O
 ```
 
 Targets: `x86_64-unknown-plan9`, `i686-unknown-plan9`, `aarch64-unknown-plan9`.
-The tree builds its Rust programs this way (`tree/scripts/build/cargo.sh`).
+The tree builds its Rust programs this way (`tree/sys/src/build/step/cargo.sh`).
 
 ## Go
 
@@ -127,7 +127,7 @@ GOOS=plan9 GOARCH=amd64 go/bin/go build -o hello hello.go     # 386, arm64 likew
 
 ```sh
 cd ~/Devel/9space/tree
-scripts/guest/build-self.sh               # amd64; objtype=386 for 386
+sys/src/build/host/guest/build-self.sh               # amd64; objtype=386 for 386
 ```
 
 The script:
@@ -153,7 +153,7 @@ guest yet.
 
 ### The whole tree, by hand on 9space
 
-This is what `build-self.sh` types in the guest (`tree/scripts/guest/boot/mkself.rc`).
+This is what `build-self.sh` types in the guest (`tree/sys/src/build/host/guest/boot/mkself.rc`).
 You need:
 
 - the tree's sources at some path, here `/n/src9`;

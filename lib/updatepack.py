@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # updatepack.py STAGE LIST OUT ARCH MANIFEST DRY [STAMP]: an update archive (dist/bin/mkupdate,
 # mkfirmware) from a staged tree and its list (path, mode with Plan 9's DMDIR, owner,
-# group, tab-separated; scripts/guest/stage-dist.sh's): root/ with the files, the
+# group, tab-separated; sys/src/build/host/guest/stage-dist.sh's): root/ with the files, the
 # list's modes and owners, without what an installed machine makes its own;
 # apply.rc, which copies root/ over a running system (the toolchains' trees,
 # /$objtype/rust, go and gnu, it replaces) and a kernel in it into 9fat;

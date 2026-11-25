@@ -15,7 +15,7 @@
 #   logs      dist/logs/
 #
 # The sources stay: the parts' repositories, their src/, rust/, go/, crates/, the
-# archives (dl/, distfiles/), plan9port; in the tree tests/hw/results/ (results of
+# archives (dl/, distfiles/), plan9port; in the tree sys/src/build/host/tests/hw/results/ (results of
 # runs on real hardware, not made again by a build). -downloads also removes rust/build/cache.
 # -cli also removes CLI_DIR (cache/cli: the guests' images, the CDs, their logs).
 #
@@ -46,7 +46,7 @@ want(){ case " ${parts[*]} " in *" $1 "*) return 0 ;; esac; return 1; }
 
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
 ROOT=$TREE
-. "$TREE/scripts/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR, CACHE, CLI_DIR (paths.env)
+. "$TREE/sys/src/build/lib/paths.sh"	# GCC_DIR, RUST_DIR, GO_DIR, CACHE, CLI_DIR (paths.env)
 
 # no build at the same time: both locks, held to the end
 if [ $dry = 0 ]; then
