@@ -88,7 +88,13 @@ of it (`dist/bin/instance fresh`, below): `dist/bin/instance put` puts their
 programs on as `/tests`, the system's desktop ends (`deskoff.rc`) and an MCP
 server of the test's starts in its place (`sys/src/build/host/tests/lib.sh`
 `deskguest`); `instance stop` at the end throws it all away, so the next
-test boots the instance as it was. Their parts with a GPU of the host's
+test boots the instance as it was. In one run of `tests/run.sh` they share
+that boot (draw, glfw, winit, uiserver one after another; sdl and wayland end
+it, sdl's sound being written only when QEMU ends), the next category ending
+what the one before left; and the build is staged once at the run's start
+(`dist/bin/instance stage`), not again when a file changes meanwhile.
+`instance stop` notes which build the disk has (`disk.fingerprint`), so a
+throwaway boot needs no boot of the instance before it to know. Their parts with a GPU of the host's
 (venus) still boot a guest of their own, after the instance stopped; the
 other categories boot guests of their own as before (their devices and
 kernels are the test's). The instance is
