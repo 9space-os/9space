@@ -27,8 +27,11 @@ Steps:
 3. Merge `gcc` into `main`, `nix`, `riscv`; build and test each (`tests/static`,
    `tests/gpu/run.sh` for `main`). A change both sides made (paths, scripts) is
    resolved for the branch's own version.
-4. `upstream`: rebased onto the new `front` (all its commits must apply), export
-   `patch-upstream/` again; it alone is force-pushed.
+4. `upstream`: rebased onto the new `front` (all its commits must apply; one
+   9front has taken drops out); it alone is force-pushed. `patch-upstream/` is
+   not exported again: the files keep their numbers, a taken one moves to
+   `patch-upstream/archive/` (its README: "Archive"), a new one gets the next
+   free number.
 5. Push `front`, `gcc`, `main`, `nix`, `riscv`, `upstream` (`bin/push tree`:
    `upstream` with `--force-with-lease`); `bin/pin` in the distribution's
    repository, then `bin/push dist`.

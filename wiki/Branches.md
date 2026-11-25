@@ -16,7 +16,7 @@ origin/front ── upstream                      fixes for 9front itself
 | `main` | `tree` | the distribution | 9front code may change where 9space needs it |
 | `nix` | (`tree-nix`) | NIX (AC/TC cores) on `gcc` | |
 | `riscv` | (`tree-riscv`) | riscv64 kernel and userland on `gcc` | |
-| `upstream` | (`tree-upstream`) | one commit per fix, on `origin/front`; exported to `patch-upstream/` | must apply to 9front as is |
+| `upstream` | (`tree-upstream`) | one commit per fix, on `origin/front`; as files in `patch-upstream/` (numbers kept, taken ones in `archive/`) | must apply to 9front as is |
 
 Bringing in 9front (details: `dist/docs/upstream.md`):
 

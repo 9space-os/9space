@@ -15,7 +15,7 @@ builds never in one tree, and no other load while a suite boots guests.
 
 Bring in 9front's `front` and merge it through the tree's branches, as
 `docs/upstream.md` describes (`front` → `gcc` → `main`, `nix`, `riscv`;
-`upstream` rebased, `patch-upstream/` exported again). Each branch is built
+`upstream` rebased; patches 9front has taken to `patch-upstream/archive/`). Each branch is built
 and tested before the next merge.
 
 ## 2. The other parts up to date
