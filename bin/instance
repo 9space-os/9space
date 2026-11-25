@@ -24,8 +24,9 @@
 #   stop      shuts it down (fshalt, else QEMU quits)
 #   check     exit 0 if it has this checkout's build, 1 if not (it must run)
 #   update    puts this checkout's build on it if it does not have it: BACKUP over
-#             DISK first (an update removes nothing: no file of an earlier build
-#             stays; FRESH=0: onto the disk as it is), then mkupdate's archive
+#             DISK first (a system without earlier tests' traces; FRESH=0: onto
+#             the disk as it is, where apply.rc removes only what the last update
+#             put on and this one has not), then mkupdate's archive
 #             (PROFILE, MKUPDATE), apply.rc, a reboot
 #   up        start (if it does not run), then update: what the tests call
 #   fresh     up, then a throwaway boot: QEMU's -snapshot, nothing done in it
@@ -191,8 +192,8 @@ resetdisk(){
 update(){
 	snapshot && { echo "instance: a test boot (-snapshot) runs: an update would not stay (instance up)" >&2; exit 1; }
 	current && { echo "instance: current ($(cut -c1-12 "$ARCHIVE.fingerprint"))" >&2; return 0; }
-	# the update copies over and removes nothing: from the backup, so that no file an
-	# earlier build had and this one has not stays behind (FRESH=0: onto the disk as it is)
+	# from the backup: a system without earlier tests' traces (apply.rc removes only
+	# files of the last update; FRESH=0: onto the disk as it is)
 	if [ "${FRESH:-1}" = 1 ] && [ -f "$BACKUP" ]; then
 		held && { echo "instance: held by $(holder) ($D/hold): not reset; FRESH=0 puts the build onto the disk as it is" >&2; exit 1; }
 		resetdisk
