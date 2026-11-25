@@ -6,6 +6,12 @@
 # apply.rc, which copies root/ over a running system (the toolchains' trees,
 # /$objtype/rust, go and gnu, it replaces) and a kernel in it into 9fat;
 # MANIFEST. DRY 1: count only, no archive.
+# STAMP 1 (a whole system): root/sys/lib/dist/update.files, the paths the update
+# puts on (sorted, one per line, without the leading /); apply.rc removes
+# what the machine's list from the last whole update names and this one's
+# does not (sources, programs and libraries the system no longer has), the
+# machine's own files (skip) never; apply.rc -n names them and stops. The first
+# update of a machine (installed from a CD: no list yet) removes nothing.
 # The fingerprint (printed, and with MANIFEST in root/sys/lib/dist/update, so that
 # the updated system names what it has: dist/bin/instance compares the two;
 # STAMP 1, mkupdate's: a whole system, not mkfirmware's firmware alone) is a
@@ -20,12 +26,52 @@ skip = ('adm', 'cfg', 'usr', 'mail', 'lib/ndb/local', 'lib/ndb/auth')
 def skipped(p):
 	return any(p == s or p.startswith(s + '/') for s in skip)
 kern = {'amd64': '9pc64', '386': '9pc'}[arch]
+# what the last whole update put on and this one does not: the old list's
+# lines not in the new one (awk, not comm: no sort order to agree on), never
+# the machine's own files nor a path with ..; files first, then the
+# directories that are empty then, deepest first
+gone = r'''# the files the last update put on that this one no longer has
+old=/sys/lib/dist/update.files
+new=$here/root/sys/lib/dist/update.files
+gone=()
+if(test -r $old && test -r $new){
+	oifs=$ifs
+	ifs='
+'
+	gone=`{awk -v 'skip=%(skip)s' 'BEGIN { n = split(skip, s, " ") }
+		NR == FNR { keep[$0] = 1; next }
+		$0 == "" || $0 ~ /(^|\/)\.\.(\/|$)/ || ($0 in keep) { next }
+		{ for(i = 1; i <= n; i++) if($0 == s[i] || index($0, s[i] "/") == 1) next; print }' $new $old}
+	ifs=$oifs
+}
+if(~ $1 -n){
+	for(f in $gone) echo /$f
+	echo apply: $#gone paths of the last update to remove
+	exit ''
+}
+''' % {'skip': ' '.join(skip)}
+remove = '''if(! ~ $#gone 0){
+	echo apply: removing $#gone paths the last update had and this one has not
+	rev=()
+	for(f in $gone){
+		if(test -d /$f)
+			rev=($f $rev)
+		if not if(test -e /$f){
+			echo apply: removing /$f
+			rm /$f
+		}
+	}
+	for(d in $rev)
+		rm /$d >[2]/dev/null && echo apply: removing /$d
+}
+'''
 apply = '''#!/bin/rc
-# apply.rc: this update over the running system (mkupdate in 9space's dist/bin)
+# apply.rc [-n]: this update over the running system (mkupdate in 9space's dist/bin);
+# -n: name what it would remove and stop
 rfork ne
 here=`{pwd}
 test -d $here/root || { echo apply: no root/ here >[1=2]; exit noroot }
-cat $here/MANIFEST
+%(gone)scat $here/MANIFEST
 fs=()
 for(s in /srv/hjfs.cmd /srv/cwfs.cmd)
 	if(test -w $s)
@@ -42,16 +88,17 @@ for(t in %(a)s/rust %(a)s/go %(a)s/gnu)
 	}
 echo apply: copying root/ over /
 dircp $here/root / || { echo apply: copy failed >[1=2]; exit copy }
-if(test -e $here/root/%(a)s/%(k)s && 9fs 9fat >[2]/dev/null){
+%(remove)sif(test -e $here/root/%(a)s/%(k)s && 9fs 9fat >[2]/dev/null){
 	if(test -e /n/9fat/%(k)s)
 		cp /n/9fat/%(k)s /n/9fat/%(k)s.orig
 	cp /%(a)s/%(k)s /n/9fat/%(k)s && echo apply: kernel /%(a)s/%(k)s into 9fat, the old one as %(k)s.orig
 	unmount /n/9fat
 }
 echo 'apply: done: reboot (fshalt -r) into the updated system'
-''' % {'a': arch, 'k': kern}
+''' % {'a': arch, 'k': kern, 'gone': gone if stamp else '', 'remove': remove if stamp else ''}
 n = 0; size = 0
 fph = hashlib.sha256()
+files = []
 def contents(p):
 	h = hashlib.sha256()
 	with open(p, 'rb') as f:
@@ -73,6 +120,7 @@ for line in open(lst):
 	if not isdir and not os.path.isfile(src):
 		continue
 	n += 1
+	files.append(path)
 	if not isdir:
 		size += os.path.getsize(src)
 	if isdir:
@@ -108,6 +156,8 @@ if tf is not None:
 	add('MANIFEST', man)
 	if stamp:
 		add('root/sys/lib/dist/update', b'fingerprint ' + fingerprint.encode() + b'\n' + man)
+		names = set(files) | {'sys/lib/dist/update', 'sys/lib/dist/update.files'}
+		add('root/sys/lib/dist/update.files', ''.join(f + '\n' for f in sorted(names)).encode())
 	tf.close()
 	os.rename(out + '.new', out)
 print('mkupdate: %d entries, %d MB of files%s' % (n, size >> 20, '' if tf is None else ' in ' + out))

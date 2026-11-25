@@ -23,10 +23,13 @@
 #
 # apply.rc copies root/ over / (the file server's permission checks off meanwhile:
 # hjfs or cwfs "allow"), puts the kernel into 9fat (the old one as 9pc64.orig, 386:
-# 9pc.orig) and says what to reboot into. It removes nothing, except that the
-# toolchains' trees (/$objtype/rust, go, gnu) are replaced whole: elsewhere a file
-# the new system no longer has stays. pull(1) (mkcd's replica) is the update over HTTP that
-# does remove; this is the one without a network.
+# 9pc.orig) and says what to reboot into. The toolchains' trees (/$objtype/rust,
+# go, gnu) are replaced whole; elsewhere it removes what the last update put on
+# and this one no longer has (root/sys/lib/dist/update.files, the list of the
+# update's paths, against the machine's from the last update; never the
+# machine's own files above; `rc apply.rc -n` names them and stops). A machine
+# installed from a CD has no list yet: its first update removes nothing.
+# pull(1) (mkcd's replica) is the update over HTTP; this is the one without a network.
 #
 # With build-all's lock (unless the caller holds it: CHECK_LOCKED=1): the archive
 # is made from the tree's build.

@@ -360,9 +360,15 @@ fshalt -r
 `apply.rc` copies the archive's `root/` over the system (the file server's
 permission checks off meanwhile) and puts the new kernel into 9fat, the old
 one as `9pc64.orig`. The machine's own files are left alone (`/adm`,
-`/cfg`, `/usr`, `/mail`, `/lib/ndb/local`, `plan9.ini`); files the new
-system no longer has stay. pull(1) (mkcd's replica) is the update over
-HTTP. `mkfirmware` stops when the host's linux-firmware is not the one
+`/cfg`, `/usr`, `/mail`, `/lib/ndb/local`, `plan9.ini`). What the last
+update put on and this one no longer has (old sources, programs,
+libraries) is removed: each update leaves the list of its paths in
+`/sys/lib/dist/update.files`, and `apply.rc` compares the machine's list
+with the new one; `rc apply.rc -n` names those paths and changes nothing.
+A machine installed from a CD has no list yet, so its first update
+removes nothing. The toolchains (`/amd64/rust`, `go`, `gnu`) are replaced
+whole. `mkfirmware`'s archive only adds. pull(1) (mkcd's replica) is the
+update over HTTP. `mkfirmware` stops when the host's linux-firmware is not the one
 `tree/sys/src/build/host/guest/firmware.list` was made from (e.g. after a package
 update): `dist/bin/mkfirmware -u` makes the list anew from it and then the
 archive; commit the list.
