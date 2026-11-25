@@ -97,7 +97,11 @@ objtype=amd64 ./build.sh plan9       # gccmk: mk with gcc on 9space             
 cd ../..
 ```
 
-`cross` needs section 1's sysroot. The stages' logs are `toolchain/gcc/*.log`. A
+`cross` needs section 1's sysroot. The stages' logs are `toolchain/gcc/*.log`.
+`plan9` copies gccmk's wrappers (`toolchain/gcc/plan9`) and writes their flags
+from the tree's manifests; the CDs and update archives take them from `out/`,
+and `stage-dist.sh` (mkcd, mkupdate) runs `plan9` again by itself when
+`plan9/` or those manifests are newer than its output. A
 stage whose arguments have not changed since the last run is not configured again.
 
 ## 3. Rust
