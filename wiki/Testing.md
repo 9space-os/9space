@@ -66,9 +66,9 @@ the ports; `dist/bin/instance`'s header lists them).
 and checks that it has this checkout's build: the system's
 `/sys/lib/dist/update` names the fingerprint of the update archive it was
 last given, `dist/bin/mkupdate` computes the build's. When they differ, it
-puts the backup back over the disk (an update copies over and removes
-nothing: no file of an earlier build stays; `FRESH=0`: onto the disk as it
-is), puts the build on with an update archive and reboots. The archive is
+puts the backup back over the disk (a fresh system, without the traces of
+earlier tests; `FRESH=0`: onto the disk as it is, where the update removes
+only what the last update put on and this one has not), puts the build on with an update archive and reboots. The archive is
 kept (`cache/cli/instance.amd64.tgz`); the build is staged again (minutes)
 only when a part of it is newer. `instance stop`, `reset` (the backup back),
 `start` and `check` do one step each.

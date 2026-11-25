@@ -357,6 +357,28 @@ mkdir /tmp/up && cd /tmp/up && tar xzf /path/to/9space-update-full.amd64.tgz && 
 fshalt -r
 ```
 
+Over the network, without copying the archive first: serve it from the
+host (only that file, in a directory of its own, on the host's LAN
+address; not while `dist/bin/instance up` or `update` runs, which serves on
+the same port) and let the machine fetch and unpack it in one go:
+
+```sh
+mkdir -p cache/up && ln -sf "$PWD"/cache/cli/9space-update-full-mcp-browser.amd64.tgz cache/up/up.tgz
+(cd cache/up && python3 -m http.server 18099 --bind HOSTADDR)
+```
+
+```rc
+mkdir /tmp/up && cd /tmp/up && hget http://HOSTADDR:18099/up.tgz | gunzip | tar x && rc apply.rc
+```
+
+Through 9front-mcp (an agent's way, `tree/sys/src/build/host/guest/mcp.py` with
+`MCPURL` and `MCPTOKEN` of the machine) the same line runs detached, as the
+copy takes longer than an MCP call may: `{rfork sF; ... >/tmp/up.log >[2=1]}
+</dev/null >/dev/null >[2=1] &`, then read `/tmp/up.log` until it ends with
+`apply: done`. The update replaces `/amd64/{rust,go,gnu}` under the running
+MCP server: gcc and rustc are back in its namespace after the reboot. Stop
+the HTTP server afterwards.
+
 `apply.rc` copies the archive's `root/` over the system (the file server's
 permission checks off meanwhile) and puts the new kernel into 9fat, the old
 one as `9pc64.orig`. The machine's own files are left alone (`/adm`,
