@@ -63,8 +63,8 @@ directory holds only data: the disk, its backup, `mcptoken`, and
 the ports; `dist/bin/instance`'s header lists them).
 
 More instances run beside it: a copy of the directory (`cp -r --sparse=always
-~/9space ~/9space-2`) whose `instance.env` gives other ports (`MCP_PORT=18091`,
-`CPU_PORT=17020`, `SERVE_PORT=18098`; the defaults are 18090, 17019, 18099), used
+~/9space ~/9space-2`) whose `instance.env` gives other ports (`MCP_PORT=18093`,
+`CPU_PORT=17020`, `SERVE_PORT=18098`; the defaults are 18090, 17019, 18099; 18091 is the tree tests' MCP guest's), used
 as `INSTANCE_DIR=~/9space-2 dist/bin/instance up`. Whoever works on one
 leaves a `hold` file in it (below) and takes another when one is held.
 

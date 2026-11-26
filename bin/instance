@@ -84,14 +84,24 @@ mcp(){ python3 "$MCPPY" "$@"; }
 pid(){ [ -s "$D/qemu.pid" ] && kill -0 "$(cat "$D/qemu.pid")" 2>/dev/null && cat "$D/qemu.pid"; }
 running(){ pid >/dev/null; }
 answers(){ mcp rc 'echo up' 20 >/dev/null 2>&1; }
+# what another QEMU of this host takes from this instance: its disk, or one of its
+# ports (another instance with the same ports, a test's guest on 18091); the other
+# instances (other directories, other ports in their instance.env) run beside it
+taken(){
+	local q
+	q=$(pgrep -af qemu-system | grep -F -- "$DISK") && { echo "QEMU on $DISK: ${q%% *}"; return 0; }
+	q=$(ss -Hltn 2>/dev/null | awk -v a=":$MCP_PORT" -v b=":$CPU_PORT" '$4 ~ a"$" || $4 ~ b"$" {print $4}') && [ -n "$q" ] &&
+		{ echo "port $q in use"; return 0; }
+	return 1
+}
 
 start(){
 	if running; then answers && return 0; echo "instance: QEMU runs (pid $(pid)), waiting for its MCP server" >&2
 	else
 		[ -f "$DISK" ] || { echo "instance: no $DISK (instance install)" >&2; exit 1; }
 		[ -n "$MCPTOKEN" ] || { echo "instance: no $D/mcptoken (the system's \$home/lib/mcptoken)" >&2; exit 1; }
-		if pgrep qemu-system >/dev/null; then	# not -x: the kernel cuts the name to 15 characters
-			echo "instance: another QEMU runs (one guest at a time)" >&2; exit 1
+		if why=$(taken); then
+			echo "instance: $why (another QEMU; this instance's ports are in $D/instance.env)" >&2; exit 1
 		fi
 		local disp=(-display none -daemonize)
 		[ -n "$DISPLAY_OPT" ] && disp=(-display "$DISPLAY_OPT")
@@ -331,7 +341,7 @@ install)
 	iso=${1:-$CLI_DIR/9space-$PROFILE-mcp.$ARCH.iso}
 	[ -f "$iso" ] || { echo "instance: no $iso (dist/bin/mkcd -mcp $PROFILE)" >&2; exit 1; }
 	[ -f "$DISK" ] && { echo "instance: $DISK exists (reset, or remove it first)" >&2; exit 1; }
-	if pgrep qemu-system >/dev/null; then echo "instance: another QEMU runs (one guest at a time)" >&2; exit 1; fi
+	if why=$(taken); then echo "instance: $why (another QEMU)" >&2; exit 1; fi
 	truncate -s "${SIZE:-20G}" "$DISK"
 	[ -s "$D/mcptoken" ] || { head -c 24 /dev/urandom | base64 | tr -d '/+=' > "$D/mcptoken"; chmod 600 "$D/mcptoken"; }
 	echo "instance: installing from $iso; in the installer, afterwards put $D/mcptoken into \$home/lib/mcptoken" >&2
