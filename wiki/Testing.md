@@ -62,6 +62,12 @@ directory holds only data: the disk, its backup, `mcptoken`, and
 `mkupdate`'s options of its CD, default `full` and `-mcp`; `SMP`, `MEM`,
 the ports; `dist/bin/instance`'s header lists them).
 
+More instances run beside it: a copy of the directory (`cp -r --sparse=always
+~/9space ~/9space-2`) whose `instance.env` gives other ports (`MCP_PORT=18091`,
+`CPU_PORT=17020`, `SERVE_PORT=18098`; the defaults are 18090, 17019, 18099), used
+as `INSTANCE_DIR=~/9space-2 dist/bin/instance up`. Whoever works on one
+leaves a `hold` file in it (below) and takes another when one is held.
+
 `dist/bin/instance up` (what the tests call) boots it if it does not run
 and checks that it has this checkout's build: the system's
 `/sys/lib/dist/update` names the fingerprint of the update archive it was
@@ -69,8 +75,11 @@ last given, `dist/bin/mkupdate` computes the build's. When they differ, it
 puts the backup back over the disk (a fresh system, without the traces of
 earlier tests; `FRESH=0`: onto the disk as it is, where the update removes
 only what the last update put on and this one has not), puts the build on with an update archive and reboots. The archive is
-kept (`cache/cli/instance.amd64.tgz`); the build is staged again (minutes)
-only when a part of it is newer. `instance stop`, `reset` (the backup back),
+kept, one for each profile and set of `mkupdate` options
+(`cache/cli/instance.full.amd64.-mcp.tgz`, with its `.fingerprint` and `.log`), so
+instances with other options never take each other's; the build is staged again
+(minutes, one staging at a time: `cache/cli/instance.stage.lock`) only when a part
+of it is newer. `instance stop`, `reset` (the backup back),
 `start` and `check` do one step each.
 
 Work on the instance that must stay (a setup for a test of one's own)

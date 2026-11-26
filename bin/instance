@@ -50,9 +50,11 @@
 #
 # Current means: the system's /sys/lib/dist/update names the fingerprint mkupdate
 # gives this build (dist/lib/updatepack.py). The archive of the last update is kept
-# ($CLI_DIR/instance.ARCH.tgz with .fingerprint); only when a part of the build is
-# newer than it is the build staged anew (minutes), and put on only if its
-# fingerprint differs.
+# ($CLI_DIR/instance.PROFILE.ARCH[.OPTIONS].tgz with .fingerprint and .log: one for
+# each PROFILE and MKUPDATE, so that instances with other options never take each
+# other's); only when a part of the build is newer than it is the build staged anew
+# (minutes, one mkupdate at a time: they share $CLI_DIR's stage), and put on only if
+# its fingerprint differs.
 #
 # STAGE=0: take the kept archive as the build, without staging (while changing
 # the tests themselves: a tree file newer than the archive stages anew).
@@ -71,7 +73,9 @@ PROFILE=${PROFILE:-full} MKUPDATE=${MKUPDATE--mcp} ARCH=${ARCH:-amd64}
 DISK=$D/${DISK:-9space.raw} BACKUP=$D/${BACKUP:-9space.golden.raw}
 SMP=${SMP:-4} MEM=${MEM:-4096}
 MCP_PORT=${MCP_PORT:-18090} CPU_PORT=${CPU_PORT:-17019} SERVE_PORT=${SERVE_PORT:-18099}
-ARCHIVE=$CLI_DIR/instance.$ARCH.tgz
+# the archive of these options (mkupdate's, as words joined by dots: -mcp.-dev.none)
+opts=$(echo $MKUPDATE | tr ' ' '.')
+ARCHIVE=$CLI_DIR/instance.$PROFILE.$ARCH${opts:+.$opts}.tgz
 MCPPY=$TREE_SCRIPTS/guest/mcp.py
 export MCPURL=http://127.0.0.1:$MCP_PORT/mcp
 [ -r "$D/mcptoken" ] && export MCPTOKEN=$(cat "$D/mcptoken")
@@ -171,10 +175,18 @@ ours(){
 		cat "$ARCHIVE.fingerprint"; return
 	fi
 	if [ ! -s "$ARCHIVE.fingerprint" ] || [ ! -f "$ARCHIVE" ] || newer; then
-		echo "instance: staging the build (mkupdate $MKUPDATE $PROFILE $ARCH, minutes)" >&2
-		"$HERE/bin/mkupdate" $MKUPDATE -o "$ARCHIVE" "$PROFILE" "$ARCH" > "$CLI_DIR/instance.mkupdate.log" 2>&1 ||
-			{ echo "instance: mkupdate failed ($CLI_DIR/instance.mkupdate.log)" >&2; exit 1; }
-		sed -n 's/^fingerprint //p' "$CLI_DIR/instance.mkupdate.log" > "$ARCHIVE.fingerprint"
+		# one mkupdate at a time (another instance's, or a mkcd's: CLI_DIR's
+		# update.PROFILE.ARCH stage); waiting, then looked at again (it may have
+		# made this very archive meanwhile)
+		exec 8>"$CLI_DIR/instance.stage.lock"
+		flock -n 8 || { echo "instance: another staging runs ($CLI_DIR/instance.stage.lock): waiting" >&2; flock 8; }
+		if [ ! -s "$ARCHIVE.fingerprint" ] || [ ! -f "$ARCHIVE" ] || newer; then
+			echo "instance: staging the build (mkupdate $MKUPDATE $PROFILE $ARCH, minutes)" >&2
+			"$HERE/bin/mkupdate" $MKUPDATE -o "$ARCHIVE" "$PROFILE" "$ARCH" > "$ARCHIVE.log" 2>&1 ||
+				{ echo "instance: mkupdate failed ($ARCHIVE.log)" >&2; exit 1; }
+			sed -n 's/^fingerprint //p' "$ARCHIVE.log" > "$ARCHIVE.fingerprint"
+		fi
+		exec 8>&-
 	fi
 	cat "$ARCHIVE.fingerprint"
 }
