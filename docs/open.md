@@ -440,8 +440,12 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   49c62065f, dist b4ef6e1: lib.sh deskguest, deskoff.rc, instance put,
   fresh's QEMU_EXTRA); winit's iced typing check had failed since tree
   fe201a126 (2026-11-19: a program sizes its first window, iced's 1024x768
-  filled the screen), fixed in icedtest (toolchain/rust b868393). Possible
-  later: one throwaway boot for all six instead of one each.
+  filled the screen), fixed in icedtest (toolchain/rust b868393). Fewer
+  boots since tree 03b10e30c (draw's boot taken over by glfw, winit, uiserver;
+  the archive staged once per run). 2026-11-26 with APE's wide ino_t/dev_t:
+  12/12 (44 min), after toolchain/gcc's native binutils/gcc were rebuilt (the
+  ld of 07:11 had bfd compiled with the old struct stat, linked with the wide
+  libap: it crashed overwriting an existing output, so cgo and workflow failed).
 - The X1: updated 2026-11-25 with the new apply.rc (toolchains replaced
   whole, one libstd), rebooted, Rust runs; `/tmp/up` removed,
   `/tmp/up.20261125` (3.2 GB) still there (the user's word).
