@@ -370,6 +370,19 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - riscv64: no ISO, the tree never built itself there, musl without real
   quad `expl`/`logl`/`log1pl`.
 - Building `build.exe` with Go on 9front untested (wiki Toolchains).
+- clang (toolchain/clang, `CLANG_DIR` not yet in paths.env; 2026-11-26): cross
+  and native amd64 work (tests/cross.sh 13/13, tests/native.sh 8/8). Open:
+  386 and arm64 (runtimes, native); the part not yet in dist (paths.env,
+  parts.py, manifest, build-toolchains, the CD's `/$objtype/clang`, the
+  wiki's Building, Toolchains, Repositories); the tree built with `CC=clang`
+  (a `clang.json`, `-ffixed-r14/-r15`, gccmk made compiler-neutral);
+  `#pragma varargck` as real format checking with Plan 9's verbs; a rebuild
+  of Rust's LLVM and the native rustc from the series with `Triple::Plan9`
+  (expected without effect, not yet confirmed: toolchain/rust NOTES.md).
+- APE's own `sin`/`cos` (double) are inaccurate: `cos(M_PI)` is 2 ulp off,
+  `sin(M_PI)` is -0 (found by clang's tests, 2026-11-25; gcc programs alike,
+  hidden at -O2 by constant folding). Candidate: musl's, as for float and
+  long double (tree MEMORY.md).
 - rust-analyzer (the user, 2026-11-20; shelved 2026-11-21: the current tasks
   first): (1) on the Linux host, a
   `rust-analyzer.toml` per workspace (the tree's, toolchain/rust's, browser's)
