@@ -1,4 +1,4 @@
-# Using gcc, Rust and Go
+# Using gcc, Rust, Go and clang
 
 9space's toolchains run on 9space itself (native) and on Linux (cross). This
 page shows how to use them and how to rebuild the system with gcc.
@@ -6,13 +6,14 @@ page shows how to use them and how to rebuild the system with gcc.
 
 ## Getting them onto 9space
 
-The CD of the profile `full` (`dist/bin/mkcd full`, see [[Building]]) carries all three, as does any profile with `-dev all`:
+The CD of the profile `full` (`dist/bin/mkcd full`, see [[Building]]) carries all four, as does any profile with `-dev all`:
 
 | Toolchain | On 9space | Built in |
 |---|---|---|
 | gcc 16, binutils 2.47 | `/amd64/gnu` | `toolchain/gcc/out/amd64` |
 | Rust (rustc, cargo, rustdoc, rustfmt, clippy) | `/amd64/rust` | `toolchain/rust/out/amd64` |
 | Go | `/amd64/go` | `toolchain/go/out/amd64` |
+| clang 23, lld (C, C++ with libc++) | `/amd64/clang`; for `objtype=386` and `arm64`: `/386/clang`, `/arm64/clang` with their `lib.gcc` and `plan9.ld` | `toolchain/clang/out/amd64` (`out/386`, `out/arm64`: their runtimes) |
 
 On a system installed some other way, copy them over as archives, with paths
 from `/` (on 386 or arm64 replace amd64 and the Rust target):
@@ -21,6 +22,7 @@ from `/` (on 386 or arm64 replace amd64 and the Rust target):
 # on Linux, in ~/Devel/9space
 tar -C toolchain/gcc/out/amd64 -czf gnu-amd64.tgz amd64        # gcc has no archive of its own
 ls toolchain/rust/out/amd64/*.tgz toolchain/go/out/amd64/*.tgz
+tar -C toolchain/clang/out/amd64 --exclude=libc++.modules.json -czf clang-amd64.tgz amd64   # clang has none either
 ```
 
 ```rc
@@ -28,9 +30,12 @@ ls toolchain/rust/out/amd64/*.tgz toolchain/go/out/amd64/*.tgz
 cd / && tar xzf $home/gnu-amd64.tgz
 cd / && tar xzf $home/rust-x86_64-unknown-plan9.tgz && tar xzf $home/rust-tools-x86_64-unknown-plan9.tgz
 cd / && tar xzf $home/go-plan9-amd64.tgz
+cd / && tar xzf $home/clang-amd64.tgz
 ```
 
-Rust needs gcc: rustc links with it.
+Rust needs gcc: rustc links with it. clang needs gcc's files too: APE's
+libraries in `/$objtype/lib.gcc` (it links them with its own lld). `-dev rust` and
+`-dev clang` take gcc along.
 
 ## gcc
 
@@ -120,6 +125,47 @@ From Linux (cross):
 cd ~/Devel/9space/toolchain/go
 GOOS=plan9 GOARCH=amd64 go/bin/go build -o hello hello.go     # 386, arm64 likewise
 ```
+
+## clang
+
+```rc
+bind -b /$cputype/clang/bin /bin
+clang -O2 -o hello hello.c                    # APE: POSIX headers and libraries
+clang++ -O2 -o hello hello.cc                 # C++ with libc++, libc++abi, libunwind
+objtype=arm64 clang++ -O2 -o hello hello.cc   # a program for another machine
+```
+
+- clang and gcc share the ABI and the layout (APE's headers and libraries,
+  `/$objtype/plan9.ld`, static ELF): objects of both link together.
+- Each clang has the backends of all machines and builds for `$objtype`, as mk
+  and 6c do; `--target=` (`x86_64-unknown-plan9`, `i686-unknown-plan9`,
+  `aarch64-unknown-plan9`) overrides it. The CD carries what `objtype=386` and
+  `objtype=arm64` need: `/386/clang` and `/arm64/clang` (their runtimes),
+  `/386/lib.gcc` and `/arm64/lib.gcc` (without the GPU stack's archives) and
+  their `plan9.ld`.
+- It must be at `/$cputype/clang`: its resource directory
+  (`lib/clang/23`, compiler-rt and its own headers) is compiled in.
+- Native Plan 9 C, as gcc does it (Plan 9 C's unnamed members with
+  `-fplan9-extensions`):
+
+```rc
+clang -O2 -nostdinc -I/$objtype/include -I/sys/include -fplan9-extensions \
+	-ffreestanding -fno-builtin -c prog.c
+clang -nostdlib -o prog prog.o -L/$objtype/lib.gcc -lc `{clang --print-libgcc-file-name}
+```
+
+- kencc's pragmas (`#pragma lib`, `varargck`) are ignored, as with gcc: name
+  the libraries.
+
+From Linux (cross), with the tree as the sysroot `toolchain/clang` makes:
+
+```sh
+cd ~/Devel/9space/toolchain/clang
+build/host/bin/clang --target=x86_64-unknown-plan9 --sysroot=build/amd64/sysroot -O2 -o hello hello.c
+```
+
+`toolchain/clang/README.md` has the details: the port, the build stages and
+its tests.
 
 ## Rebuilding the system with gcc
 

@@ -18,6 +18,7 @@ PARTS = [
 	('gcc', 'GCC_DIR'),
 	('rust', 'RUST_DIR'), ('rust/rust', 'RUST_DIR/rust'), ('rust/libc', 'RUST_DIR/libc'),
 	('go', 'GO_DIR'), ('go/go', 'GO_DIR/go'),
+	('clang', 'CLANG_DIR'),
 	('mcp', 'MCP_DIR'),
 	('browser', 'BROWSER_DIR'), ('browser/servo', 'BROWSER_DIR/servo'), ('browser/mozjs', 'BROWSER_DIR/mozjs'),
 	('plan9port', 'PLAN9PORT'),

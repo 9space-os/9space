@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-toolchains [-n] [-from STEP] [ARCH...]: gcc, Rust and Go for 9front, from
+# build-toolchains [-n] [-from STEP] [ARCH...]: gcc, Rust, Go and clang for 9front, from
 # scratch, in the one order that works (wiki: Building). ARCH: amd64 386 arm64
 # (default all three). Needs the sources: dist/bin/repos --sources. Only the
 # toolchains: the tree of an installation profile is dist/bin/build-profile's.
@@ -15,6 +15,11 @@
 #   cargo-A        scripts/build-cargo.sh: cargo for 9front
 #   install-A      scripts/install.sh: out/A (/A/rust on 9front)
 #   go-A           toolchain/go: sys/src/build/step.sh, scripts/install.sh (the host Go once)
+#   clang-host     toolchain/clang: build.sh host (clang and lld for Linux, every target;
+#                  from toolchain/rust's llvm-project, which need not be built)
+#   clang-A        build.sh sysroot runtimes native (objtype=A): the tree of A as the
+#                  sysroot (tree-base's: APE's libraries, libz for lld), libc++ and
+#                  compiler-rt, then clang and lld for 9front (out/A, /A/clang there)
 #
 # Then: dist/bin/build-profile PROFILE (the tree for one profile), dist/bin/mkcd.
 #
@@ -35,7 +40,7 @@ while [ $# -gt 0 ]; do
 done
 arches=("$@")
 [ ${#arches[@]} -gt 0 ] || arches=(amd64 386 arm64)
-. "$HERE/lib/tree-build.sh"	# TREE, GCC_DIR, RUST_DIR, GO_DIR; tb_groups, tb_projects
+. "$HERE/lib/tree-build.sh"	# TREE, GCC_DIR, RUST_DIR, GO_DIR, CLANG_DIR; tb_groups, tb_projects
 LOGS=$HERE/logs
 mkdir -p "$LOGS"
 if [ $dry = 0 ]; then
@@ -58,6 +63,8 @@ if [ -n "$from" ]; then
 	steps="$steps rust-stage1"
 	for a in "${arches[@]}"; do steps="$steps llvm-$a rustc-$a stage1-again-$a cargo-$a install-$a"; done
 	for a in "${arches[@]}"; do steps="$steps go-$a"; done
+	steps="$steps clang-host"
+	for a in "${arches[@]}"; do steps="$steps clang-$a"; done
 	case " $steps " in *" $from "*) ;; *)
 		echo "build-toolchains: no step $from in this run; the steps: $steps" >&2; exit 2 ;; esac
 fi
@@ -80,7 +87,7 @@ step(){
 		# steps that keep logs of their own (build-llvm.sh, build-cargo.sh, gcc's
 		# build.sh): those written during the step, the newest one's end
 		mapfile -t own < <(find "$GCC_DIR" -maxdepth 1 -name '*.log' -newer "$LOGS/.start"; \
-			find "$RUST_DIR/logs" "$GO_DIR" -maxdepth 1 -name '*.log' -newer "$LOGS/.start" 2>/dev/null)
+			find "$RUST_DIR/logs" "$GO_DIR" "$CLANG_DIR/logs" -maxdepth 1 -name '*.log' -newer "$LOGS/.start" 2>/dev/null)
 		if [ ${#own[@]} -gt 0 ]; then
 			echo "logs written by the step: ${own[*]}"
 			newest=$(ls -t "${own[@]}" | head -1)
@@ -126,6 +133,10 @@ host=1
 for a in "${arches[@]}"; do
 	step go-$a env objtype=$a HOST=$host bash -c "cd '$GO_DIR' && sys/src/build/step.sh && scripts/install.sh"
 	host=0
+done
+step clang-host bash -c "cd '$CLANG_DIR' && ./build.sh host"
+for a in "${arches[@]}"; do
+	step clang-$a env objtype=$a bash -c "cd '$CLANG_DIR' && ./build.sh sysroot runtimes native"
 done
 if [ $dry = 0 ]; then
 	echo "$(date +%H:%M) build-toolchains: done (${arches[*]})"

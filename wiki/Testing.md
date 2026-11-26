@@ -30,8 +30,8 @@ and the exit status is 1 when one failed. The output of each stage is in
 | `kencc` (`-native`) | 9front's own compilers (6c, 6a, 6l, mk) build the tree, kernel included | `bash sys/src/build/host/guest/build-kencc.sh` |
 | `gccmk` (`-native`) | 9front's mkfiles with `gccmk`, the native gcc (userland) | `bash sys/src/build/host/guest/build-kencc.sh gcc` |
 | `gpu` (`-gpu`) | the GPU stack on virtio-gpu (~1 h, needs a host GPU) | `bash sys/src/build/host/tests/gpu/run.sh` |
-| `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust mcp` |
-| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, the MCP server, the desktop's mouse and keys, the reference workflow; and the tests that bring their own desktop (draw, SDL, GLFW, winit, ui, Wayland) | `INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust mcp rio workflow draw glfw winit uiserver sdl wayland` |
+| `iso` (`-iso ISO`) | the CD as CD and as disk, BIOS and UEFI, up to its desktop; mouse and keyboard, USB, and the gcc, Go, Rust, clang and MCP server it has (each skipped when the CD lacks it) | `ISO=... bash sys/src/build/host/tests/run.sh iso rio usb gcc go rust clang mcp` |
+| `instance` (`-instance`) | the same tests of the installed system on your instance: gcc, Go, Rust, clang, the MCP server, the desktop's mouse and keys, the reference workflow; and the tests that bring their own desktop (draw, SDL, GLFW, winit, ui, Wayland) | `INSTANCE=1 bash sys/src/build/host/tests/run.sh gcc go rust clang mcp rio workflow draw glfw winit uiserver sdl wayland` |
 
 `check` needs the tree's build first (`build-all`, `build-profile`). The
 `gccmk` stage also needs the native gcc's `plan9` step
@@ -80,7 +80,7 @@ what for (`echo 'me: self-build test' > ~/9space/hold`). While it is there,
 up` puts a new build onto the disk as it is), and `status` names the
 holder. Remove it when done.
 
-The tests of the installed system (`gcc`, `go`, `rust`, `mcp`, `rio`,
+The tests of the installed system (`gcc`, `go`, `rust`, `clang`, `mcp`, `rio`,
 `workflow`) run on it with `INSTANCE=1`, and so do the tests that bring a
 desktop of their own (`draw`, `sdl`, `glfw`, `winit`, `uiserver`,
 `wayland`: their wsys on the screen, keys through QMP), on a throwaway boot

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mkupdate [-n] [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-o FILE] PROFILE [ARCH]:
+# mkupdate [-n] [-dev gcc,rust,go,clang|all|none] [-mcp] [-browser] [-o FILE] PROFILE [ARCH]:
 # an update archive for machines installed from a CD of that profile: the files the
 # CD of the same options carries (sys/src/build/host/guest/stage-dist.sh, as mkcd stages them),
 # from the main branch's build, without what an installed machine makes its own.
@@ -35,7 +35,7 @@
 # is made from the tree's build.
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: mkupdate [-n] [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-o file] minimal|gpu|ui|full [amd64|386]" >&2; exit 2; }
+usage(){ echo "usage: mkupdate [-n] [-dev gcc,rust,go,clang|all|none] [-mcp] [-browser] [-o file] minimal|gpu|ui|full [amd64|386]" >&2; exit 2; }
 dev=- out= mcp= browser= dry=0
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -60,14 +60,14 @@ if [ "$dev" = - ]; then
 	[ $profile = full ] && dev=all || dev=none
 fi
 [ "$dev" = none ] && dev=
-[ "$dev" = all ] && dev=gcc,rust,go
+[ "$dev" = all ] && dev=gcc,rust,go,clang
 for l in ${dev//,/ }; do
-	case $l in gcc|rust|go) ;; *) echo "mkupdate: -dev: no language $l (gcc, rust, go)" >&2; exit 2 ;; esac
+	case $l in gcc|rust|go|clang) ;; *) echo "mkupdate: -dev: no language $l (gcc, rust, go, clang)" >&2; exit 2 ;; esac
 done
 
 . "$HERE/lib/tree.sh"	# TREE, TREE_SCRIPTS; CLI_DIR, RUST_DIR, GO_DIR (paths.env)
 name=9space-update-$profile
-[ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
+[ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go,clang ] && name=$name-dev-${dev//,/-}
 [ -n "$mcp" ] && name=$name-mcp
 [ -n "$browser" ] && name=$name-browser
 out=${out:-$CLI_DIR/$name.$arch.tgz}
@@ -82,6 +82,7 @@ fi
 rm -rf "$stage" "$stage.list"
 case ",$dev," in *,rust,*) export RUST_OUT=$RUST_DIR/out/$arch ;; esac
 case ",$dev," in *,go,*) export GO_OUT=$GO_DIR/out/$arch ;; esac
+case ",$dev," in *,clang,*) export CLANG_OUT=$CLANG_DIR/out/$arch ;; esac
 PROFILE=$profile DEV=$dev MCP=$mcp BROWSER=$browser objtype=$arch \
 	bash "$TREE_SCRIPTS/guest/stage-dist.sh" "$stage" >&2
 

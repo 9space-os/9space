@@ -5,13 +5,14 @@
 #
 #   1. checks the toolchains: gcc's cross compiler and its install tree
 #      (GCC_DIR/build/<arch>/cross, out/<arch>), Rust's stage-1 rustc and
-#      out/<arch> (RUST_DIR), Go's out/<arch> (GO_DIR); a missing one is
+#      out/<arch> (RUST_DIR), Go's out/<arch> (GO_DIR), clang's out/<arch>
+#      (CLANG_DIR); a missing one is
 #      reported, not built (their builds take hours: build.sh, install.sh
 #      of each toolchain), and the tree's build skips what needs it
 #   2. the tree for each ARCH (amd64 386 arm64; default amd64): build.exe -D (the build tool,
 #      sys/src/cmd/build/build.exe, built first with the host's go if missing)
-#   3. -iso: the install CD of amd64 with Rust and Go on it
-#      (sys/src/build/host/guest/mkiso.sh; RUST_OUT, GO_OUT), into $CLI_DIR; the CDs of the
+#   3. -iso: the install CD of amd64 with Rust, Go and clang on it
+#      (sys/src/build/host/guest/mkiso.sh; RUST_OUT, GO_OUT, CLANG_OUT), into $CLI_DIR; the CDs of the
 #      installation profiles (minimal, gpu, ui, full; -dev): dist/bin/mkcd
 #   -check: after 2, dist/bin/check -native (sys/src/build/host/tests/static, the build's tests,
 #      the guest's, kencc and gccmk over 9front's mkfiles); a failure stops
@@ -57,6 +58,7 @@ for a in "${arches[@]}"; do
 	[ -d "$GCC_DIR/out/$a" ] || echo "build-all: no native gcc for $a ($GCC_DIR/out/$a: build.sh native)" >&2
 	[ -d "$RUST_DIR/out/$a" ] || echo "build-all: no Rust for $a ($RUST_DIR/out/$a: scripts/install.sh)" >&2
 	[ -d "$GO_DIR/out/$a" ] || echo "build-all: no Go for $a ($GO_DIR/out/$a: scripts/install.sh)" >&2
+	[ -x "$CLANG_DIR/out/$a/$a/clang/bin/clang" ] || echo "build-all: no clang for $a ($CLANG_DIR/out/$a: build.sh native)" >&2
 done
 [ -x "$RUST_DIR/rust/build/host/stage1/bin/rustc" ] || echo "build-all: no stage-1 rustc ($RUST_DIR): the Rust programs not built" >&2
 
@@ -75,7 +77,7 @@ fi
 
 if [ $iso = 1 ]; then
 	echo "build-all: the amd64 CD"
-	RUST_OUT=$RUST_DIR/out/amd64 GO_OUT=$GO_DIR/out/amd64 objtype=amd64 sys/src/build/host/guest/mkiso.sh
+	RUST_OUT=$RUST_DIR/out/amd64 GO_OUT=$GO_DIR/out/amd64 CLANG_OUT=$CLANG_DIR/out/amd64 objtype=amd64 sys/src/build/host/guest/mkiso.sh
 	if [ $check = 1 ]; then
 		echo "build-all: dist/bin/check -iso on the CD"
 		CHECK_LOCKED=1 "$HERE/bin/check" -iso "$CLI_DIR/9front.amd64.iso" iso || { echo "build-all: the CD failed its tests" >&2; exit 1; }

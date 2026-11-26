@@ -13,7 +13,8 @@ them (see [[Branches]]):
 ├── toolchain/
 │   ├── gcc/           gcc and binutils for 9space
 │   ├── rust/          Rust for 9space (+ rust/, libc/)
-│   └── go/            Go for 9space (+ go/)
+│   ├── go/            Go for 9space (+ go/)
+│   └── clang/         clang and lld for 9space (sources: rust/'s llvm-project)
 ├── tools/mcp/         MCP server for 9space
 ├── browser/           Servo for 9space (+ servo/, mozjs/)
 ├── tools/plan9port/   Plan 9 from User Space (9fans', unchanged)
@@ -31,6 +32,7 @@ them (see [[Branches]]):
 | `toolchain/rust/rust`, `libc` | the release archives (`fetch.sh`: nightly source, libc's crate) as repositories of their own (Rust's git data in `rust.git` beside `rust/`: Rust's bootstrap treats `rust/` as a source archive only without `.git`); the port on branch `plan9` (from `patches/`) | rust-lang/rust, rust-lang/libc |
 | `toolchain/go` | `patches/go`, `sys/src/build/step.sh`, `install.sh`, tests | go1.27.3 |
 | `toolchain/go/go` | Go's release archive (`fetch.sh`) as a repository; the port on branch `plan9` | go1.27.3 |
+| `toolchain/clang` | `build.sh` (host, sysroot, runtimes, native), `fetch.sh` (checks the sources), `scripts/`, `tests/`, `NOTES.md`; the port itself is in `toolchain/rust`'s `patches/llvm-project`; not on GitHub yet | LLVM 23 (Rust's llvm-project) |
 | `tools/plan9port` | rc, yacc and the generators of the host build (`PLAN9PORT`); 9fans' repository, unchanged: its `INSTALL` writes the install path into ~75 files, `bin/repos` knows that | github.com/9fans/plan9port |
 | `tools/mcp` | `9front-mcp`: lets an agent on Linux work on a 9space system (read, write, edit, glob, grep, rc); on the CD with `dist/bin/mkcd -mcp` | — |
 | `browser` | `fetch.sh`, `prepare.sh`, `build.sh`, `patches/` (servo, mozjs, crates: stylo's, a git source Servo brings), `webfs-rs/`, `tests/`; the crates.io crates it changes are `toolchain/rust`'s (`patches/crates`, `cargo-plan9.toml`); MPL-2.0 for Servo's and mozjs' parts (`LICENSES.md`) | servo/servo (a nightly's commit), servo/mozjs, servo/stylo |

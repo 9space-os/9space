@@ -3,10 +3,10 @@
 Everything is built on a Linux host (x86-64) from the repositories of
 [9space-os](https://github.com/9space-os) and the release archives they name.
 The result is 9space for amd64, 386 and arm64 (the 9front tree built with gcc),
-with gcc, Rust and Go for 9space, and an install CD.
+with gcc, Rust, Go and clang for 9space, and an install CD.
 
-From scratch it is a handful of commands (sections 2–5) and about three hours,
-mostly gcc and Rust. Later builds are incremental and take minutes.
+From scratch it is a handful of commands (sections 2–5) and five to six hours,
+mostly gcc, Rust and clang. Later builds are incremental and take minutes.
 
 | Part | Where | What it is |
 |---|---|---|
@@ -15,6 +15,7 @@ mostly gcc and Rust. Later builds are incremental and take minutes.
 | gcc | `toolchain/gcc` | gcc 16 and binutils for 9space: the cross compiler (Linux → 9space) and gcc on 9space |
 | Rust | `toolchain/rust` | rustc, cargo and std for 9space (from Rust's nightly source archive) |
 | Go | `toolchain/go` | Go for 9space (from Go's release archive) |
+| clang | `toolchain/clang` | clang and lld for 9space, cross and native, with libc++ (from Rust's llvm-project: `toolchain/rust` has its sources) |
 
 All paths come from `dist/paths.env`. Every command below starts in
 `~/Devel/9space` unless it says otherwise.
@@ -62,6 +63,10 @@ and `dist/bin/fetch`:
 - `dist/bin/fetch`: the archives of `distfiles.list` (Mesa, Wayland, SDL3, …)
   into `distfiles/`, checked by sha256.
 
+`toolchain/clang` has no download of its own: its sources are the
+llvm-project `toolchain/rust/fetch.sh` makes (`toolchain/clang/fetch.sh` only
+checks them). It is not on GitHub yet, so `dist/bin/repos` does not clone it.
+
 plan9port's `./INSTALL` builds it in place (a few minutes). It writes its own
 directory into about 75 of its files; that is expected, and `dist/bin/repos`
 knows it.
@@ -72,7 +77,7 @@ knows it.
 dist/bin/build-toolchains            # amd64 386 arm64; or name the architectures
 ```
 
-It builds gcc, Rust and Go for 9space, and of the tree only what they are built
+It builds gcc, Rust, Go and clang for 9space, and of the tree only what they are built
 against. The tree of an installation profile comes after it (section 4). It runs
 these steps in order, each one's output in `dist/logs/<step>.log`, and stops at
 the first failure, showing the end of its log:
@@ -88,6 +93,8 @@ the first failure, showing the end of its log:
 | `cargo-A` | `objtype=A scripts/build-cargo.sh`: cargo for 9space (its output starts anew when the stage-1 std changed: `tests/out/cargo-port.std`) | 5 min |
 | `install-A` | `objtype=A scripts/install.sh`: `out/A`, which is `/A/rust` on 9space | 1 min |
 | `go-A` | `toolchain/go`: `objtype=A sys/src/build/step.sh && scripts/install.sh` (the host Go only for the first arch) | 1–3 min |
+| `clang-host` | `toolchain/clang`: `./build.sh host`: clang and lld for Linux with every 9space target (from `toolchain/rust`'s llvm-project, which need not be built) | 30–45 min |
+| `clang-A` | `objtype=A ./build.sh sysroot runtimes native`: the tree of A as the sysroot (tree-base's APE, libz for lld), libc++ and compiler-rt, then clang and lld for 9space in `out/A` (`/A/clang` there) | 45–65 min per arch (with a warm ccache 15–20) |
 
 The times are those of the development machine; a smaller one (a laptop) takes
 several times as long. A is amd64, 386, arm64; T is the Rust target (`x86_64-unknown-plan9`,
@@ -164,7 +171,7 @@ the CD, and so onto the system installed from it.
 | `minimal` | the base system: rio, VESA | 330 MB |
 | `gpu` | + the GPU stack: gpu(4)'s drivers (i915, amdgpu, virtiogpu), Mesa's Vulkan, the Vulkan programs | 1.3 GB |
 | `ui` | + the desktop: wsys, the ui framework, term, foot, Wayland, the TrueType fonts and themes; wsys composes on the processor and is the desktop (`desktop=rio` in plan9.ini: rio) | 670 MB |
-| `full` | `gpu` and `ui`, with gcc, Rust and Go | past 2 GB |
+| `full` | `gpu` and `ui`, with gcc, Rust, Go and clang | past 2 GB |
 | `nix` | the branch `nix`: the base system with NIX's kernel; no GPU stack, no desktop | 340 MB |
 
 `nix` is the one profile not made from `main`: its CD comes from the tree's
@@ -181,12 +188,17 @@ CC=gcc ARCH=amd64 sys/src/cmd/build/build.exe
 sys/src/build/host/guest/build-boot.sh
 cd ..
 dist/bin/mkcd nix                             # 9space-nix.amd64.iso
-dist/bin/mkcd -dev all nix                    # with gcc, Rust and Go (1.5 GB)
+dist/bin/mkcd -dev all nix                    # with gcc, Rust and Go (1.5 GB; nix has no clang yet)
 ```
 
 The languages are an option of every profile: `-dev` takes `gcc`, `rust`,
-`go` (comma-separated), `all` or `none`. The default is `all` for `full` and
-`none` for the others. Rust links with gcc, so `rust` brings gcc along. With Rust
+`go`, `clang` (comma-separated), `all` or `none`. The default is `all` for `full` and
+`none` for the others. Rust links with gcc, and clang links with gcc's files (APE's
+libraries in `/$objtype/lib.gcc`), so `rust` and `clang` bring gcc along. With
+clang the CD also carries what `objtype=386` and `objtype=arm64` builds need
+(their clang runtimes, `lib.gcc` without the GPU stack's archives, `plan9.ld`:
+about 50 MB each), for the machines whose runtimes `toolchain/clang` has built.
+`nix`'s branch stages no clang yet: there `all` means gcc, Rust and Go. With Rust
 or Go the CD also gets the CA roots (`/sys/lib/tls/ca.pem`), so cargo and go
 can fetch crates and modules over https.
 
@@ -214,7 +226,7 @@ the Rust toolchain's) must be public: the MPL's source offer points at them.
 
 ```sh
 dist/bin/mkcd minimal                         # 9space-minimal.amd64.iso
-dist/bin/mkcd -dev all minimal                # minimal with gcc, Rust and Go
+dist/bin/mkcd -dev all minimal                # minimal with gcc, Rust, Go and clang
 dist/bin/mkcd -dev rust gpu                   # 9space-gpu-dev-rust.amd64.iso
 dist/bin/mkcd -ini 'desktop=rio' ui           # rio instead of wsys, the ui CD's default
 dist/bin/mkcd -mcp minimal                    # with the MCP server: 9space-minimal-mcp.amd64.iso

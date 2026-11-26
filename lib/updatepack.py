@@ -4,7 +4,7 @@
 # group, tab-separated; sys/src/build/host/guest/stage-dist.sh's): root/ with the files, the
 # list's modes and owners, without what an installed machine makes its own;
 # apply.rc, which copies root/ over a running system (the toolchains' trees,
-# /$objtype/rust, go and gnu, it replaces) and a kernel in it into 9fat;
+# /$objtype/rust, go, clang and gnu, it replaces) and a kernel in it into 9fat;
 # MANIFEST. DRY 1: count only, no archive.
 # STAMP 1 (a whole system): root/sys/lib/dist/update.files, the paths the update
 # puts on (sorted, one per line, without the leading /); apply.rc removes
@@ -81,7 +81,7 @@ for(s in $fs) echo allow >>$s
 # the toolchains' trees are the distribution's alone: replaced, not copied
 # over (their libraries carry hashes in their names: rustc refuses two
 # libstd it finds side by side, the old one and the new)
-for(t in %(a)s/rust %(a)s/go %(a)s/gnu)
+for(t in %(a)s/rust %(a)s/go %(a)s/clang %(a)s/gnu)
 	if(test -d $here/root/$t && test -d /$t){
 		echo apply: replacing /$t
 		rm -rf /$t

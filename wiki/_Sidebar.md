@@ -8,6 +8,6 @@
 - [[Building by hand|Building-by-hand]]
 - [[Testing]]
 - [[Releasing]]
-- [[Using gcc, Rust and Go|Toolchains]]
+- [[Using gcc, Rust, Go and clang|Toolchains]]
 - [[Features]]
 - [[The desktop and its theme|Desktop]]

@@ -136,6 +136,22 @@ objtype=386 HOST=0 bash -c 'sys/src/build/step.sh && scripts/install.sh'
 cd ../..
 ```
 
+## 4b. clang
+
+From Rust's llvm-project (`toolchain/rust/fetch.sh` made it; Rust need not be
+built), against the tree of section 1 (APE's libraries, libz for lld):
+
+```sh
+cd toolchain/clang
+./build.sh host                                       # clang and lld for Linux, every target -> build/host
+objtype=amd64 ./build.sh sysroot runtimes native      # libc++, compiler-rt; clang for 9space -> out/amd64
+objtype=386 ./build.sh sysroot runtimes native        # likewise for 386, arm64
+cd ../..
+```
+
+`native` needs that machine's `runtimes` first. Its tests (in a guest):
+`tests/cross.sh`, `tests/native.sh` (`toolchain/clang/README.md`).
+
 ## 5. The tree of a profile
 
 `dist/bin/build-profile PROFILE` is these steps. Every profile:
@@ -198,7 +214,7 @@ PROFILE=minimal DEV= MCP= BROWSER= PLAN9INI= objtype=amd64 sys/src/build/host/gu
 cd ..
 ```
 
-`DEV` takes the languages (`gcc,rust,go`); `MCP=1`; `BROWSER=1` (profile `full`,
+`DEV` takes the languages (`gcc,rust,go,clang`); `MCP=1`; `BROWSER=1` (profile `full`,
 amd64); `PLAN9INI` lines `name=value`. `mkiso.sh` runs `sys/src/build/host/guest/stage-dist.sh`
 (the distribution's tree for the profile, checked with `check-install.py -d -x`)
 and makes the ISO in a guest. With pull(1), `mkcd` also sets `REPLICA_KEY`,

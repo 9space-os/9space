@@ -13,9 +13,9 @@
 #              NIX's kernel (application and kernel cores, plan9.ini(8) *nixac); no
 #              GPU stack, no desktop, no pull(1); amd64 only. Its languages with -dev
 #              (default none); -mcp and -ini only for the main branch's profiles
-#   -dev LIST  the languages on the CD, any profile: gcc, rust, go, comma-separated,
-#              or all, or none. Default: all for full, none for the others.
-#              Rust links with gcc: rust takes gcc along
+#   -dev LIST  the languages on the CD, any profile: gcc, rust, go, clang,
+#              comma-separated, or all, or none. Default: all for full, none for
+#              the others. Rust and clang link with gcc's files: they take gcc along
 #   -mcp       the MCP server too (tools/mcp: /$objtype/bin/9front-mcp, its deny list
 #              /sys/lib/mcp/deny), any profile
 #   -browser   the browser too (browser/: servoshell and webfs-rs in /$objtype/bin,
@@ -42,7 +42,7 @@
 # and build-all's lock (the CD is made from the tree's build).
 set -e
 HERE=$(cd -P "$(dirname "$0")/.." && pwd -P)
-usage(){ echo "usage: mkcd [-dev gcc,rust,go|all|none] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
+usage(){ echo "usage: mkcd [-dev gcc,rust,go,clang|all|none] [-mcp] [-browser] [-ini 'name=value'] [-o iso] [-noreplica] minimal|gpu|ui|full|nix [amd64|386]" >&2; exit 2; }
 dev=- ini= out= mcp= browser= replica=1
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -75,9 +75,11 @@ if [ "$dev" = - ]; then
 	[ $profile = full ] && dev=all || dev=none
 fi
 [ "$dev" = none ] && dev=
-[ "$dev" = all ] && dev=gcc,rust,go
+# nix's tree (the branch nix, on gcc) stages gcc, Rust and Go, not clang yet
+[ "$dev" = all ] && { [ $profile = nix ] && dev=gcc,rust,go || dev=gcc,rust,go,clang; }
 for l in ${dev//,/ }; do
-	case $l in gcc|rust|go) ;; *) echo "mkcd: -dev: no language $l (gcc, rust, go)" >&2; exit 2 ;; esac
+	case $l in gcc|rust|go|clang) ;; *) echo "mkcd: -dev: no language $l (gcc, rust, go, clang)" >&2; exit 2 ;; esac
+	[ $l != clang ] || [ $profile != nix ] || { echo "mkcd: -dev clang: not for nix (its branch's stage-dist.sh has no clang yet)" >&2; exit 2; }
 done
 
 TREE=$(cd -P "$HERE/.." && pwd -P)/$(sed -n 's/^TREE=//p' "$HERE/paths.env")
@@ -91,7 +93,7 @@ if [ $profile = nix ]; then
 fi
 . "$TREE/sys/src/build/lib/paths.sh"	# CLI_DIR (paths.env)
 name=9space-$profile
-[ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go ] && name=$name-dev-${dev//,/-}
+[ -n "$dev" ] && [ $profile != full -o "$dev" != gcc,rust,go,clang ] && name=$name-dev-${dev//,/-}
 [ -n "$mcp" ] && name=$name-mcp
 [ -n "$browser" ] && name=$name-browser
 out=${out:-$CLI_DIR/$name.$arch.iso}

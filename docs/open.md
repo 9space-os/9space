@@ -449,6 +449,13 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - The X1: updated 2026-11-25 with the new apply.rc (toolchains replaced
   whole, one libstd), rebooted, Rust runs; `/tmp/up` removed,
   `/tmp/up.20261125` (3.2 GB) still there (the user's word).
+- clang in the distribution (2026-11-26, tree aca5e6358): `-dev clang`, in
+  `all` and so in `full`; `/$objtype/clang`, and for `objtype=386|arm64` the
+  other machines' runtimes, `lib.gcc` (without the gpu group's) and `plan9.ld`;
+  `build-toolchains` builds it (clang-host, clang-A); `tests/clang` 11/11 on the
+  instance; wiki Toolchains, Building. Open: `toolchain/clang` on GitHub
+  (9space-os, the user's word), then in `push`, `repos` and the manifest (`pin`);
+  the branch nix's stage-dist without clang (`mkcd nix` leaves it out).
 - Later (the user's plan, 2026-11-25): a test framework after NetBSD's ATF
   (atf(7); `NETBSD_SRC`: `external/bsd/atf`, its test cases in `tests/`), in
   Plan 9's manner rather than a port of ATF and Kyua (C++, Lua, SQLite):
