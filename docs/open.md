@@ -93,6 +93,18 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 ## Graphics
 
+- Write-combining for system RAM pages (2026-11-26, the user: later, on the
+  list). There is WC on BARs (PAT entry 7, PTEWC, SG_WC; devgpu's gpuNbarMw,
+  the KPI's ioremap_wc/io_mapping_wc/vmap_pfn), but not on the KPI's own page
+  pool: set_pages_wc only sets PG_PMAP_WC, which nothing reads, set_memory_wc
+  is a no-op, vmap maps cached. Needed only for amdgpu's USWC (a performance
+  gain; without CONFIG_X86_PAT amdgpu leaves it off and snoops, correctly; the
+  #warning at amdgpu_object.c:600 is accurate) and for Intel GPUs without LLC
+  (the X1's Broadwell has LLC). A page must not be mapped cached and WC at
+  once on x86, so it takes per-page memory types in a segment in the kernel
+  (with a TLB shootdown), an interface in devgpu, then the KPI (set_pages_wc,
+  vmap), and only then CONFIG_X86_PAT. Setting CONFIG_X86_PAT alone would be
+  incoherent.
 - The LinuxKPI page pool (aux/i915, aux/amdgpu) gives memory back since
   tree 33d5e2fdd (i915-pool.md: (c) 231668ae3 the status line, (a)
   2aaa5c5e0 wholly free chunks, (b) 33d5e2fdd under memory pressure, with
