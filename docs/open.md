@@ -453,9 +453,11 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   `all` and so in `full`; `/$objtype/clang`, and for `objtype=386|arm64` the
   other machines' runtimes, `lib.gcc` (without the gpu group's) and `plan9.ld`;
   `build-toolchains` builds it (clang-host, clang-A); `tests/clang` 11/11 on the
-  instance; wiki Toolchains, Building. Open: `toolchain/clang` on GitHub
-  (9space-os, the user's word), then in `push`, `repos` and the manifest (`pin`);
-  the branch nix's stage-dist without clang (`mkcd nix` leaves it out).
+  instance (again 11/11 after the relink against the `_dirfstat` fix, tree
+  a7ebaf367: `apefresh -a`); wiki Toolchains, Building. `toolchain/clang` on
+  GitHub (9space-os/clang), in `push` and `repos`. Open: its first push and the
+  manifest (`pin`, the user's word); the branch nix's stage-dist without clang
+  (`mkcd nix` leaves it out).
 - Later (the user's plan, 2026-11-25): a test framework after NetBSD's ATF
   (atf(7); `NETBSD_SRC`: `external/bsd/atf`, its test cases in `tests/`), in
   Plan 9's manner rather than a port of ATF and Kyua (C++, Lua, SQLite):

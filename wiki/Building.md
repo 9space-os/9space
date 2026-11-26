@@ -44,7 +44,7 @@ there only.
 `dist/bin/repos` clones every part where `paths.env` puts it: the tree with its
 branches (`main` checked out; `gcc`, `nix`, `riscv`, `upstream` as refs: a worktree
 for one of them only with `--worktrees=riscv` etc.), gcc, Rust,
-Go, mcp and plan9port, by HTTPS (no key needed). How you push is up to you; to push
+Go, clang, mcp and plan9port, by HTTPS (no key needed). How you push is up to you; to push
 by SSH, `NINESPACE_PUSH=git@github.com:9space-os dist/bin/repos` gives the remotes
 of 9space-os (`dist`'s too) that push URL and leaves fetching as it is (a push URL
 already set stays). `--sources` then runs each toolchain's `./fetch.sh`
@@ -65,7 +65,7 @@ and `dist/bin/fetch`:
 
 `toolchain/clang` has no download of its own: its sources are the
 llvm-project `toolchain/rust/fetch.sh` makes (`toolchain/clang/fetch.sh` only
-checks them). It is not on GitHub yet, so `dist/bin/repos` does not clone it.
+checks them; `dist/bin/repos --sources` runs it after Rust's).
 
 plan9port's `./INSTALL` builds it in place (a few minutes). It writes its own
 directory into about 75 of its files; that is expected, and `dist/bin/repos`

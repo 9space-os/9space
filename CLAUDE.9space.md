@@ -15,7 +15,7 @@ it is not a git repository itself, each part is one.
 | `toolchain/gcc/` | gcc 16 and binutils for 9front, cross and native (branch `main`) | yes |
 | `toolchain/rust/` | Rust for 9front; `rust/`, `libc/`, `llvm-project/` are repositories of their own | yes |
 | `toolchain/go/` | Go for 9front; `go/` is a repository of its own | yes |
-| `toolchain/clang/` | clang and lld for 9front, cross and native, with libc++ (sources: `toolchain/rust`'s llvm-project; not on GitHub yet) | yes |
+| `toolchain/clang/` | clang and lld for 9front, cross and native, with libc++ (sources: `toolchain/rust`'s llvm-project) | yes |
 | `tools/mcp/` | MCP server: an agent on Linux works on a 9front guest | yes |
 | `browser/` | Servo for 9space (servoshell, servoshot, webfs-rs); `servo/`, `mozjs/` are repositories of their own (from archives, the port on branch `plan9`); MPL-2.0, see Rules | yes |
 | `tools/plan9port/` | Plan 9 from User Space (`PLAN9PORT`: rc, yacc, the host build's generators); 9fans' repository, unchanged, built by its `./INSTALL` | yes (9fans') |
