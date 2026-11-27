@@ -689,3 +689,11 @@ build host); what is missing on more than one machine or blocks one:
 - ThinkBook: the power button (GPIO, no event), fingerprint, internal mic,
   Bluetooth, the IR camera's emitter, tap-and-drag and horizontal
   scrolling.
+- Mesa's shader cache (tree 785c8a0a1, 2026-11-27): its database in
+  `$home/lib/mesa` is locked with flock, which is a stub twice (APE's
+  `ap/gnu/flock.c` grants every lock, Mesa's `plan9compat.c` does nothing):
+  ui programs starting at once (the desktop's) may write it together.
+  Clean: a real flock in APE (an exclusive-use lock file, DMEXCL, per
+  locked file), Mesa's stub gone. Not yet measured on real hardware
+  (venus compiles on the host): the X1 with cxxwidgets twice, and whether
+  the cache stays whole after a desktop start.
