@@ -215,7 +215,8 @@ You need:
   cd sys/src/cmd/build; GO111MODULE=off go build -o build.exe .
   ```
 
-  The Go-on-9space route is untested.
+  This was tried on an installed 9space (2026-11-25). The result works, but it
+  is not byte-identical to the Linux build.
 
 Then:
 

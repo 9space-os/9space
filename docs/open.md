@@ -16,7 +16,7 @@ details (`MEMORY.md` line numbers as of this date, "L").
   wakeups) after an update; the RX 7600 by VFIO (amdgpu: the growing
   request pool, sudo vfio-gpu.sh bind by the user; the host loses its
   screen meanwhile). Postponed by the user on 2026-11-27 ("geht heute
-  nicht"); no push of these before. The X1 part done 2026-11-27 evening
+  nicht"); pushed since (GitHub main 0e470dffe has them). The X1 part done 2026-11-27 evening
   (main 8b2c2b55e, after two reboots): 300 i915 contexts opened and
   closed in a row (none failed, numbers stay at the first free one,
   the count as before), vkcube under wsys 5+10 times started, drawing,
@@ -28,20 +28,22 @@ details (`MEMORY.md` line numbers as of this date, "L").
   device served, vkcube drew again, no error state; the desktop there,
   mouse and keyboard working. Found on the way: the killed vkcube hung
   in its atexit functions (APE ran them for a kill note, Mesa's waited
-  for the dead driver): fixed (gcc, signal.c: none for SIGKILL's
-  notes), to upstream. Left: the RX 7600 by VFIO.
+  for the dead driver): fixed (gcc 51491d2a9, signal.c: none for
+  SIGKILL's notes); to upstream, not yet in patch-upstream. Left: the RX
+  7600 by VFIO (the request pool); natively the RX 7600 ran 71c938b23 on
+  the B550 (CD of main 8b2c2b55e, 2026-11-27: wsys -g and vkcube,
+  hardware.md). The stage 1 medium fixes (tree 932289ae7, 49e4edbc2: the
+  concurrent ctxfree) are tested only on virtio: the X1 ran 8b2c2b55e,
+  before them (L2077).
 - The 0.1-preview tag: whether, where, its name (`roadmap.md`, wiki Releasing).
 - The update server: its place and key; where files over 100 MB go (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
   refuses them).
-- The X1 with the user there: aux/i915 killed while vkcube draws (tree
-  fb4a91e54: gpu(3) onexit's GEN6_GDRST, ORCLOSE segments), as tests/gpu's
-  killdrv.rc does on virtio: no "engine did not stop", no i915./kpi.
-  segments left in #g, /dev/swap back down, aux/i915 restarts. A failed
-  reset turns the display off until reboot. The same visit, under wsys -g:
-  wsys falls back to the processor and composes on the GPU again once
-  aux/i915 is back (tree cf74a918b; the drivers in shr(3) since 0b322aebc; tested in QEMU
-  with venus, tests/gpu wsysback.rc).
+- The X1 under wsys -g with the user there: wsys falls back to the
+  processor while aux/i915 is gone and composes on the GPU again once it
+  is back (tree cf74a918b; the drivers in shr(3) since 0b322aebc; tested
+  in QEMU with venus, tests/gpu wsysback.rc). The kill itself (killdrv,
+  fb4a91e54) passed on the X1 on 2026-11-27 (above).
 - The X1's install: done by the user on a second SSD (2026-11-27); its
   first SSD stays untouched. Now open on it: `pull` on real hardware (once
   the update server exists) and the soak run on the installed system;
@@ -79,33 +81,33 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 - The 8-hour soak run (`tests/hw/soak.rc`, 1.0 criterion 1), first run
   2026-11-19 with the final kernel: stopped after ~5 rounds when memory ran
-  out (logs: `cache/cli/pxe/soak-2026-11-19/`). Two leaks: the `ui -s`
-  servers of killed ui clients stay (ui session: `ui -c` ends with its
-  client); the sticky `#g` segments (`i915.<pid>.*`, `kpi.<pid>.*`) of an
-  aux/i915 the pager killed stay until reboot (fix: segment(3) create
-  honours ORCLOSE, after the main build). Then: the pager's choice of
-  aux/i915 as victim (FreeBSD's protect(1)) and the i915 page pool never
-  giving chunks back. soak.rc to FAIL on growth of procs and pages from
-  round to round. Rerun after the fixes.
+  out (logs: `cache/cli/pxe/soak-2026-11-19/`). Its causes are fixed: the
+  `ui -s` servers of killed clients (`ui -c`, tree 72de338ff), the sticky
+  `#g` segments of a killed aux/i915 (ORCLOSE and gpu(3) onexit,
+  fb4a91e54), the pager's choice of the driver (proc(3) nokill,
+  8de91a2c3), the page pool giving chunks back (33d5e2fdd); soak.rc fails
+  when procs, pages or the driver's files grow after round 2. Left: the
+  rerun.
 - Soaks, 2026-11-19: "busy while idle" for the whole 10 s window, once
   each: aux/acpi (X1, 18:44), aux/amdgpu (ThinkBook, 21:08), #l1wifi
   (ThinkBook, 21:11, the first test kernel of the reorder fix: all its CPU
   since boot in that window). Causes open; soak.rc now records the procs'
   state and kregs when it fires (tree, soak.rc). aux/acpi's (2026-11-21, the
-  X1: ~3% of a processor at idle, all system time): ec.c's ecwait polls
-  with delay(1), 1 ms of busy waiting per poll, ~25-45 ms per _Q/_BST;
-  the fix after OpenBSD's acpiec_wait (300 polls of microdelay(1) first)
-  is in the stability session's clone (branch ecwait), its X1 test (acpi's
-  system time per 10 s, before 300-370 ms; battery, brightness, lid) with
-  the user, then patch-upstream 0066. Separate: ec.c holds the spinlock
-  ec.Lock across waits of up to 1 s.
+  X1: ~3% of a processor at idle, all system time): ec.c's ecwait polled
+  with delay(1); fixed in tree 9299f3880 (300 polls of microdelay(1) first,
+  as OpenBSD's acpiec_wait): on the X1 its system time per 10 s 280-360 →
+  0 ms, a battery read 60 → <10 ms, brightness and lid fine (L1968). Left:
+  its export to patch-upstream (0066 is now another patch), with
+  sdiahci's class-code match (656607f9b, L1971). Separate: ec.c holds the
+  spinlock ec.Lock across waits of up to 1 s.
 - Volume and mute keys: wsys has kbdtap and riostart starts
   reform/shortcuts under it (tree e2f6a78ef, tests/ui); untested on the X1's
   HDA keys.
 - HDMI/DP audio: "no audio codecs found" (the i915 audio power domain);
   the cause of HDA's `waitup timeout` is open (L1756).
 - UEFI: `bootx64.efi` resets the X1 at once; the test with 9front's own
-  (`stick-9front-efi.img`) is pending (L1726).
+  (`stick-9front-efi.img`) is pending (L1726). The B550 boots 9space's
+  from a stick (2026-11-27, hardware.md).
 - The second monitor black (pointer visible) after a replug or a login,
   seen once by the user, not reproduced; needs the user with the monitor.
   The same visit: tree 3f185ebb6 (windows moving to the remaining monitor
@@ -121,6 +123,9 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   3 min (the fan ran up audibly, then down); with wsys -g: 6 %, 902 MHz, 54 °C. Power
   management starts only with the first client; until fixed, do not leave the card
   alone with no client (hardware.md).
+- RX 7600 on the B550 natively (2026-11-27, hardware.md): the warnings "Failed to
+  setup vendor infoframe ... -22" and an optc32_disable_crtc REG_WAIT timeout; the
+  screen is black for a moment at the takeover. Not looked at.
 
 - Write-combining for system RAM pages (2026-11-26, the user: later, on the
   list). There is WC on BARs (PAT entry 7, PTEWC, SG_WC; devgpu's gpuNbarMw,
@@ -141,11 +146,12 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   chunk went back, nobody killed, the driver lived; the cost of the
   lookups' count is none measurable (vkcube within 0.1 %, drawspeed equal
   over 10 runs a side). "memory short" counts episodes and seconds since
-  cd5115f52. The GPU drivers are noswap since c0a610b20 (gpu(4)): on the
-  X1's hog soak (2026-11-20, attic hw/x1-hogsoak-20261120) aux/i915 lived
-  and the pool gave 8 chunks back, but the pager killed wsys, vkcube and
-  wbar first (each bigger than a hog child): wsys to be noswap too
-  (wsys(4), FreeBSD's protect(1); patch ready, the ui session's area).
+  cd5115f52. The GPU drivers are noswap since c0a610b20 (gpu(4)), nokill
+  since 8de91a2c3 (proc(3) nokill, FreeBSD's protect(1); aux/nokill.c): on
+  the X1's hog soak (2026-11-20, attic hw/x1-hogsoak-20261120) aux/i915
+  lived and the pool gave 8 chunks back, but the pager killed wsys, vkcube
+  and wbar first (each bigger than a hog child): wsys protected since tree
+  220dda698 (noswap, tests/gpu wsysnoswap), nokill since 518c3fa67.
   Open: the soak again with it and a slower hog (the pool giving back
   over seconds), and a client freeing hundreds of MB. An option for the
   user, not planned: a kill priority per process (Linux's oom_score_adj:
@@ -222,19 +228,20 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   (2+4+8+16 s) adds about 10 s before it composes on the GPU again.
   On hold (the user, 2026-11-21): the RX 7600 is released from VFIO and
   stays the host's (venus); A on AMD, B, C, D and the RADV check wait for
-  an AMD machine.
-- A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu once
-  its views are always ORCLOSE, defect A's fix) hold one open ORCLOSE file
+  an AMD machine. The B550 runs the RX 7600 natively since 2026-11-27
+  (hardware.md): none of them tried there yet. C still open (p9dev.c's
+  segnext as before).
+- A known limit (2026-11-20): the LinuxKPI drivers (i915; amdgpu since
+  its views are always ORCLOSE, tree 969846bfc) hold one open ORCLOSE file
   per client view, so all clients together have at most MAXNFD (5000,
   portdat.h) views of one driver, its own fds included. To measure in a
   guest (venus): how many buffer objects ui (vello) and servoshell hold. Later,
   a design without a file per view (the kernel removing a dead driver's
   views by their maker).
-- The #g segment handling of the drivers is there twice: virtiogpu.c and
-  the LinuxKPI's p9dev.c each have segcreate, rmseg and the ORCLOSE
-  table, and both need the same rule (views ORCLOSE always, page-owning
-  segments after the reset at exit). One library for the drivers'
-  segments (modularity rule).
+- The drivers' #g segments: one place since tree 969846bfc
+  (aux/gpu/gpuseg.c, included by virtiogpu.c and the LinuxKPI's p9dev.c).
+  Left: aux/intelgpu (aux/gpu/intel/plan9/sys.c) still has its own
+  stickyseg and rmseg, without ORCLOSE.
 - Isolation between clients of one driver: the per-object views give "a
   client maps only its own objects, views end at unmap and at the
   driver's death", not isolation between users' processes, which reach
@@ -242,19 +249,24 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
   user (or views per user) are a design question.
 - venus: a lost ring notify (Mesa 0038), cause unknown; it logs and fails
   the tests now (L1302, L1699).
-- RX 7600 by VFIO (on hold, see above): the IH ring re-arm and "IH ring overflow" (L1086, L1701),
+- RX 7600 by VFIO (on hold, see above) or on the B550 natively (since 2026-11-27): the IH ring re-arm and "IH ring overflow" (L1086, L1701),
   buddy blocks left after a failed init (L1074), overlay planes and a
   second monitor never looked at (L1113, L1213).
 - i915 on the X1: syncobjs only within a process (L1312), `live_rps_power`
-  fails (L1139), a confirming run of the drmirqw fix (L1140), a driver
-  restart untested (L1116).
+  fails (L1139), a confirming run of the drmirqw fix (L1140). A driver
+  restart passed on 2026-11-27 (killdrv: aux/i915 killed under vkcube,
+  restarted by gpustart i915, vkcube drew again).
 - No GPU limits per user (VRAM, contexts; L1115); no shared venus
   semaphores (L1201); "MESA-LOADER: failed to retrieve device information"
   with `DRIVER_OVERRIDE` (L1117); no ROM BAR in `#G` (L1073).
-- gpu(4) and gpu(3) BUGS: no MSI, 1 MB command buffers, the host-visible
-  BAR uncached, each frame copied twice, a dma-buf token for one other
-  process. Some entries look stale (amdgpu "no display", "no hotplug";
-  the framebuffer never freed): check them.
+- gpu(4) and gpu(3) BUGS: 1 MB command buffers, the host-visible BAR
+  uncached, each frame copied twice, a dma-buf token for one other
+  process. Stale entries to remove: gpu(3) "no MSI" (devgpu has MSI since
+  tree 52785b234) and "the framebuffer is never freed" (fbreap,
+  3f185ebb6); gpu(4) "one output, one framebuffer; no cursor plane, no
+  hotplug" (kmsscreen.c: outputs, cursor planes, hotplugproc; 3f185ebb6)
+  and amdgpu "no display yet" (scanout since 2026-11-02, L1086; HDMI on
+  the B550 natively 2026-11-27).
 - Mesa 26.3 as a step of its own (L1692).
 - A fence wait with a time limit is several calls: gpu(4)'s fence file
   waits without one, so Mesa's plan9 drm (`drm9.c` `gemwait`, `syncwait`)
@@ -274,26 +286,27 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    Found on the way: EGL never announced buffer age (tree d191d12f4, Mesa
    0046), zink read stale scissored clears (996f2e697, 0047); tests/gpu
    glage, wsysorder. Servo by eye again with the next root.
-2. RADV finds no device on the ThinkBook's APU (1002:1681): RADV says
-   only "Created an instance"; drm9's scan has DRM9DEBUG lines since tree
-   0b322aebc, one run there names the cause.
+2. RADV on the ThinkBook's APU (1002:1681): done; with the drivers in
+   shr(3) (tree 0b322aebc) RADV finds /shr/gpu/0 (RADV REMBRANDT, attic
+   hw/thinkbook-radv-20261119, run 2), and ran there for amdgpu9's
+   lost-driver test (tree d24ae5c73).
 3. From the X1's ui profile (60 s, 0.45 ms of ui's first proc a frame, no
-   encode hotspot): Mesa was built with its asserts (debugoptimized,
-   b_ndebug if-release: vk_object_base_assert_valid 2.2 %): a release
-   build from now (b_ndebug=true, MESA_ASSERTS=1 the developer's), ms per
-   frame on the X1 before/after; the printf a frame is gpu(4)'s text and
-   the WSI's present (cheap, stays). uiprof.rc to cover all of ui's procs.
+   encode hotspot): Mesa was built with its asserts; a release build since
+   tree 2520c6386 (b_ndebug=true, MESA_ASSERTS=1 the developer's). Open: ms
+   per frame on the X1 before/after; uiprof.rc to cover all of ui's procs.
+   The printf a frame is gpu(4)'s text and the WSI's present (cheap, stays).
 4. Tearing on the processor path: done (tree 31be0d5ed two screen
    objects, a1058f9b5 swap only when on the display; X1 and ThinkBook
-   by eye clean, flips = events). amdflip.rc at the RX 7600's next binding.
-5. Partial updates on the GPU path: A+B done (tree 6653c0d14: the WSI's
+   by eye clean, flips = events; amdflip.rc on the RX 7600 by VFIO
+   2026-11-20 all ok, attic hw/rx7600-vfio-20261120).
+5. Partial updates on the GPU path: done. A+B tree 6653c0d14 (the WSI's
    regions to wsys, comp.rs composing only the damage per image; glage
-   ~20000 instead of ~166000 window pixels a frame). C1 holds already
-   (ui presents only on a change). C2, ui's damage: not a side channel
-   beside Vulkan but VkPresentRegionsKHR chained by wgpu-hal's Vulkan
-   backend, given through a small wgpu API (a crate patch in
-   toolchain/rust; upstream wgpu has requests for present damage), so
-   every wgpu client gains; the design decided when taken on.
+   ~20000 instead of ~166000 window pixels a frame); C1 holds (ui presents
+   only on a change); C2 toolchain/rust c3cbf3b (wgpu 28's
+   present_with_damage, upstream gfx-rs/wgpu PR #10152 backported:
+   VkPresentRegionsKHR, EGL swap with damage) and tree d9949adf5 (ui
+   presents what it drew: 10516 instead of 192864 pixels a frame for a
+   progress bar).
 6. The measurement: done for QEMU (tree ae171b460, tests/uiserver/uilat.c,
    measure.sh): first pixels ~265 ms (VESA) / ~281 ms (venus) after
    uinew; click → composed pixels 5.7 / 6.6 ms (ui's frame ~3.5-4 ms of
@@ -308,7 +321,8 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 7. wsys' menus in the scale and font of the monitor they open on: done
    (tree 3924c581b); by eye on the X1 with a second monitor at another
    scale. The overlay plane with damage (bac452371): glage on the RX
-   7600's plane at its next binding (QEMU has no plane).
+   7600's plane done (2026-11-20: 600 overlay commits, 0 frames wrong,
+   attic hw/rx7600-vfio-20261120).
 8. term and ptyfs: SIGWINCH (to the processes that catch it only) and
    VMIN/VTIME done (tree 4ee185d0f). Open: Alt/Meta, the user's word.
    kbdfs starts a compose at Alt's press, so Alt+key never reaches term
@@ -328,11 +342,6 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
    Servo study scans /lib/font/ttf each start) could both use. Open from
    before: no native build with the `gpu` feature, a window node's x, y,
    role set only at creation.
-After a GPU driver's loss: venus done (Mesa 0048, tree e94dbb71d). hasvk on
-    the X1: new objects after the loss have no map and hasvk writes through
-    it (ui's crash); drm9 then gives local memory for them (written, the X1
-    tests it). Next: the same in amdgpu9.c for RADV (libdrm_amdgpu's BO
-    allocation and map after the loss).
 10. GPU windows and draw(3) readers: documented (wsys(4) BUGS): under -g
     draw(3)'s screen image lacks the GPU windows, /dev/screen in a window
     has them. Low priority, until it shows on real hardware: the soft
@@ -346,14 +355,18 @@ L1293; subsurfaces clipped at the root, L1346; wlsys(4) BUGS: one output,
 32 buffers, clipboard text only, no client scaling) and a draw(3)-ops back
 end for ui under drawterm/rcpu (ui on the GPU sends 4.8 MB in 20 s at
 33 ms RTT, ui -p 280 KB; wsys' text windows are done). For one visit at
-the X1 with the user: the HiDPI cursor on a real monitor (L1392), the
-tearing check, the GPU return under wsys -g (above).
+the X1 with the user: the HiDPI cursor on a real monitor (L1392) (the
+tearing check and wsys -g's return to the GPU are done: item 4; X1
+drvswap 2026-11-20, attic hw/x1-wsys-drvswap-20261120).
 
 Smaller: ui's scene not clipped to the damage before vello encodes it
 (measured: no encode hotspot in QEMU or on the X1, no block for it);
 a rio
 inside a window goes Broken when the window closes (real rio too, an
-upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
+upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575);
+wsys' build is not reproducible (one source built three times, three
+md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
+2026-11-20 "cargostd auch für den Host-Teil", cause not yet looked for).
 
 ## Kernel, APE, the gcc port
 
@@ -384,15 +397,20 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   int, also in 9front amd64), scat `heavens()` (a projection over the
   wrong struct), gs' `sfnts_reader_rlong` (four calls in one expression,
   a gs bug; L1628, L1629, L1646).
-- APE: stdio without locks (`fopen` no longer gives two threads one FILE,
-  tree aacb318f6; a shared FILE is unguarded); `_exit`/abort end the
-  whole program only in native programs with Rust's std (`__plan9_exit`,
-  tree 11a5cf69e), a C program's other pthreads go on; no locale but "C"
-  (gcc `NOTES.md`, whose "`<uchar.h>` is missing" is stale: tree
-  5265aca8a).
+- APE: stdio locks each FILE once a second thread runs, `_exit`/abort end
+  the other threads in every program (tree 32bab4bc8, 2026-11-19); no
+  locale but "C" (gcc `NOTES.md`); FD_SETSIZE is still 96 while OPEN_MAX
+  is 5000 (select ignores higher fds, FD_SET writes past the fd_set; the
+  change is an ABI one down to the libc crate; MEMORY 2026-11-27, review
+  stage 2).
 - acid cannot read the gcc port's ELF symbols (L938, L1574).
-- 386: APE shared memory cannot grow (L1427); 386 and arm64 come later by
-  the user's choice (L1382).
+- waserror locals (2026-11-27): the kernel's set after waserror and read in
+  its handler made volatile (tree 59e317819, aaf01b020, 4c47fd8c9; upstream
+  0069-0074); left: drawmesg's fmt/a (only the diagnostic output; MEMORY
+  2026-11-27 "waserror-Muster").
+- 386: APE shared memory cannot grow (L1427); the 386 guest's notify
+  frame alignment check fails, with gcc and clang alike (toolchain/clang
+  NOTES part 7); 386 and arm64 come later by the user's choice (L1382).
 
 ## Toolchains
 
@@ -404,21 +422,24 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   calls in all procs; APE's copy procs leak their buffer after a close
   during a read. Two "open" entries in Rust's `NOTES.md` are done (TCP half
   close: tree 7e5a710d1; loopback connect under load: patch-upstream 0025):
-  update them once the file's uncommitted work is in.
+  to be updated there (the file has no uncommitted work now, 2026-11-27).
 - Go: after `syscall.Exec` the other procs go on and hold the inherited
   fds (a parent never sees EOF); the exit-message patch to carry to each
   release, the vendored `x/sys/plan9` still old.
 - riscv64: no ISO, the tree never built itself there, musl without real
   quad `expl`/`logl`/`log1pl`.
-- Building `build.exe` with Go on 9front untested (wiki Toolchains).
+- `build.exe` built with Go on 9space: done on the X1 (build-tool.rc,
+  2026-11-25, MEMORY "build installiert"); its md5 differs from the Linux
+  build (Go version and buildid still to compare; wiki Toolchains says so).
 - clang (toolchain/clang; NOTES.md parts 1-8): cross and native on amd64,
   386, arm64 and riscv64, the whole tree built with `CC=clang` on each, every
   machine boots, and the system builds itself with clang (2026-11-27). Open:
   `#pragma varargck` as real format checking with Plan 9's verbs (now an
-  ignored pragma, as with gcc); a rebuild of Rust's LLVM and the native rustc
-  from the series with `Triple::Plan9` (expected without effect, not yet
-  confirmed: toolchain/rust NOTES.md, "clang's patches in the llvm-project
-  series").
+  ignored pragma, as with gcc); Rust's LLVM and the native rustc rebuilt
+  from the series with `Triple::Plan9` for amd64, 386, arm64 (2026-11-27,
+  cache/clang/relink-logs, toolchain/rust out/*/*.tgz); open: tests/run.sh
+  and rustc.sh in the guest to confirm it is without effect, then
+  toolchain/rust NOTES.md ("clang's patches in the llvm-project series").
 - APE's own `sin`/`cos` (double) are inaccurate: `cos(M_PI)` is 2 ulp off,
   `sin(M_PI)` is -0 (found by clang's tests, 2026-11-25; gcc programs alike,
   hidden at -O2 by constant folding). Candidate: musl's, as for float and
@@ -434,18 +455,13 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   process, pipe and file-watching parts it uses (polling, since there is no
   inotify); (3) later both cargo and rust-analyzer for the host from
   toolchain/rust too, so the builds need no rustup.
-- The script review's findings (2026-11-20), the toolchains' part
-  ((a) and (b) fixed): (c) x86_64-unknown-linux-gnu hard-coded as rust's build host
-  (install.sh, tests/rustc.sh, cargo-build.sh). (d) gcc's build.sh usage
-  stops before BUILD, OUTDIR, PLAN9; gcc tests/mk.sh ignores BUILD;
-  gcc fetch.sh's key branch has no keys/ (dead), autoconf 2.69 listed
-  but built by nobody; rust's async.sh and std-runner.sh let PLAN9_RISCV override PLAN9; rust
-  guest.sh's arm64 SMP=1 (the wfe hang is fixed; check *ncpu first);
-  rust-patches.sh's `ids "$d"` argument unused; crates-patch.sh's
-  libp9.a check silent without the amd64 tree; the installed READMEs say
-  "9front-rust", "9front-gcc", "9front-go" and go's "no cgo" (wrong);
-  go build.sh keeps build/gocache after a make.bash; go tests/guest.sh's
-  cp fallback lacks rust's rm -rf; rust tools/csstress.rc has no header.
+- The script review's findings (2026-11-20), the toolchains' part ((a),
+  (b), (c) and most of (d) fixed: toolchain/rust 3fd03be, 163a9da;
+  toolchain/go 372106c; gcc build.sh's usage, fabf42e). Left of (d): gcc
+  tests/mk.sh ignores BUILD (writes $TOP/build); gcc fetch.sh's key branch
+  has no keys/ (dead), autoconf 2.69 listed in sources.txt but built by
+  nobody; rust guest.sh's arm64 SMP=1 (the wfe hang is fixed; check *ncpu
+  first).
 
 ## Network
 
@@ -456,9 +472,6 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   (tree b9a54d270) and was not rechecked after it; the 9000 family's path
   untested, no card (L1763, L1765).
 - Replica: the signed index has no expiry; no way back on hjfs (L1444).
-- factotum's wpapsk `calcptk` orders the two nonces by their first 6
-  bytes (`memcmp(..., Eaddrlen)`), not all 32: a wrong PTK only when those
-  6 bytes are equal; 9front's code, an upstream candidate (L1517).
 
 ## Tests and the build
 
@@ -530,8 +543,10 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   stopped, no echo on the console, no ^T^T; host side no connection on 5640,
   no ufs or QEMU log. Not seen with 4 CPUs. To find: the guest's TCP
   (retransmits, a reset) under 8 CPUs, or slirp's guestfwd. Run 3 (4 CPUs)
-  stopped on the user's word (2026-11-23): gccmk and the lost connection are
-  to be tested on hardware later.
+  stopped on the user's word (2026-11-23). gccmk on hardware: done on the
+  installed X1 (2026-11-25: all of /sys/src without a failing directory,
+  `gccmk 9pc64` boots to the desktop; toolchain/gcc 6be417f). Still open:
+  the lost connection under 8 CPUs.
 - **Kernel heap exhausted** (2026-11-23, installed 9space in `~/9space`, KVM,
   4 CPUs, 4 GB): during the 4th gccmk run over all of `/sys/src` in one boot
   (runs 3 and 4 piped `gcc -E` of every file through grep, megabytes each)
@@ -541,8 +556,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   its clone chan on every failed walk (a local set after waserror, read in
   its handler, not volatile: gcc's register copy after the longjmp). The
   candidates of `tree/sys/src/build/host/check/find-clobbered.py` reviewed: six more
-  made volatile (patch-upstream 0066); open: devvmx eventparse frees `q`
-  after `q++` (a bug of its own, kencc too). gccmk again
+  made volatile (patch-upstream 0066); devvmx eventparse freed `q` after
+  `q++` (a bug of its own, kencc too): fixed in tree 0b21990fc
+  (patch-upstream 0068, 2026-11-27). gccmk again
   on the test host with the fix: all of 9front's mkfiles build (mp3enc
   fixed after it), the kernel heap 5.7 -> 7.1 MB through the run.
 - Sporadic, cause not found: tests/boot with an empty console (L1583;
@@ -557,10 +573,6 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   redirection window(1) takes as its own) reached guests twice
   (2026-11-21); a shared helper for a window running a command with
   redirections is planned (ui session).
-- wsys writes a diagnostic line in several writes (Rust's unbuffered
-  stderr, format pieces), so a test's echo can land inside it: tests/gpu's
-  `^back: the GPU composes again` missed once (2026-11-21). One write per
-  line in wsys, and greps that need no line start (ui session).
 - sys/src/build/mesa/patches.sh rewrites sys/src/mesa/patches from scratch (rm,
   then format-patch overlay..HEAD); the series has gaps (0017, 0040), so a
   rerun renumbers ~30 patches. Renumber once on purpose, or add only new
@@ -574,11 +586,6 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   tests/guest.sh QEMU_DEBUG (qmp and serial), the kernel kept in
   cache/browser/runs/freeze/; take `info registers -a` 2-3 times, `info
   cpus`, gdb's bt per vCPU before killing it.
-- Sporadic, 2026-11-20: tests/guest's apegnutest once failed its pty part
-  (tree 969846bfc's run): "^C: interrupt to the note group" first, then
-  the VMIN 3 and VMIN 0/VTIME 3 checks behind it (they read what was
-  left); the next run was green, 331 of 331. ptyfs' VMIN/VTIME are new
-  (4ee185d0f). Log: cache/stability/logs/guest-defecta-fail1-console.log.
 - Sporadic, 2026-11-20 (maybe the devshr deadlock, fixed 2026-11-21):
   tests/gpu's wsysback hung for 300 s (tree
   e94dbb71d's run, again in 627ade406+'s joint run without host load):
@@ -589,37 +596,35 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - Sporadic, 2026-11-20: tests/uiserver's uilost boot once printed no
   lines (the venus guest up, the MCP call in run.sh came back empty);
   the debug run and the next full run were green.
-- wsysorder.rc read the desktop after vktri's end as frames (X1, "back
-  to 119" = #777777): counts only vktri's frames now (tree 785af7950);
-  confirm on the X1, -O and plain.
+- Sporadic, 2026-11-27: tests/gpu 198/201 on tree 49e4edbc2 (the review's
+  stage 1 medium fixes): i915's mock selftests (aux/i915 -M: sw_fence
+  "Timeout fence unsignaled", -22), 3d (a run of 1 frame in 3.1 s, no
+  triangle at 640,333), vktri; the repeat on the same build 204/204.
+  Suspects: the concurrent ctxfree (Gpudrv.bg), flush_delayed_work's
+  change, the irq ack. Logs: cache/stability/review/m8-gpu.log, m10-gpu.log.
 - The VFIO guest's /tests lacks `drawcmp` and `workload`: amddraw.rc's
   drawcmp comparison and its workload part FAIL on the RX 7600
   (2026-11-19). drawcmp is built only by tests/draw/run.sh into its own
   root; vfio-test.sh copies tests/gpu's root and `amd*.rc` alone.
   Fix: build both into tests/gpu's root (build-vktest.sh), or let
   vfio-test.sh take tests/draw's root as well.
-- Never run: `sys/src/build/step/rc/ape.rc` (no self-build), eframetest on
-  venus (L1266, L1354); firmware loaded from the CD (only its staging
-  checked; L1762).
-- `build.exe -D` rebuilds musl's 12 `x86_64/*.s` each time (L1411); a full
-  gs rebuild under `-D`, seen twice, unexplained (L879).
+- Never run: eframetest on venus (L1266, L1354); firmware loaded from the
+  CD (only its staging checked; L1762).
+- A full gs rebuild under `build.exe -D`, seen twice, unexplained (L879).
 - A `-D` run right after a clean build (tree 66e79df91, 2026-11-19)
   recompiled 145 files: the pc64 kernel's sources, libsec's generated
-  `secp*.c`/`jacobian.c`, `gram.c`; the kernel came out the same
-  (md5 8547d171…). A no-op should compile nothing; cause open.
+  `secp*.c`/`jacobian.c`, `gram.c`. The kernel's part fixed in tree
+  c37206777 (kernelgen's Clean list was relative to the root, the tool
+  reads it relative to the manifest; "a second -D now compiles nothing");
+  libsec's and `gram.c` not named there: confirm with a clean build and two
+  `-D` runs.
 - The QEMU egl-headless SIGKILL workaround goes once the host's QEMU has
-  baca2517 (L1416).
+  baca2517 (L1416); the host still has 11.1.3 (2026-11-27).
 - The script review's code findings (2026-11-20; the whole list: attic
   dist-docs/plans/scriptreview/FINDINGS.md; (a) and (b) fixed), the
-  tree's part: (c) hardcodings:
-  tests/gcc/gcc.py's `'16.2'`; sys/src/build/linux/kbuild.py guesses Linux (6,6)
-  without VERSION; census.py, undef.py and gencmds.py match gcc's
-  messages in German and English (LC_ALL=C instead); sdl3/vendor.py's
-  version numbers not from VERSION, mesa/vendor.py's KeyError for arm64,
-  wayland/build.sh's ARCH=amd64; hw/soak.py's -w/-H defaults are this
-  LAN's addresses (from the machine files instead); hw/pxe.sh's OVMF
-  paths (paths.env as boot-cli.sh) and its QMP helper taking an event for
-  the reply. (d) small: rc scripts behind their .sh (gen-9syscall,
+  tree's part: (c) hardcodings: fixed in tree 030737e52 (2026-11-20) but
+  for hw/pxe.sh's QMP helper taking an event for the reply.
+  (d) small: rc scripts behind their .sh (gen-9syscall,
   gen-initcode-i, gen-bootfs, gen-rebootcode-i: no arm64; rc/ape.rc's
   lists by hand, no cxxwidgets; rc/check-install.rc ignores -r), paths.sh
   sourced twice (gen-bootfs.sh, gen-sd53c8xx-i.sh), dead code
@@ -676,23 +681,28 @@ build host); what is missing on more than one machine or blocks one:
   its rtw89 stalls after two load rounds while associated (an A/B against
   the kernel before tree be974532b, counters for the block-ack window's
   old frames, then a window reset as net80211's reorder does); `wlan auto`
-  at boot does not associate on the X1 and the ThinkBook.
+  at boot did not associate on the X1 (fixed: tree f97615f46, it waits
+  up to $wlanwait for a known network; joined 21 s after start) and the
+  ThinkBook (not retried).
 - Bluetooth on all three (X1 8087:0a2a, ThinkBook, host 2357:0604 RTL8761B):
   9front has none. A project of its own: HCI over USB as an nusb driver
   with the firmware load, L2CAP/SDP, then HID, then audio; permissive
   templates only (FreeBSD's netgraph Bluetooth, NetBSD's stack; BlueZ is
   GPL).
 - HDMI/DP audio: the X1 ("no audio codecs found") and the host's RX 7600
-  (1002:ab30 unknown to `audiohda`; amdgpu's display audio not done).
-- Internal disks: NVMe and AHCI never read or written on real hardware
-  (all machines' disks are off limits by the user's rule); a QEMU NVMe
-  test first (detect, partition, gefs and hjfs, load, the CD's install
-  onto NVMe) before an install on any machine.
+  (natively, 2026-11-27: its codec 1002:aa01 found on `#A1`, outpath pin
+  11 "nothing", not tried; amdgpu's display audio not done).
+- Internal disks: NVMe never read or written on real hardware (the
+  machines' disks off limits by the user's rule); AHCI on the X1:
+  sdiahci finds its Samsung PCIe AHCI SSD since tree 656607f9b (any
+  vendor by class code), and the user installed 9space on its second SSD
+  (2026-11-27). A QEMU NVMe test first (detect, partition, gefs and hjfs,
+  load, the CD's install onto NVMe) before an install on an NVMe disk.
 - The build host as a target (plan: attic `dist-docs/plans/host-b550.md`):
-  its devices by VFIO in a guest first (HDA ALC897, the Matisse xHCI with
-  the PCM2902 USB audio, the RX 7600 with its HDMI audio), a native boot
-  from a stick with `*nonvme=1 *noahci=1` only with the user's word (it is
-  the PXE server and the agents' machine).
+  booted natively from a stick with `*nonvme=1 *noahci=1` on 2026-11-27
+  (the CD of main 8b2c2b55e, hardware.md): USB, Ethernet, pstate, the RX
+  7600 (wsys -g, vkcube), the ALC897's rear out and the PCM2902 play. Left:
+  the front headphone, the RX 7600's HDMI audio, Bluetooth (no driver).
 
 ## Shelved by the user
 
