@@ -3,7 +3,7 @@
 	"parts": {
 		"browser": {
 			"branch": "main",
-			"commit": "2645d6f0797a9f044e622e2149257f82a058988c",
+			"commit": "c8f88aa6686fe4d2fb68b05b51bacf6d5f85d2f0",
 			"path": "BROWSER_DIR"
 		},
 		"browser/mozjs": {
@@ -13,12 +13,17 @@
 		},
 		"browser/servo": {
 			"branch": "plan9",
-			"commit": "0d93a018bf5448635b3d874b1efa80ecf0774475",
+			"commit": "13a5635d8dd4efd8ba4750907d0cfb1b1b94d6ba",
 			"path": "BROWSER_DIR/servo"
+		},
+		"clang": {
+			"branch": "main",
+			"commit": "412a4c7a7118254da2179c8315c7bcfd00dbfa17",
+			"path": "CLANG_DIR"
 		},
 		"gcc": {
 			"branch": "main",
-			"commit": "92dc14f9b691ac5f1fe44dd0c9ed9e3c6c8c60c8",
+			"commit": "5f67627084c502c4f6c630eef431c8febebd0000",
 			"path": "GCC_DIR"
 		},
 		"go": {
@@ -33,7 +38,7 @@
 		},
 		"mcp": {
 			"branch": "main",
-			"commit": "9a69c37fae2addb7869f4aed55a14f76f3aa6c08",
+			"commit": "ed5310f9b1752e74f47fb56bde62cfa808e87f00",
 			"path": "MCP_DIR"
 		},
 		"plan9port": {
@@ -43,7 +48,7 @@
 		},
 		"rust": {
 			"branch": "main",
-			"commit": "25bd0b8fd04d100ef7f99194a90e640f2420634a",
+			"commit": "37f728b272ad323d81dfeea6cf1c67f0ae6aaee8",
 			"path": "RUST_DIR"
 		},
 		"rust/libc": {
@@ -53,32 +58,32 @@
 		},
 		"rust/rust": {
 			"branch": "plan9",
-			"commit": "a4498ff0b5fda37d2e8278062918f1ab1d7f7af7",
+			"commit": "7f24e63fc47c7257842ec55e7004d6fcf2ac8dbb",
 			"path": "RUST_DIR/rust"
 		},
 		"tree": {
 			"branch": "main",
-			"commit": "a075f67fe73e5f354535aae0341231ed09c5e856",
+			"commit": "86d88a7775281dc29925be7e874f3b82d7057bd9",
 			"path": "TREE"
 		},
 		"tree-gcc": {
 			"branch": "gcc",
-			"commit": "b1f02489bbd74c0a75711b67ec8f59d0dc9f48ca",
+			"commit": "7fa0f7123cc4eb7df99bcb03acbabbe3d21145c4",
 			"path": "TREE_GCC"
 		},
 		"tree-nix": {
 			"branch": "nix",
-			"commit": "2a8afd1a613cbcb54fc9621e495d1be6969732d7",
+			"commit": "fd2dadbda4397e4ac00bf3177ccffb1ede15f9da",
 			"path": "TREE_NIX"
 		},
 		"tree-riscv": {
 			"branch": "riscv",
-			"commit": "1b278f086871ec245577537b0270ff6c98356894",
+			"commit": "f15208ce1ceef4e7033cd7d8f2b1f7d033c2001b",
 			"path": "TREE_RISCV"
 		},
 		"tree-upstream": {
 			"branch": "upstream",
-			"commit": "196ed8ba173455609cbfb8f1943c44e76030de2a",
+			"commit": "b7135f06bb1988bdd37354f63ed918133e101342",
 			"path": "TREE_UPSTREAM"
 		}
 	}
