@@ -390,15 +390,14 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 - riscv64: no ISO, the tree never built itself there, musl without real
   quad `expl`/`logl`/`log1pl`.
 - Building `build.exe` with Go on 9front untested (wiki Toolchains).
-- clang (toolchain/clang, `CLANG_DIR` not yet in paths.env; 2026-11-26): cross
-  and native amd64 work (tests/cross.sh 13/13, tests/native.sh 8/8). Open:
-  386 and arm64 (runtimes, native); the part not yet in dist (paths.env,
-  parts.py, manifest, build-toolchains, the CD's `/$objtype/clang`, the
-  wiki's Building, Toolchains, Repositories); the tree built with `CC=clang`
-  (a `clang.json`, `-ffixed-r14/-r15`, gccmk made compiler-neutral);
-  `#pragma varargck` as real format checking with Plan 9's verbs; a rebuild
-  of Rust's LLVM and the native rustc from the series with `Triple::Plan9`
-  (expected without effect, not yet confirmed: toolchain/rust NOTES.md).
+- clang (toolchain/clang; NOTES.md parts 1-8): cross and native on amd64,
+  386, arm64 and riscv64, the whole tree built with `CC=clang` on each, every
+  machine boots, and the system builds itself with clang (2026-11-27). Open:
+  `#pragma varargck` as real format checking with Plan 9's verbs (now an
+  ignored pragma, as with gcc); a rebuild of Rust's LLVM and the native rustc
+  from the series with `Triple::Plan9` (expected without effect, not yet
+  confirmed: toolchain/rust NOTES.md, "clang's patches in the llvm-project
+  series").
 - APE's own `sin`/`cos` (double) are inaccurate: `cos(M_PI)` is 2 ulp off,
   `sin(M_PI)` is -0 (found by clang's tests, 2026-11-25; gcc programs alike,
   hidden at -O2 by constant folding). Candidate: musl's, as for float and
@@ -480,9 +479,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   `build-toolchains` builds it (clang-host, clang-A); `tests/clang` 11/11 on the
   instance (again 11/11 after the relink against the `_dirfstat` fix, tree
   a7ebaf367: `apefresh -a`); wiki Toolchains, Building. `toolchain/clang` on
-  GitHub (9space-os/clang), in `push` and `repos`. Open: its first push and the
-  manifest (`pin`, the user's word); the branch nix's stage-dist without clang
-  (`mkcd nix` leaves it out).
+  GitHub (9space-os/clang), in `push` and `repos`. Pushed and pinned (dist
+  3045b7c). Open: the branch nix's stage-dist without clang (`mkcd nix` leaves
+  it out).
 - Later (the user's plan, 2026-11-25): a test framework after NetBSD's ATF
   (atf(7); `NETBSD_SRC`: `external/bsd/atf`, its test cases in `tests/`), in
   Plan 9's manner rather than a port of ATF and Kyua (C++, Lua, SQLite):
