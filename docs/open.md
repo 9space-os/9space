@@ -673,6 +673,10 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
 
 ## Hardware: gaps across the machines
 
+- VisionFive 2 (riscv64 `9vf`, riscv ce8ba043a, hardware.md): the console after
+  mpinit (uart0's interrupt by the PLIC), reset after a panic (sbireset), all 8 GB,
+  the MACs from u-boot; then the root over the network. Test kernels: TFTP from the
+  host (dnsmasq tftp-only, cache/hw/tftp) and u-boot's `dhcp; tftpboot`.
 The inventory of 2026-11-19 (`hardware.md`: the X1, the ThinkBook, the
 build host); what is missing on more than one machine or blocks one:
 
