@@ -269,4 +269,7 @@ Rust programs link with gcc's g++ by default (the Rust target's linker); with
 clang the build's `cargo.rc` names clang++. For your own crates, see
 `/$objtype/rust/README` (`cargo run --config 'target.<triple>.linker="clang++"'`).
 
-First run: 2026-11-27, amd64, in progress.
+Last run: 2026-11-27, amd64, on `main`: the whole tree (857 files) built in the
+guest by the native clang; 9769 objects byte-identical to the Linux build, 100
+different by yacc's and lex's output, absolute build paths, a date in cwfs and
+the bootfs's length in the kernel.
