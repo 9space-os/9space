@@ -693,6 +693,13 @@ build host); what is missing on more than one machine or blocks one:
   `ap/gnu/flock.c` grants every lock, Mesa's `plan9compat.c` does nothing):
   ui programs starting at once (the desktop's) may write it together.
   Clean: a real flock in APE (an exclusive-use lock file, DMEXCL, per
-  locked file), Mesa's stub gone. Not yet measured on real hardware
-  (venus compiles on the host): the X1 with cxxwidgets twice, and whether
-  the cache stays whole after a desktop start.
+  locked file), Mesa's stub gone. Measured on the X1 (2026-11-27, update
+  0dbd9bc, hasvk on Broadwell): Mesa's cache stays empty (its database
+  parts 2 KB, no shader written), cxxwidgets takes 16 s the first time and
+  10.5 s after; ui alone (UITIME) ~3.9 s, of which the first frame 2.9-3.2 s
+  each start (vello's pipelines), with ui's own wgpu pipeline cache read
+  ($home/lib/ui/cache, 918 KB of 2026-11-23, accepted by the driver: not
+  written again). Open: why hasvk compiles anyway (pipeline cache data not
+  used for vello's compute pipelines? Mesa's disk cache not reached by
+  hasvk?), and where cxxwidgets' other ~6.5 s go. The ui work is paused
+  (the user, 2026-11-27).
