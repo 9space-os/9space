@@ -99,7 +99,9 @@ Logs of the work: `tree/sys/src/build/host/MEMORY.md` (German, stays so: every b
   written by hand from usage, never generated from the original; copied code
   keeps its notices. Exceptions the user accepted: Bison-generated parsers,
   dual-licensed files (a permissive choice), FreeBSD's BSD-4-Clause
-  (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept), and
+  (vge's register layout in `sys/src/9/pc/ethervgbe.c`, notice kept),
+  9front's own mp3dec (libmad, GPL; `sys/src/cmd/audio/mp3dec`, built and on
+  the CDs as 9front ships it; user, 2026-11-27), and
   MPL-2.0 for the browser only: Servo and SpiderMonkey (mozjs) and the
   patches to them in `browser/` (`browser/LICENSES.md`), and the patches of
   the browser's MPL crates.io crates in `toolchain/rust/patches/crates`
