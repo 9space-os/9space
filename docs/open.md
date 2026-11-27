@@ -42,12 +42,14 @@ details (`MEMORY.md` line numbers as of this date, "L").
   wsys falls back to the processor and composes on the GPU again once
   aux/i915 is back (tree cf74a918b; the drivers in shr(3) since 0b322aebc; tested in QEMU
   with venus, tests/gpu wsysback.rc).
-- The X1's SSD: the install is decided, wiping the SSD is not. Suspend and
-  `pull` on real hardware follow it.
+- The X1's install: done by the user on a second SSD (2026-11-27); its
+  first SSD stays untouched. Now open on it: `pull` on real hardware (once
+  the update server exists) and the soak run on the installed system;
+  suspend stays shelved.
 - Sending fixes upstream:
-  - 9front: the 65 patches in tree `patch-upstream/` (base `cb9e5e7e9`;
-    0064/0065 of 2026-11-21: shr(3)'s walk and chan.c's createdir held a
-    lock across a remote walk, the killdrv deadlock), none sent yet. Not made into a patch: APE's dup/`F_DUPFD` taking the
+  - 9front: the patches in tree `patch-upstream/` (base `cb9e5e7e9`, up
+    to 0075) are published (the user, 2026-11-27); left: what 9front
+    takes, into `archive/`. Not made into a patch: APE's dup/`F_DUPFD` taking the
     number from `_fdinfo` (L1272): it goes wrong only in a program that
     mixes native descriptors with APE's (Rust's std with Mesa), which
     9front has none of.
