@@ -223,6 +223,7 @@ Then:
 cd /n/src9
 bind /n/src9/sys/include /sys/include
 bind /n/src9/$objtype/include /$objtype/include
+bind /n/src9/sys/src /sys/src	# APE's zlib.h, bzlib.h include from there
 @{
 	rfork E
 	path=(/$objtype/gnu/bin /bin .)
