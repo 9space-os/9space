@@ -477,7 +477,8 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
 
 - The CD's /lib/firmware was empty (no proto named its files): fixed in tree
   0e470dffe (boot/firmwareproto; tests/iso checks the CD against firmware.list);
-  not yet tried on a CD: the next mkcd and check -iso show it.
+  the B550 CD of 22:35 (mkcd -dev gcc,rust,go -mcp) holds all 674 files, check -iso ok;
+  still to try on the B550: gpustart amdgpu straight from that CD.
 - MCP: `aux/pstate` started inside an rc call keeps the call open until its timeout
   (the server waits on the call's stdout, which the background proc holds).
 
