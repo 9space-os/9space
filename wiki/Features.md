@@ -10,7 +10,7 @@ State of `main`, November 2026. "QEMU" means tested in `sys/src/build/host/tests
 | 9front built with gcc: amd64, 386, arm64 | QEMU, hardware (amd64) |
 | riscv64 (branch `riscv`) | QEMU |
 | NIX application cores (branch `nix`) | QEMU |
-| Self-hosting: the tree builds itself on 9space with the native gcc | QEMU (`sys/src/build/host/guest/build-self.sh`) |
+| Self-hosting: the tree builds itself on 9space with the native gcc or clang | QEMU (`sys/src/build/host/guest/build-self.sh`) |
 | APE with C99/C11, POSIX.1-2008, pthreads, ptys, eventfd, memfd | QEMU |
 | Install/live CD, hybrid BIOS/UEFI/USB | QEMU, hardware |
 | Installation profiles: `minimal`, `gpu`, `ui`, `full`, gcc/Rust/Go and the MCP server as options of each (`dist/bin/mkcd`) | QEMU: all four boot; `full` CD and USB, BIOS and UEFI, rio, USB, gcc, Go, Rust tests |
