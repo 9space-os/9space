@@ -16,7 +16,14 @@ details (`MEMORY.md` line numbers as of this date, "L").
   wakeups) after an update; the RX 7600 by VFIO (amdgpu: the growing
   request pool, sudo vfio-gpu.sh bind by the user; the host loses its
   screen meanwhile). Postponed by the user on 2026-11-27 ("geht heute
-  nicht"); no push of these before.
+  nicht"); no push of these before. The X1 part done 2026-11-27 evening
+  (main 8b2c2b55e, after two reboots): 300 i915 contexts opened and
+  closed in a row (none failed, numbers stay at the first free one,
+  the count as before), vkcube under wsys 5+10 times started, drawing,
+  killed (no hang, none left, no i915 error state, aux/i915 +800 KB per
+  10 runs, not growing). Not done: killdrv (aux/i915 killed while
+  drawing: a failed reset turns the display off, only with the user
+  there); the RX 7600 by VFIO.
 - The 0.1-preview tag: whether, where, its name (`roadmap.md`, wiki Releasing).
 - The update server: its place and key; where files over 100 MB go (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
