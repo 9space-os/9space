@@ -435,11 +435,10 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
   386, arm64 and riscv64, the whole tree built with `CC=clang` on each, every
   machine boots, and the system builds itself with clang (2026-11-27). Open:
   `#pragma varargck` as real format checking with Plan 9's verbs (now an
-  ignored pragma, as with gcc); Rust's LLVM and the native rustc rebuilt
-  from the series with `Triple::Plan9` for amd64, 386, arm64 (2026-11-27,
-  cache/clang/relink-logs, toolchain/rust out/*/*.tgz); open: tests/run.sh
-  and rustc.sh in the guest to confirm it is without effect, then
-  toolchain/rust NOTES.md ("clang's patches in the llvm-project series").
+  ignored pragma, as with gcc). Rust's LLVM and the native rustc from the
+  series with `Triple::Plan9`: rebuilt and confirmed without effect
+  (2026-11-27; tests/run.sh 15/15, rustc.sh 3/3 on amd64, 386, arm64:
+  toolchain/rust NOTES.md, "clang's patches in the llvm-project series").
 - APE's own `sin`/`cos` (double) are inaccurate: `cos(M_PI)` is 2 ulp off,
   `sin(M_PI)` is -0 (found by clang's tests, 2026-11-25; gcc programs alike,
   hidden at -O2 by constant folding). Candidate: musl's, as for float and
