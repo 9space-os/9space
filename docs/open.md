@@ -434,6 +434,16 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Tests and the build
 
+- Mesa's work directory is one per machine, not per tree (2026-11-27):
+  `cache/mesa/build-$objtype` holds gcc's sysroot view (a view of the tree
+  that last sourced `sys/src/build/mesa/common.sh`), its cross wrappers and
+  the meson build. Two builds of different trees at once (tree, tree-gcc,
+  tree-clang) change it under each other: a clang build re-pointed it to
+  tree-clang and gcc's wsys link on main took the clang `libvulkan.a`
+  (tree 5c86a48d1: the view only for TOOLSET=gcc now). The clean fix: a
+  view and a meson build directory per tree (keyed by ROOT, e.g.
+  `build-$objtype-<tree>`). Until then: no two Mesa or cargo builds of
+  different trees at once.
 - Updates (dist acbf579): apply.rc removes what the last update put on and
   the new one lacks (`/sys/lib/dist/update.files`). The X1 got its first list
   by hand (2026-11-25): 180 leftovers of the layout of 2026-11-24 removed.
