@@ -21,9 +21,15 @@ details (`MEMORY.md` line numbers as of this date, "L").
   closed in a row (none failed, numbers stay at the first free one,
   the count as before), vkcube under wsys 5+10 times started, drawing,
   killed (no hang, none left, no i915 error state, aux/i915 +800 KB per
-  10 runs, not growing). Not done: killdrv (aux/i915 killed while
-  drawing: a failed reset turns the display off, only with the user
-  there); the RX 7600 by VFIO.
+  10 runs, not growing). killdrv done too, the user there: aux/i915
+  killed while vkcube drew under wsys and two walkers were in its tree:
+  no proc of it left, its 78 #g segments gone, the memory back, no
+  "did not stop"/fault/panic in kmesg; restarted (gpustart i915): the
+  device served, vkcube drew again, no error state; the desktop there,
+  mouse and keyboard working. Found on the way: the killed vkcube hung
+  in its atexit functions (APE ran them for a kill note, Mesa's waited
+  for the dead driver): fixed (gcc, signal.c: none for SIGKILL's
+  notes), to upstream. Left: the RX 7600 by VFIO.
 - The 0.1-preview tag: whether, where, its name (`roadmap.md`, wiki Releasing).
 - The update server: its place and key; where files over 100 MB go (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
