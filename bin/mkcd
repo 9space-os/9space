@@ -97,6 +97,8 @@ name=9space-$profile
 [ -n "$mcp" ] && name=$name-mcp
 [ -n "$browser" ] && name=$name-browser
 out=${out:-$CLI_DIR/$name.$arch.iso}
+# -o relative to where mkcd was called: it works in the tree below
+case $out in /*) ;; *) out=$PWD/$out ;; esac
 
 # with build-all's lock: the CD is made from the tree's build
 exec 9>"$HERE/.build-all.lock"
