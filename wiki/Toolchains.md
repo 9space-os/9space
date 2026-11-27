@@ -246,3 +246,26 @@ again.
 
 The binaries and the kernel land in `/n/src9/$objtype`, as on Linux. To build
 only some manifests, name them: `sys/src/cmd/build/build.exe sys/src/cmd/cmds.json`.
+
+### The same with clang
+
+`build-self.sh` takes the toolset from `CC`, as the build tool does:
+
+```sh
+cd ~/Devel/9space/tree-clang          # a tree built with CC=x86_64-unknown-plan9-clang
+objtype=amd64 CC=clang sys/src/build/host/guest/build-self.sh
+```
+
+The guest then gets toolchain/clang's native clang, lld and LLVM's
+binutils (`toolchain/clang/out/$objtype`, `/$objtype/clang`: `objtype=amd64
+./build.sh native` there), and the build tool runs with `CC=clang`. The
+build steps for 9space (`sys/src/build/step/rc/*.rc`) take their compiler
+and tools from the toolset the build tool names (`TOOLSET`, `lib.rc`): gcc's
+of `/$objtype/gnu` or clang's of `/$objtype/clang`. By hand, as above, with
+`path=(/$objtype/clang/bin /bin .)` and `CC=clang`.
+
+Rust programs link with gcc's g++ by default (the Rust target's linker); with
+clang the build's `cargo.rc` names clang++. For your own crates, see
+`/$objtype/rust/README` (`cargo run --config 'target.<triple>.linker="clang++"'`).
+
+First run: 2026-11-27, amd64, in progress.
