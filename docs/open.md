@@ -114,6 +114,12 @@ Plan: attic `dist-docs/plans/x1-daily.md`.
 
 ## Graphics
 
+- RX 7600 (B550, native, 2026-11-27): after `gpustart amdgpu` and before the first
+  client the status says load 96-100 %, gfx up to 2944 MHz, hotspot 46 → 76 °C in
+  3 min (the fan ran up audibly, then down); with wsys -g: 6 %, 902 MHz, 54 °C. Power
+  management starts only with the first client; until fixed, do not leave the card
+  alone with no client (hardware.md).
+
 - Write-combining for system RAM pages (2026-11-26, the user: later, on the
   list). There is WC on BARs (PAT entry 7, PTEWC, SG_WC; devgpu's gpuNbarMw,
   the KPI's ioremap_wc/io_mapping_wc/vmap_pfn), but not on the KPI's own page
@@ -453,6 +459,12 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
   6 bytes are equal; 9front's code, an upstream candidate (L1517).
 
 ## Tests and the build
+
+- The CD's /lib/firmware was empty (no proto named its files): fix drafted in
+  cache/stability/firmware-cd (boot/firmwareproto into gccproto; tests/iso checks the
+  CD against firmware.list), waits for a tree slot; then a new CD for the B550.
+- MCP: `aux/pstate` started inside an rc call keeps the call open until its timeout
+  (the server waits on the call's stdout, which the background proc holds).
 
 - Mesa's work directory is one per machine, not per tree (2026-11-27):
   `cache/mesa/build-$objtype` holds gcc's sysroot view (a view of the tree
