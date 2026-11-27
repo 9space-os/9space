@@ -460,9 +460,9 @@ upstream candidate, L1175); AltGr in the Windows drawterm fork (L1575).
 
 ## Tests and the build
 
-- The CD's /lib/firmware was empty (no proto named its files): fix drafted in
-  cache/stability/firmware-cd (boot/firmwareproto into gccproto; tests/iso checks the
-  CD against firmware.list), waits for a tree slot; then a new CD for the B550.
+- The CD's /lib/firmware was empty (no proto named its files): fixed in tree
+  0e470dffe (boot/firmwareproto; tests/iso checks the CD against firmware.list);
+  not yet tried on a CD: the next mkcd and check -iso show it.
 - MCP: `aux/pstate` started inside an rc call keeps the call open until its timeout
   (the server waits on the call's stdout, which the background proc holds).
 
