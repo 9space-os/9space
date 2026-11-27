@@ -9,6 +9,14 @@ details (`MEMORY.md` line numbers as of this date, "L").
 
 ## Waiting for the user
 
+- The stage 1 review fixes on real hardware (tree main 71c938b23 and the
+  waserror fixes, gcc d9f1d850f/4c47fd8c9): green in QEMU (gpu 204/204
+  with gcc and clang), but i915 and amdgpu run there only on virtio. The
+  X1 (i915: context reuse, cancel_work_sync, hrtimer_cancel, late
+  wakeups) after an update; the RX 7600 by VFIO (amdgpu: the growing
+  request pool, sudo vfio-gpu.sh bind by the user; the host loses its
+  screen meanwhile). Postponed by the user on 2026-11-27 ("geht heute
+  nicht"); no push of these before.
 - The 0.1-preview tag: whether, where, its name (`roadmap.md`, wiki Releasing).
 - The update server: its place and key; where files over 100 MB go (the
   `full` profile's rustc, rustdoc, clippy-driver are 147-161 MB; GitHub
