@@ -456,7 +456,16 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
     36 likeliest of gcc's 269 -Wclobbered: none is live. devdraw's
     drawmesg `a`/`fmt` (three copies) hold by the rule but only feed a
     debug print that is off;
-  - 386, arm64 and riscv64 are not swept yet. Rust's LLVM and the native rustc from the
+  - 386, arm64 and riscv64 are not swept yet (riscv64's own code was:
+    nothing found).
+  - Before the next CD or update (2026-11-28): toolchain/gcc `build.sh
+    native` and toolchain/clang `build.sh sysroot runtimes native` for each
+    arch shipped; their out dirs are older than today's APE fixes, and
+    stage-dist's apefresh refuses them. rust/out's rustc and cargo (linked
+    2026-11-27) and browser/out (2026-11-26) carry APE's old NaN/Inf
+    helpers and both old aborts; std's own abort path (end_program) is not
+    affected. The tree's Rust programs (wsys, ui, term, wbar) were
+    relinked with the fixes. Rust's LLVM and the native rustc from the
   series with `Triple::Plan9`: rebuilt and confirmed without effect
   (2026-11-27; tests/run.sh 15/15, rustc.sh 3/3 on amd64, 386, arm64:
   toolchain/rust NOTES.md, "clang's patches in the llvm-project series").
