@@ -437,8 +437,10 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
   `#pragma varargck` checks formats as kencc does (llvm-project 0013,
   2026-11-28; NOTES part 9). Open, in the tree: the ~100 places the check
   finds with clang (`%d` for size_t, ptrdiff_t, ulong of 64 bits; cwfs's
-  Timet), and `-Wno-plan9-format` for APE's libbio and libsec (built without
-  kencc's `-F`). Rust's LLVM and the native rustc from the
+  Timet), each on the branch of its cause: `upstream` (and `gcc`) where
+  kencc's types have the bug too, `gcc` where only gcc and clang widths cause
+  it (NOTES part 9). Also open: `-Wno-plan9-format` for APE's libbio and
+  libsec (built without kencc's `-F`). Rust's LLVM and the native rustc from the
   series with `Triple::Plan9`: rebuilt and confirmed without effect
   (2026-11-27; tests/run.sh 15/15, rustc.sh 3/3 on amd64, 386, arm64:
   toolchain/rust NOTES.md, "clang's patches in the llvm-project series").
