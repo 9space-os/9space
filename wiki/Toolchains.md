@@ -154,8 +154,11 @@ clang -O2 -nostdinc -I/$objtype/include -I/sys/include -fplan9-extensions \
 clang -nostdlib -o prog prog.o -L/$objtype/lib.gcc -lc `{clang --print-libgcc-file-name}
 ```
 
-- kencc's pragmas (`#pragma lib`, `varargck`) are ignored, as with gcc: name
-  the libraries.
+- `#pragma varargck` checks print formats as kencc does: `print("%d", l)`
+  with a long `l` warns `format mismatch '%d' 'long', arg 2`
+  (`-Wplan9-format`, on by default; `-Wno-plan9-format` turns it off). gcc
+  ignores the pragma.
+- `#pragma lib` is ignored, as with gcc: name the libraries.
 
 From Linux (cross), with the tree as the sysroot `toolchain/clang` makes:
 

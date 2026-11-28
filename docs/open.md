@@ -433,9 +433,12 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
   build (Go version and buildid still to compare; wiki Toolchains says so).
 - clang (toolchain/clang; NOTES.md parts 1-8): cross and native on amd64,
   386, arm64 and riscv64, the whole tree built with `CC=clang` on each, every
-  machine boots, and the system builds itself with clang (2026-11-27). Open:
-  `#pragma varargck` as real format checking with Plan 9's verbs (now an
-  ignored pragma, as with gcc). Rust's LLVM and the native rustc from the
+  machine boots, and the system builds itself with clang (2026-11-27).
+  `#pragma varargck` checks formats as kencc does (llvm-project 0013,
+  2026-11-28; NOTES part 9). Open, in the tree: the ~100 places the check
+  finds with clang (`%d` for size_t, ptrdiff_t, ulong of 64 bits; cwfs's
+  Timet), and `-Wno-plan9-format` for APE's libbio and libsec (built without
+  kencc's `-F`). Rust's LLVM and the native rustc from the
   series with `Triple::Plan9`: rebuilt and confirmed without effect
   (2026-11-27; tests/run.sh 15/15, rustc.sh 3/3 on amd64, 386, arm64:
   toolchain/rust NOTES.md, "clang's patches in the llvm-project series").
