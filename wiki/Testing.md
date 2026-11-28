@@ -24,7 +24,7 @@ and the exit status is 1 when one failed. The output of each stage is in
 | Stage | What | Command (in `tree/`) |
 |---|---|---|
 | `static` | source checks: manifests, licences, layouts (seconds) | `bash sys/src/build/host/tests/static/run.sh` |
-| `build` | what the build tool made: libraries, programs, kernel | `bash sys/src/build/host/tests/run.sh build` |
+| `build` | what the build tool made: libraries, programs, kernel; no global with two sizes (`-fcommon`) | `bash sys/src/build/host/tests/run.sh build` |
 | `guest` | the unit tests in a 9front guest | `bash sys/src/build/host/tests/run.sh guest` |
 | `boot` | the built kernel boots to rc | `bash sys/src/build/host/tests/run.sh boot` |
 | `kencc` (`-native`) | 9front's own compilers (6c, 6a, 6l, mk) build the tree, kernel included | `bash sys/src/build/host/guest/build-kencc.sh` |
