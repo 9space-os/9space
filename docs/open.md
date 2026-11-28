@@ -435,12 +435,23 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
   386, arm64 and riscv64, the whole tree built with `CC=clang` on each, every
   machine boots, and the system builds itself with clang (2026-11-27).
   `#pragma varargck` checks formats as kencc does (llvm-project 0013,
-  2026-11-28; NOTES part 9). Open, in the tree: the ~100 places the check
-  finds with clang (`%d` for size_t, ptrdiff_t, ulong of 64 bits; cwfs's
-  Timet), each on the branch of its cause: `upstream` (and `gcc`) where
-  kencc's types have the bug too, `gcc` where only gcc and clang widths cause
-  it (NOTES part 9). Also open: `-Wno-plan9-format` for APE's libbio and
-  libsec (built without kencc's `-F`). Rust's LLVM and the native rustc from the
+  2026-11-28; NOTES part 9). The amd64 sweep of gcc's and clang's warnings
+  (2026-11-28, cache/clang/analysis) is worked through: the fixes are on
+  `gcc` and `upstream` (patch-upstream 0076-0114; 0081 withdrawn), and three
+  checks now catch the same mistakes (tests/static ulongmax and ulongshift,
+  tests/build find-common-mismatch.py). Not merged, not pushed. The full
+  gcc build with `check` (build, guest, boot) on them is running. Open:
+  - the varargck places of the gcc-only kind (`%d` for a 64-bit sizeof,
+    ptrdiff_t or ulong), on `gcc`, and `-Wno-plan9-format` for APE's
+    libbio and libsec, which are built without kencc's `-F`;
+  - a waserror check with control flow (a clang AST/CFG pass): a local
+    changed inside a waserror()...poperror() scope, an error() after the
+    change, and a read after the jump. A text scan has too many false
+    alarms to be a gate (draft in cache/clang/waserror). 9space-3e read the
+    36 likeliest of gcc's 269 -Wclobbered: none is live. devdraw's
+    drawmesg `a`/`fmt` (three copies) hold by the rule but only feed a
+    debug print that is off;
+  - 386, arm64 and riscv64 are not swept yet. Rust's LLVM and the native rustc from the
   series with `Triple::Plan9`: rebuilt and confirmed without effect
   (2026-11-27; tests/run.sh 15/15, rustc.sh 3/3 on amd64, 386, arm64:
   toolchain/rust NOTES.md, "clang's patches in the llvm-project series").
