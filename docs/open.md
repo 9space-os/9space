@@ -447,7 +447,12 @@ md5s: only LLVM's inlining in Wsys::answer differs, thin LTO; MEMORY
   - a waserror check with control flow (a clang AST/CFG pass): a local
     changed inside a waserror()...poperror() scope, an error() after the
     change, and a read after the jump. A text scan has too many false
-    alarms to be a gate (draft in cache/clang/waserror). 9space-3e read the
+    alarms to be a gate (draft in cache/clang/waserror). Negatives the pass
+    must get right: devfs.c mconfig's i (the handler writes it before it
+    reads), devmnt.c mntwalk's wq (`wq = nil; goto Return` leaves the scope
+    without a later call), gefs check.c:355 ok (the handler writes the same
+    value), gefs fs.c fsattach's mnt (only `f.mnt`, a member of the same
+    name, is assigned). 9space-3e read the
     36 likeliest of gcc's 269 -Wclobbered: none is live. devdraw's
     drawmesg `a`/`fmt` (three copies) hold by the rule but only feed a
     debug print that is off;
