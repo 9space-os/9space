@@ -29,8 +29,12 @@ cycle is needed), boots it and logs to `cache/hw/vf2.log`.
 | reboot, reset after a panic (the JH7110 watchdog: OpenSBI's reset does nothing) | works |
 | Ethernet ×2 (`etherdwmac.c`, YT8531): clocks and resets on, MACs from the device tree | works: ETH1 1000 Mbps, DHCP |
 | root over the network (host: `gen-ufs-root.sh` for riscv64 and ufs; `vf2load.py INI=`) | works: init, termrc, rc |
-| SD card, eMMC (`sddwmmc.c`) | written, untested |
-| no RTC: timesync wants `/dev/rtc`; no `#i`, `#m` (display) | open |
+| SD card, eMMC (`sddwmmc.c`; at most 25 MHz with programmed i/o) | works: the local root (gefs on partition 4) |
+| userland at `-O2` with -fno-strict-aliasing, -fwrapv, -fno-delete-null-pointer-checks | works: QEMU boot 12/12, guest 341/341; on the board under load |
+| PCI Express port 0 (`pcivf.c`, PLDA root port) | works: link up, the VL805 found |
+| USB by the VL805 (`usbxhcipci`) | works: root hubs and the VL805's hub enumerate |
+| PCIe port 1 (the M.2 slot; the NVMe may be read, never written) | not yet: one root only |
+| no RTC: timesync wants `/dev/rtc`; no `#i`, `#m` (display); SD DMA | open |
 
 ## Order
 
@@ -43,17 +47,17 @@ Each step ends with a test on the board and a commit on `riscv`.
    early, before any local disk.
 2. **Reset** (done 2026-11-28). `reboot` and a panic reset the board: SBI's system reset if it
    works, else the JH7110 watchdog (NetBSD `jh7110_wdt.c`).
-3. **SD card.** `sddwmmc.c` on the card (read, write on partition 4 only),
+3. **SD card** (done 2026-11-28: the root on partition 4). `sddwmmc.c` on the card (read, write on partition 4 only),
    then a 9front file system there (gefs or hjfs) as the local root; the
    card's layout made by `mksd-vf.sh` (p1/p2 StarFive's, p3 FAT boot, p4 the
    root).
 4. **Clocks, resets, pins** (syscrg, aoncrg, stgcrg; sys/aon iomux): a small
    driver for what the next steps need, instead of relying on U-Boot's state
    (NetBSD `jh7110_clkc.c`, `jh7110_pinctrl.c`).
-5. **PCIe** (PLDA XpressRICH, two ports; NetBSD `jh7110_pcie.c`,
+5. **PCIe** (port 0 done 2026-11-28) (PLDA XpressRICH, two ports; NetBSD `jh7110_pcie.c`,
    `jh7110_pciephy.c`, OpenBSD `stfpcie.c`): port 0 carries the VL805 USB 3
    controller, port 1 the M.2 slot (the SSD: only enumerated, never written).
-6. **USB.** xHCI on the VL805 (9front's `usbxhci`) for keyboard, mouse,
+6. **USB** (xHCI on the VL805 done 2026-11-28). xHCI on the VL805 (9front's `usbxhci`) for keyboard, mouse,
    sticks; then the SoC's own USB 2.0 (Cadence, NetBSD `jh71x0_usb.c`).
 7. **Display.** HDMI: the DC8200 display controller and the Innosilicon HDMI
    transmitter, a frame buffer for devdraw (software rendering; the IMG BXE
